@@ -68,6 +68,7 @@ export default {
     // (feature แตะ groups ได้ที่นี่ที่เดียว ตอนเริ่ม server ยังไม่มีใครสร้างกลุ่มชื่อนี้)
     if (!groups.has(GROUP)) groups.set(GROUP, new Set());
 
+    console.log(`[discord] connecting to Discord Gateway... (group #${GROUP}, channel ${CHANNEL_ID})`);
     const client = new Client({
       intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
     });
@@ -83,9 +84,13 @@ export default {
 
     // ขาเข้า: ข้อความใหม่ใน channel → ส่งให้สมาชิกกลุ่มในแอป (เฉพาะ room ของกลุ่ม เหมือน R11)
     client.on(Events.MessageCreate, (message) => {
-      if (message.channelId !== CHANNEL_ID) return;
+      if (message.channelId !== CHANNEL_ID || message.author?.bot) return;
       const msg = fromDiscordMessage(message);
-      if (!msg) return;
+      if (!msg) {
+        // มีคนพิมพ์แต่เนื้อหาว่าง: เกือบทุกครั้งเกิดจากยังไม่ได้เปิด MESSAGE CONTENT INTENT ใน Developer Portal
+        console.warn(`[discord] got an empty message from ${message.author?.username} — enable MESSAGE CONTENT INTENT (Developer Portal → Bot)`);
+        return;
+      }
       console.log(`[discord] in  <- ${msg.from}: ${msg.text}`);
       io.to(`group:${GROUP}`).emit("group_msg", msg);
     });
@@ -102,7 +107,12 @@ export default {
   // ขาออก: ข้อความกลุ่ม (ผ่านการตรวจสิทธิ์ของ core แล้ว) → โพสต์ใน Discord
   // ข้อความที่มาจาก Discord ไม่ผ่าน core จึงไม่ถูกส่งกลับไปซ้ำ (ไม่วนลูป)
   onGroupMessage(msg) {
-    if (!enabled || msg.group !== GROUP || !channel) return;
+    if (!enabled || msg.group !== GROUP) return;
+    if (!channel) {
+      // bot ยังต่อ Discord ไม่สำเร็จ ไม่ข้ามเงียบ ๆ ให้ดูสาเหตุจาก log ตอนเริ่ม (login failed / cannot open channel)
+      console.warn(`[discord] not connected to Discord — message from ${msg.from} NOT forwarded (see [discord] startup logs)`);
+      return;
+    }
     console.log(`[discord] out -> ${msg.from}: ${msg.text}`);
     channel
       .send({ content: toDiscordText(msg), allowedMentions: { parse: [] } }) // ไม่ ping @everyone / @user

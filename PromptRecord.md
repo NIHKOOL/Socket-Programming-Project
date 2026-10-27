@@ -370,3 +370,12 @@
   > ขั้นตอน 1.4 หาไม่เจอ
 - **ผลลัพธ์:** อธิบาย 2 วิธี: ดู Channel ID จาก URL ใน browser (`/channels/<server>/<channel>`) และเปิด Developer Mode (App Settings → Advanced) อัปเดตขั้นตอน 1.4 ใน `docs/features/discord_TEST.md`
 - **หมายเหตุ:** —
+
+### [2026-10-28] Discord: ส่งข้อความแล้วไม่ขึ้นทั้งสองฝั่ง
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature 2 (Discord)
+- **Prompt:**
+  > พิมพ์หา Discord แล้วไม่ขึ้น Discord พิมพ์ก็ไม่ขึ้น Log ใน Render ล่าสุดคือการ Join ห้อง
+- **ผลลัพธ์:** วิเคราะห์ว่า log ไม่มี `[discord]` เลย สาเหตุที่น่าจะเป็นที่สุดคือไม่ได้ตั้ง env บน Render (`server/.env` ไม่ถูก push) / แก้จุดอ่อนในโค้ด: `server/features/discord.js` เพิ่ม log `connecting to Discord Gateway...`, เตือน `NOT forwarded` เมื่อ bot ยังไม่ต่อ (เดิมข้ามเงียบ ๆ), เตือนให้เปิด MESSAGE CONTENT INTENT เมื่อได้ข้อความว่าง / อัปเดตตารางแก้ปัญหาใน `discord_TEST.md` + ลิงก์ใน HandbookFeatures
+- **หมายเหตุ:** `npm test` 12/12 รอผู้ใช้เช็ก log ตอนเริ่ม server บน Render (บรรทัด `Features:`)

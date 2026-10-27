@@ -165,8 +165,8 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 | 1 | โหลด `server/.env` (ถ้ามี ยกเว้นตอน test) แล้วอ่าน token / channel id / ชื่อกลุ่ม | [server/features/discord.js:19-31](server/features/discord.js#L19-L31) |
 | 2 | ไม่มี token หรือ channel → feature ปิดตัวเอง (`discord (off: ...)`) แอปทำงานปกติ | [:31](server/features/discord.js#L31), [:62](server/features/discord.js#L62) |
 | 3 | core เรียก `initFeatures` → สร้างกลุ่ม `#discord` แบบ**ไม่มีสมาชิก** ใครอยากคุยก็กด `[join]` เอง (R10) | [server/index.js:38](server/index.js#L38) → [discord.js:64-69](server/features/discord.js#L64-L69) |
-| 4 | สร้าง Discord client ขอ intent: Guilds, GuildMessages, **MessageContent** (ต้องเปิดใน Developer Portal) | [discord.js:71-73](server/features/discord.js#L71-L73) |
-| 5 | `client.login(token)` → ต่อ Discord Gateway (WSS) → `ClientReady` → เปิด channel ตาม id | [discord.js:94](server/features/discord.js#L94), [:75-82](server/features/discord.js#L75-L82) |
+| 4 | สร้าง Discord client ขอ intent: Guilds, GuildMessages, **MessageContent** (ต้องเปิดใน Developer Portal) | [discord.js:72-74](server/features/discord.js#L72-L74) |
+| 5 | `client.login(token)` → ต่อ Discord Gateway (WSS) → `ClientReady` → เปิด channel ตาม id | [discord.js:99](server/features/discord.js#L99), [:76-83](server/features/discord.js#L76-L83) |
 
 **ลำดับการทำงาน: ขาออก (แอป → Discord)**
 
@@ -174,26 +174,26 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 |---|---|---|
 | 1 | สมาชิก `#discord` ส่งข้อความ → core ตรวจสิทธิ์ (R11) → ส่งให้สมาชิกในแอป | [server/index.js:177-178](server/index.js#L177-L178) |
 | 2 | core เรียก `onGroupMessage(msg)` | [server/index.js:179](server/index.js#L179) |
-| 3 | discord: ไม่ใช่กลุ่มที่ bridge หรือยังไม่ได้เปิด channel → ข้าม | [discord.js:105](server/features/discord.js#L105) |
+| 3 | discord: ไม่ใช่กลุ่มที่ bridge → ข้าม / bot ยังต่อ Discord ไม่สำเร็จ → **log เตือน** `NOT forwarded` (ไม่ข้ามเงียบ ๆ) | [discord.js:110-115](server/features/discord.js#L110-L115) |
 | 4 | แปลงเป็น `**C1**: text` (escape markdown ในชื่อ) | [discord.js:36-38](server/features/discord.js#L36-L38) |
-| 5 | `channel.send(...)` ผ่าน REST API โดย `allowedMentions: { parse: [] }` → **ไม่ ping `@everyone` / `@user`** | [discord.js:107-109](server/features/discord.js#L107-L109) |
+| 5 | `channel.send(...)` ผ่าน REST API โดย `allowedMentions: { parse: [] }` → **ไม่ ping `@everyone` / `@user`** | [discord.js:117-119](server/features/discord.js#L117-L119) |
 
 **ลำดับการทำงาน: ขาเข้า (Discord → แอป)**
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | มีคนพิมพ์ใน Discord → Gateway ส่ง event `MessageCreate` มาที่ bot | [discord.js:85](server/features/discord.js#L85) |
-| 2 | ไม่ใช่ channel ที่ bridge → ข้าม | [discord.js:86](server/features/discord.js#L86) |
+| 1 | มีคนพิมพ์ใน Discord → Gateway ส่ง event `MessageCreate` มาที่ bot | [discord.js:86](server/features/discord.js#L86) |
+| 2 | ไม่ใช่ channel ที่ bridge หรือเป็นข้อความจาก bot → ข้าม / เนื้อหาว่าง → **log เตือน** ให้เปิด MESSAGE CONTENT INTENT | [discord.js:87](server/features/discord.js#L87) |
 | 3 | **ข้อความจาก bot (รวมถึงของตัวเอง) → ข้าม** กันวนลูป: ข้อความที่เราส่งออกไปจะไม่ย้อนกลับมา | [discord.js:43](server/features/discord.js#L43) |
 | 4 | แปลงเป็น payload `group_msg`: ชื่อ = nickname ใน server, แนบ URL ของไฟล์, ตัดที่ 1000 ตัวอักษร (เท่า core), `source: "discord"` | [discord.js:42-55](server/features/discord.js#L42-L55) |
-| 5 | ส่งให้ **room `group:discord` เท่านั้น** (เหมือน R11 คนที่ไม่ใช่สมาชิกไม่ได้รับ) | [discord.js:90](server/features/discord.js#L90) |
+| 5 | ส่งให้ **room `group:discord` เท่านั้น** (เหมือน R11 คนที่ไม่ใช่สมาชิกไม่ได้รับ) | [discord.js:95](server/features/discord.js#L95) |
 | 6 | Client: ข้อความที่ `source === "discord"` แสดงป้าย `[discord]` สี blurple และ**ไม่นับเป็นข้อความของเรา** แม้ชื่อจะตรงกับเรา (กันปลอมตัว) | [ChatRoom.jsx:43-54](client/src/ChatRoom.jsx#L43-L54) |
 
 **ลำดับการทำงาน: UI รู้ได้อย่างไรว่ากลุ่มไหน bridge**
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | socket ใหม่ → `setupSocket` ของ discord ส่ง `bridge_info { group, platform, channel }` | [discord.js:98-100](server/features/discord.js#L98-L100) |
+| 1 | socket ใหม่ → `setupSocket` ของ discord ส่ง `bridge_info { group, platform, channel }` | [discord.js:103-105](server/features/discord.js#L103-L105) |
 | 2 | Client เก็บไว้ใน `bridges` → แสดง `⇄ discord` ข้างชื่อกลุ่ม และ "bridged to Discord #channel" ในหัวห้อง | [App.jsx:96-97](client/src/App.jsx#L96-L97), [:250](client/src/App.jsx#L250), [:315](client/src/App.jsx#L315) |
 
 **ความปลอดภัย / ความเป็นส่วนตัว**

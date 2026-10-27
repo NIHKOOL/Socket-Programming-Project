@@ -38,11 +38,14 @@ Features: cloud, discord (#discord <-> channel 1234567890)
 
 | log | สาเหตุ | แก้ |
 |---|---|---|
-| `discord (off: set DISCORD_BOT_TOKEN + DISCORD_CHANNEL_ID)` | ไม่ได้ตั้ง env | ตรวจ `server/.env` / Environment บน Render |
+| `discord (off: set DISCORD_BOT_TOKEN + DISCORD_CHANNEL_ID)` | ไม่ได้ตั้ง env | บนเครื่อง: ตรวจ `server/.env` / **บน Render: `server/.env` ไม่ถูก push ขึ้น GitHub (gitignore) ต้องใส่ใน Dashboard → Environment เอง** |
+| ไม่มีบรรทัด `[discord] logged in as …` เลย หลัง `connecting to Discord Gateway...` | กำลังต่อ / ต่อไม่สำเร็จ | รอสักครู่ แล้วดูว่ามี `login failed` หรือ `cannot open channel` ตามมาไหม |
+| `not connected to Discord — message from … NOT forwarded` | ส่งจากแอปแต่ bot ยังไม่ได้ต่อ Discord | ดู log `[discord]` ตอนเริ่ม server (แถวอื่นในตารางนี้) |
+| `got an empty message … enable MESSAGE CONTENT INTENT` | พิมพ์ใน Discord แต่ bot อ่านเนื้อหาไม่ได้ | ข้อ 1.2 แล้ว restart server |
 | `login failed: An invalid token was provided.` | token ผิด / ถูก reset | Reset Token ใหม่แล้วใส่อีกครั้ง |
 | `login failed: Used disallowed intents` | ไม่ได้เปิด MESSAGE CONTENT INTENT | ข้อ 1.2 |
 | `cannot open channel ...: Missing Access` | bot ไม่ได้อยู่ใน server / ไม่มีสิทธิ์ดู channel | ข้อ 1.3 / ตั้ง permission ของ channel |
-| ข้อความจาก Discord มาแต่เป็นข้อความว่าง | ไม่ได้เปิด MESSAGE CONTENT INTENT | ข้อ 1.2 |
+
 
 ## 3. ทดสอบด้วยมือ
 
