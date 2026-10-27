@@ -118,7 +118,7 @@ ok    r03-unique-name.test.mjs  (12 passed, 0 failed)
 
 | ข้อ | รายละเอียด | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| R1 | Client ≥ 2 ตัวบนคอมคนละเครื่อง + อธิบายโปรโตคอล (what/why/how) — ทดสอบตาม [docs/R1_TEST.md](docs/R1_TEST.md) · client ต่อ server ข้ามเครื่องได้แล้ว ([หลักฐาน](docs/evidence/README.md#r2--socket-programming-only)) **เหลือทดสอบ client 2 ตัวบนคอมคนละเครื่อง** | 🟨 | |
+| R1 | Client ≥ 2 ตัวบนคอมคนละเครื่อง + อธิบายโปรโตคอล (what/why/how) — ทดสอบตาม [docs/R1_TEST.md](docs/R1_TEST.md) · ทดสอบ client 2 ตัวบนคอมคนละเครื่องผ่านแล้ว (server อยู่ร่วมเครื่องกับ client ตัวหนึ่ง) ([หลักฐาน](docs/evidence/README.md#r1--system-architecture)) | ✅ | |
 | R2 | ข้อความแชทส่งผ่าน Socket เท่านั้น — ไม่มี REST (404), log ทุก event · ทดสอบตาม [docs/R2_TEST.md](docs/R2_TEST.md) ผ่านครบ, server กับ client อยู่คนละเครื่อง ([หลักฐาน](docs/evidence/README.md#r2--socket-programming-only)) | ✅ | |
 
 ### Part 2 — Fundamental (7) ⚠️ ต้องครบก่อน Part 3 จะถูกตรวจ
