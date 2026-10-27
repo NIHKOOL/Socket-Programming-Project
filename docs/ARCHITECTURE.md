@@ -60,14 +60,14 @@ groups:  Map<groupName, Set<name>> // R8–R11
 | | LAN (Part 1–2) | Cloud (Feature เสริม: `cloud`) |
 |---|---|---|
 | รัน | `server: npm start` + `client: npm run dev` (2 process) | root: `npm run build` → `npm start` (process เดียว) |
-| URL ของหน้าเว็บ | `http://<IP>:5173` (Vite) | `https://<app>.onrender.com` (server เสิร์ฟเอง) |
-| URL ของ socket | `ws://<IP>:3000` | `wss://<app>.onrender.com` (URL เดียวกับหน้าเว็บ) |
-| เข้ารหัส | ไม่มี | **TLS** ระหว่าง browser ↔ Render |
+| URL ของหน้าเว็บ | `http://<IP>:5173` (Vite) | `https://<app>.up.railway.app` (server เสิร์ฟเอง) |
+| URL ของ socket | `ws://<IP>:3000` | `wss://<app>.up.railway.app` (URL เดียวกับหน้าเว็บ) |
+| เข้ารหัส | ไม่มี | **TLS** ระหว่าง browser ↔ Railway |
 | ใครต่อได้ | เครื่องใน Wi-Fi/LAN เดียวกัน | ทุกเครื่องที่มี internet (รวมมือถือ 4G/5G) |
 | IP ที่ server เห็น | IP จริงของ client | IP ของ reverse proxy → IP จริงอ่านจาก `X-Forwarded-For` |
 
 ```
-Cloud:  browser ──HTTPS/WSS (TLS)──> Render reverse proxy ──HTTP/WS──> node server/index.js
+Cloud:  browser ──HTTPS/WSS (TLS)──> Railway edge proxy ──HTTP/WS──> node server/index.js
                                        (ใส่ X-Forwarded-For)            ├ GET /, /assets/* → client/dist
                                                                          └ /socket.io/      → Socket.IO
 ```
@@ -76,8 +76,8 @@ Cloud:  browser ──HTTPS/WSS (TLS)──> Render reverse proxy ──HTTP/WS�
 
 | Layer | Protocol | ทำไม / ใช้อย่างไร |
 |---|---|---|
-| Application | **DNS** | แปลงชื่อ `<app>.onrender.com` เป็น IP ของ Render (บน LAN เราพิมพ์ IP ตรง ๆ) |
-| Application/Transport | **TLS** (HTTPS, WSS) | เข้ารหัสข้อมูลระหว่างทาง ข้อความแชทที่วิ่งผ่าน internet ไม่ถูกอ่าน/แก้ระหว่างทาง Render จัดการใบรับรองให้ |
+| Application | **DNS** | แปลงชื่อ `<app>.up.railway.app` เป็น IP ของ Railway (บน LAN เราพิมพ์ IP ตรง ๆ) |
+| Application/Transport | **TLS** (HTTPS, WSS) | เข้ารหัสข้อมูลระหว่างทาง ข้อความแชทที่วิ่งผ่าน internet ไม่ถูกอ่าน/แก้ระหว่างทาง Railway จัดการใบรับรองให้ |
 | Application | **HTTP header `X-Forwarded-For`** | reverse proxy บอก IP จริงของ client ให้ server (ใช้ใน log) |
 
 **Feature discord: server ของเราเป็น client ของบริการอื่น**

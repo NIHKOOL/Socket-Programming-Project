@@ -28,7 +28,7 @@ DISCORD_CHANNEL_ID=<id จากข้อ 1.4>
 DISCORD_GROUP=discord
 ```
 
-**บน Render**: Dashboard → service → **Environment** → เพิ่ม 3 ตัวเดียวกัน → Save (Render จะ deploy ใหม่ให้)
+**บน Railway**: service → แท็บ **Variables** → เพิ่ม 3 ตัวเดียวกัน (Railway จะ deploy ใหม่ให้)
 
 เริ่ม server แล้วต้องเห็นใน log:
 ```
@@ -38,8 +38,8 @@ Features: cloud, discord (#discord <-> channel 1234567890)
 
 | log | สาเหตุ | แก้ |
 |---|---|---|
-| `discord (off: set DISCORD_BOT_TOKEN + DISCORD_CHANNEL_ID)` | ไม่ได้ตั้ง env | บนเครื่อง: ตรวจ `server/.env` / **บน Render: `server/.env` ไม่ถูก push ขึ้น GitHub (gitignore) ต้องใส่ใน Dashboard → Environment เอง** |
-| ไม่มีบรรทัด `[discord] logged in as …` เลย หลัง `connecting to Discord Gateway...` | กำลังต่อ / ต่อไม่สำเร็จ | รอสักครู่ แล้วดูว่ามี `login failed` หรือ `cannot open channel` ตามมาไหม |
+| `discord (off: set DISCORD_BOT_TOKEN + DISCORD_CHANNEL_ID)` | ไม่ได้ตั้ง env | บนเครื่อง: ตรวจ `server/.env` / **บน Cloud: `server/.env` ไม่ถูก push ขึ้น GitHub (gitignore) ต้องใส่ใน Variables ของ Railway เอง** |
+| `connecting to Discord Gateway...` แล้ว**เงียบไปเลย** (ไม่มี `logged in` และไม่มี `login failed`) / `still not connected after 30s` / `rate limited on …` | login ค้าง: Discord จำกัดหรือบล็อก IP ของ Cloud host ที่ใช้ร่วมกัน (เจอบน Render แบบฟรี จึงย้ายไป Railway) | ดูบรรทัด `[discord][debug]` ว่าค้างที่ขั้นไหน แล้ว**รันบนเครื่องด้วย `server/.env` เดียวกันเพื่อเทียบ** ถ้าบนเครื่องต่อได้ แปลว่าปัญหาอยู่ที่ host |
 | `not connected to Discord — message from … NOT forwarded` | ส่งจากแอปแต่ bot ยังไม่ได้ต่อ Discord | ดู log `[discord]` ตอนเริ่ม server (แถวอื่นในตารางนี้) |
 | `got an empty message … enable MESSAGE CONTENT INTENT` | พิมพ์ใน Discord แต่ bot อ่านเนื้อหาไม่ได้ | ข้อ 1.2 แล้ว restart server |
 | `login failed: An invalid token was provided.` | token ผิด / ถูก reset | Reset Token ใหม่แล้วใส่อีกครั้ง |

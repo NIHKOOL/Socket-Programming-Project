@@ -73,8 +73,8 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 
 | # | Feature | ชื่อใน code | สถานะ | หัวข้อ |
 |---|---|---|---|---|
-| 1 | Deploy บน Cloud | `cloud` | ✅ deploy แล้ว (รอเก็บหลักฐาน) | [Feature 1 — Cloud](#feature-1--cloud) |
-| 2 | Discord bridge: กลุ่ม `#discord` ↔ channel ใน Discord จริง | `discord` | 🟨 โค้ดเสร็จ รอตั้ง bot + ทดสอบกับ Discord จริง | [Feature 2 — Discord bridge](#feature-2--discord-bridge) |
+| 1 | Deploy บน Cloud | `cloud` | ⏸ พักไว้ (โค้ดยังอยู่ ยังไม่นับคะแนน) | [Feature 1 — Cloud](#feature-1--cloud) |
+| 2 | Discord bridge: กลุ่ม `#discord` ↔ channel ใน Discord จริง | `discord` | ✅ ใช้งานได้บนเครื่อง (รอเก็บหลักฐาน) | [Feature 2 — Discord bridge](#feature-2--discord-bridge) |
 | 3 | AI ผ่าน slash command (`/ai`, `/summarize`) **(AI บังคับ)** | `ai` | ⬜ | — |
 | 4 | (ยังไม่เลือก: ส่งไฟล์ / `/ping` + typing) | — | ⬜ | — |
 
@@ -84,8 +84,10 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 
 ## Feature 1 — Cloud
 
-> server ตัวเดียวเสิร์ฟทั้งหน้าเว็บและ Socket.IO → deploy บน Cloud (Render) แล้วใช้งานจากที่ไหนก็ได้ รวมถึงมือถือที่ใช้ 4G
+> server ตัวเดียวเสิร์ฟทั้งหน้าเว็บและ Socket.IO → deploy บน Cloud (Railway) แล้วใช้งานจากที่ไหนก็ได้ รวมถึงมือถือที่ใช้ 4G
 > Checklist + ขั้นตอน deploy: [docs/features/cloud_TEST.md](docs/features/cloud_TEST.md)
+>
+> **⏸ พักไว้ (2026-10-28):** Render ใช้งานได้ แต่ bot ของ Discord login ไม่ได้บน Render และ Railway ใช้ไม่ได้ ตอนนี้จึงยังไม่นับเป็นคะแนน โค้ดยังอยู่ (`npm run build && npm start` ใช้รันแบบ port เดียวบนเครื่องได้)
 
 **ไฟล์ที่เกี่ยวข้อง**
 
@@ -95,19 +97,19 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 | [client/src/socket.js:7-9](client/src/socket.js#L7-L9) | (แก้ core จุดเดียว) build แล้ว Server URL = URL เดียวกับหน้าเว็บ |
 | [package.json](package.json) (root) | `npm run build` / `npm start` ให้ Cloud ใช้ (ติดตั้ง + build ทั้ง 2 ฝั่งในคำสั่งเดียว) |
 
-**ลำดับการทำงาน: deploy (Render)**
+**ลำดับการทำงาน: deploy (Railway)**
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | Render รัน `npm run build` → ติดตั้ง dependency ของ server + client → `vite build` สร้าง `client/dist` | [package.json](package.json) |
-| 2 | Render รัน `npm start` → `node server/index.js` โดยส่ง port มาทาง env `PORT` | [server/index.js:9](server/index.js#L9) |
+| 1 | Cloud host รัน `npm run build` → ติดตั้ง dependency ของ server + client → `vite build` สร้าง `client/dist` | [package.json](package.json) |
+| 2 | Railway รัน `npm start` → `node server/index.js` โดยส่ง port มาทาง env `PORT` | [server/index.js:9](server/index.js#L9) |
 | 3 | ตอนโหลด feature: ถ้ามี `client/dist/index.html` → ชื่อ feature = `cloud` (log `Features: cloud`) | [server/features/cloud.js:48](server/features/cloud.js#L48) |
 
-**ลำดับการทำงาน: ผู้ใช้เปิด `https://<app>.onrender.com` บนมือถือ**
+**ลำดับการทำงาน: ผู้ใช้เปิด `https://<app>.up.railway.app` บนมือถือ**
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | Browser → reverse proxy ของ Render (HTTPS/TLS) → ส่งต่อเป็น HTTP ธรรมดาเข้า server พร้อม header `X-Forwarded-For` | — (ทำโดย Render) |
+| 1 | Browser → edge proxy ของ Railway (HTTPS/TLS) → ส่งต่อเป็น HTTP ธรรมดาเข้า server พร้อม header `X-Forwarded-For` | — (ทำโดย Railway) |
 | 2 | core รับ HTTP request → ถาม feature ก่อน (`handleHttp`) | [server/index.js:17](server/index.js#L17) |
 | 3 | cloud: รับเฉพาะ `GET`/`HEAD` | [server/features/cloud.js:51](server/features/cloud.js#L51) |
 | 4 | แปลง URL → ไฟล์ใน `client/dist` (`/` → `index.html`) | [server/features/cloud.js:24-38](server/features/cloud.js#L24-L38) |
@@ -124,10 +126,10 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 
 | Protocol / กลไก | ใช้ทำอะไร |
 |---|---|
-| **TLS** (HTTPS / WSS) | เข้ารหัสข้อมูลระหว่าง browser ↔ Render ข้อความแชทไม่ถูกอ่านระหว่างทาง (บน LAN เราใช้ `http://` / `ws://` ไม่เข้ารหัส) |
-| **Reverse proxy** | Render รับ connection จาก internet แล้วส่งต่อให้ server ของเรา → server เห็น IP ของ proxy |
+| **TLS** (HTTPS / WSS) | เข้ารหัสข้อมูลระหว่าง browser ↔ Railway ข้อความแชทไม่ถูกอ่านระหว่างทาง (บน LAN เราใช้ `http://` / `ws://` ไม่เข้ารหัส) |
+| **Reverse proxy** | Railway รับ connection จาก internet แล้วส่งต่อให้ server ของเรา → server เห็น IP ของ proxy |
 | **X-Forwarded-For** | header ที่ proxy ใส่ IP จริงของ client มาให้ |
-| **DNS** | `<app>.onrender.com` → IP ของ Render (บน LAN เราใช้ IP ตรง ๆ ไม่ผ่าน DNS) |
+| **DNS** | `<app>.up.railway.app` → IP ของ Railway (บน LAN เราใช้ IP ตรง ๆ ไม่ผ่าน DNS) |
 
 **Test:** [server/tests/features/f01-cloud.test.mjs](server/tests/features/f01-cloud.test.mjs) · `npm test -- f01`
 
@@ -166,7 +168,7 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 | 2 | ไม่มี token หรือ channel → feature ปิดตัวเอง (`discord (off: ...)`) แอปทำงานปกติ | [:31](server/features/discord.js#L31), [:62](server/features/discord.js#L62) |
 | 3 | core เรียก `initFeatures` → สร้างกลุ่ม `#discord` แบบ**ไม่มีสมาชิก** ใครอยากคุยก็กด `[join]` เอง (R10) | [server/index.js:38](server/index.js#L38) → [discord.js:64-69](server/features/discord.js#L64-L69) |
 | 4 | สร้าง Discord client ขอ intent: Guilds, GuildMessages, **MessageContent** (ต้องเปิดใน Developer Portal) | [discord.js:72-74](server/features/discord.js#L72-L74) |
-| 5 | `client.login(token)` → ต่อ Discord Gateway (WSS) → `ClientReady` → เปิด channel ตาม id | [discord.js:99](server/features/discord.js#L99), [:76-83](server/features/discord.js#L76-L83) |
+| 5 | `client.login(token)` → ต่อ Discord Gateway (WSS) → `ClientReady` → เปิด channel ตาม id | [discord.js:121](server/features/discord.js#L121), [:76-83](server/features/discord.js#L76-L83) |
 
 **ลำดับการทำงาน: ขาออก (แอป → Discord)**
 
@@ -174,9 +176,9 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 |---|---|---|
 | 1 | สมาชิก `#discord` ส่งข้อความ → core ตรวจสิทธิ์ (R11) → ส่งให้สมาชิกในแอป | [server/index.js:177-178](server/index.js#L177-L178) |
 | 2 | core เรียก `onGroupMessage(msg)` | [server/index.js:179](server/index.js#L179) |
-| 3 | discord: ไม่ใช่กลุ่มที่ bridge → ข้าม / bot ยังต่อ Discord ไม่สำเร็จ → **log เตือน** `NOT forwarded` (ไม่ข้ามเงียบ ๆ) | [discord.js:110-115](server/features/discord.js#L110-L115) |
+| 3 | discord: ไม่ใช่กลุ่มที่ bridge → ข้าม / bot ยังต่อ Discord ไม่สำเร็จ → **log เตือน** `NOT forwarded` (ไม่ข้ามเงียบ ๆ) | [discord.js:132-137](server/features/discord.js#L132-L137) |
 | 4 | แปลงเป็น `**C1**: text` (escape markdown ในชื่อ) | [discord.js:36-38](server/features/discord.js#L36-L38) |
-| 5 | `channel.send(...)` ผ่าน REST API โดย `allowedMentions: { parse: [] }` → **ไม่ ping `@everyone` / `@user`** | [discord.js:117-119](server/features/discord.js#L117-L119) |
+| 5 | `channel.send(...)` ผ่าน REST API โดย `allowedMentions: { parse: [] }` → **ไม่ ping `@everyone` / `@user`** | [discord.js:139-141](server/features/discord.js#L139-L141) |
 
 **ลำดับการทำงาน: ขาเข้า (Discord → แอป)**
 
@@ -193,11 +195,11 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | socket ใหม่ → `setupSocket` ของ discord ส่ง `bridge_info { group, platform, channel }` | [discord.js:103-105](server/features/discord.js#L103-L105) |
+| 1 | socket ใหม่ → `setupSocket` ของ discord ส่ง `bridge_info { group, platform, channel }` | [discord.js:125-127](server/features/discord.js#L125-L127) |
 | 2 | Client เก็บไว้ใน `bridges` → แสดง `⇄ discord` ข้างชื่อกลุ่ม และ "bridged to Discord #channel" ในหัวห้อง | [App.jsx:96-97](client/src/App.jsx#L96-L97), [:250](client/src/App.jsx#L250), [:315](client/src/App.jsx#L315) |
 
 **ความปลอดภัย / ความเป็นส่วนตัว**
-- **token ห้าม commit** อยู่ใน `server/.env` (gitignore แล้ว) หรือ Environment ของ Render เท่านั้น
+- **token ห้าม commit** อยู่ใน `server/.env` (gitignore แล้ว) หรือ Variables ของ Railway เท่านั้น
 - ข้อความในกลุ่ม `#discord` **คนใน Discord channel เห็นด้วย** UI จึงบอกไว้ชัดเจนด้วยป้าย `⇄ discord` / "bridged to Discord" ส่วนกลุ่มอื่นและ private message ไม่ถูกส่งออกไปเลย
 - ข้อความจาก Discord มีป้าย `[discord]` เสมอ คนใน Discord จึงปลอมเป็นผู้ใช้ในแอปไม่ได้
 

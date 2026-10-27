@@ -66,7 +66,7 @@ cd ../client && npm install
 ```
 
 Feature เสริมบางตัวต้องใช้ค่าลับ (token / API key) ให้คัดลอก [server/.env.example](server/.env.example) เป็น `server/.env` แล้วใส่ค่า (**ห้าม commit** `.env`)
-ถ้าไม่ใส่ feature นั้นจะปิดตัวเอง แอปยังทำงานปกติ บน Render ให้ใส่ค่าเดียวกันที่ Dashboard → Environment
+ถ้าไม่ใส่ feature นั้นจะปิดตัวเอง แอปยังทำงานปกติ ถ้า deploy บน Cloud ให้ใส่ค่าเดียวกันใน environment variables ของ host
 
 ## วิธีรัน
 
@@ -91,7 +91,10 @@ npm run dev
 > ถ้าไม่อยากรัน client ทุกเครื่อง ให้เปิด `http://<IP เครื่องที่รัน client>:5173` จากเครื่องอื่นได้เลย เพราะ `npm run dev` ใช้ `--host` อยู่แล้ว
 > แต่ละ browser tab นับเป็น client 1 ตัว ตอน demo R1 ต้องเปิดจากคอมคนละเครื่องจริง
 
-### รันแบบ Cloud (server ตัวเดียวเสิร์ฟทั้งหน้าเว็บและ socket)
+### รันแบบ port เดียว (แนะนำสำหรับ demo / ทดสอบข้ามเครื่อง)
+
+server ตัวเดียวเสิร์ฟทั้งหน้าเว็บและ socket ที่ port 3000 เปิด firewall แค่ port เดียว และช่อง `server>` ในหน้า login กรอกให้อัตโนมัติ
+(ตอนเขียนโค้ดใช้แบบ 2 port ด้านบนดีกว่า เพราะหน้าเว็บอัปเดตเองทันที / ต้องปิด server แบบ 2 port ก่อน เพราะใช้ port 3000 เหมือนกัน)
 
 ```bash
 # ที่ root ของโปรเจกต์
@@ -99,7 +102,7 @@ npm run build    # ติดตั้ง dependency ของ server + client �
 npm start        # เปิด http://localhost:3000 (เครื่องอื่น/มือถือใน Wi-Fi เดียวกัน: http://<IP>:3000)
 ```
 
-เป็นคำสั่งเดียวกับที่ Render ใช้ deploy ขั้นตอน deploy ทั้งหมดอยู่ใน [docs/features/cloud_TEST.md](docs/features/cloud_TEST.md)
+เป็นคำสั่งเดียวกับที่ใช้ deploy บน Cloud (Feature cloud พักไว้ก่อน) ขั้นตอน deploy ทั้งหมดอยู่ใน [docs/features/cloud_TEST.md](docs/features/cloud_TEST.md)
 
 ### เชื่อมต่อข้ามเครื่อง
 
@@ -160,8 +163,8 @@ ok    features/f00-feature-hooks.test.mjs  (3 passed, 0 failed)
 
 | # | ฟีเจอร์ | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| 1 | Deploy บน Cloud (`cloud`) — server เสิร์ฟหน้าเว็บเอง URL เดียว · [checklist + วิธี deploy](docs/features/cloud_TEST.md) · **deploy แล้วใช้งานได้** (หลักฐานยังไม่ได้เก็บ) | ✅ | |
-| 2 | Discord bridge (`discord`) — กลุ่ม `#discord` ↔ channel ใน Discord จริง · [checklist + วิธีตั้ง bot](docs/features/discord_TEST.md) · โค้ดเสร็จ **รอตั้ง bot + ทดสอบกับ Discord จริง** | 🟨 | |
+| 1 | Deploy บน Cloud (`cloud`) — **⏸ พักไว้ ยังไม่นับคะแนน** (Render ใช้ได้แต่ Discord login ไม่ได้ / Railway ใช้ไม่ได้) โค้ดยังอยู่ ใช้รันแบบ port เดียวบนเครื่องได้ · [checklist](docs/features/cloud_TEST.md) | ⏸ | |
+| 2 | Discord bridge (`discord`) — กลุ่ม `#discord` ↔ channel ใน Discord จริง · [checklist + วิธีตั้ง bot](docs/features/discord_TEST.md) · **ใช้งานได้บนเครื่อง** (หลักฐานยังไม่ได้เก็บ) | ✅ | |
 | 3 | AI ผ่าน slash command `/ai`, `/summarize` (`ai`) — **AI บังคับอย่างน้อย 1** | ⬜ | |
 | 4 | (ยังไม่เลือก: ส่งไฟล์ / `/ping` + typing) | ⬜ | |
 

@@ -11,9 +11,9 @@
 |---|---|---|---|
 | _(ยังไม่มี)_ | | | |
 
-> ⚠️ deploy แล้วใช้งานได้ (2026-10-28) แต่**ยังไม่ได้เก็บหลักฐาน**
+> ⏸ Feature cloud พักไว้ (2026-10-28) ยังไม่ต้องเก็บหลักฐาน
 >
-> รูปที่ต้องเก็บใน `cloud/` (วิธีอยู่ใน [cloud_TEST.md](../../features/cloud_TEST.md)): `cloud-render-live.png`, `cloud-phone-4g.jpg`, `cloud-wss.png`, `cloud-render-logs.png`
+> รูปที่ต้องเก็บใน `cloud/` (วิธีอยู่ใน [cloud_TEST.md](../../features/cloud_TEST.md)): `cloud-railway-active.png`, `cloud-phone-4g.jpg`, `cloud-wss.png`, `cloud-railway-logs.png`
 
 ## discord
 
@@ -21,4 +21,6 @@
 |---|---|---|---|
 | _(ยังไม่มี)_ | | | |
 
+> ✅ ใช้งานได้บนเครื่อง (2026-10-28) แต่**ยังไม่ได้เก็บหลักฐาน**
+>
 > รูปที่ต้องเก็บใน `discord/` (วิธีอยู่ใน [discord_TEST.md](../../features/discord_TEST.md)): `discord-app-to-discord.png`, `discord-discord-to-app.png`, `discord-server-log.png`, `discord-non-member.png`

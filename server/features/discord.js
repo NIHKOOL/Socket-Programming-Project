@@ -13,7 +13,7 @@
 // ไม่ได้ตั้ง token หรือ channel → feature ปิดตัวเอง แอปทำงานปกติ
 
 import { fileURLToPath } from "node:url";
-import { Client, Events, GatewayIntentBits, escapeMarkdown } from "discord.js";
+import { Client, Events, GatewayIntentBits, RESTEvents, escapeMarkdown } from "discord.js";
 
 // โหลด server/.env (ถ้ามี) ตอนรันบนเครื่อง ส่วน test (NODE_ENV=test) ไม่โหลด เพื่อไม่ให้ test ไปต่อ Discord จริง
 if (process.env.NODE_ENV !== "test") {
@@ -96,6 +96,28 @@ export default {
     });
 
     client.on(Events.Error, (err) => console.error(`[discord] ${err.message}`));
+
+    // ---- log วินิจฉัยตอน login: ถ้าค้างจะเห็นว่าค้างที่ขั้นไหน ----
+    // debug ของ discord.js แสดงทีละขั้น (ขอ gateway URL → เปิด WebSocket → identify → ready) จะ log เฉพาะก่อน ready
+    // และตัดบรรทัดที่มีคำว่า token ทิ้ง เพื่อไม่ให้ token หลุดไปอยู่ใน log ของ Render
+    let ready = false;
+    client.once(Events.ClientReady, () => (ready = true));
+    client.on(Events.Debug, (info) => {
+      if (!ready && !/token/i.test(info)) console.log(`[discord][debug] ${info.split("\n")[0]}`);
+    });
+    // Discord จำกัดจำนวน request (rate limit) → discord.js จะรอเงียบ ๆ จึง log ไว้ให้เห็น
+    client.rest.on(RESTEvents.RateLimited, (info) =>
+      console.warn(`[discord] rate limited on ${info.method} ${info.route}: retry in ${Math.round(info.timeToReset / 1000)}s (global: ${info.global})`)
+    );
+    setTimeout(() => {
+      if (!ready) {
+        console.warn(
+          "[discord] still not connected after 30s — Discord may be rate-limiting/blocking this host's shared IP. " +
+            "Compare by running locally with the same server/.env"
+        );
+      }
+    }, 30_000).unref();
+
     client.login(TOKEN).catch((err) => console.error(`[discord] login failed: ${err.message}`));
   },
 

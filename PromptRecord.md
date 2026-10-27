@@ -379,3 +379,41 @@
   > พิมพ์หา Discord แล้วไม่ขึ้น Discord พิมพ์ก็ไม่ขึ้น Log ใน Render ล่าสุดคือการ Join ห้อง
 - **ผลลัพธ์:** วิเคราะห์ว่า log ไม่มี `[discord]` เลย สาเหตุที่น่าจะเป็นที่สุดคือไม่ได้ตั้ง env บน Render (`server/.env` ไม่ถูก push) / แก้จุดอ่อนในโค้ด: `server/features/discord.js` เพิ่ม log `connecting to Discord Gateway...`, เตือน `NOT forwarded` เมื่อ bot ยังไม่ต่อ (เดิมข้ามเงียบ ๆ), เตือนให้เปิด MESSAGE CONTENT INTENT เมื่อได้ข้อความว่าง / อัปเดตตารางแก้ปัญหาใน `discord_TEST.md` + ลิงก์ใน HandbookFeatures
 - **หมายเหตุ:** `npm test` 12/12 รอผู้ใช้เช็ก log ตอนเริ่ม server บน Render (บรรทัด `Features:`)
+
+### [2026-10-28] Discord: login ค้างบน Render
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature 2 (Discord)
+- **Prompt:**
+  > (วาง log จาก Render: `connecting to Discord Gateway...` แล้วไม่มี `logged in` / `login failed` ตามมา และส่งข้อความแล้วได้ `NOT forwarded`)
+- **ผลลัพธ์:** วิเคราะห์ว่า env ถูกต้องแล้ว แต่ login ค้าง (ไม่สำเร็จและไม่ล้ม) สาเหตุที่น่าจะเป็นที่สุดคือ Discord rate limit / บล็อก shared IP ของ Render / เพิ่ม log วินิจฉัยใน `server/features/discord.js`: `[discord][debug]` ทุกขั้นก่อน ready (กรองบรรทัดที่มีคำว่า token), log `rate limited`, เตือนเมื่อผ่าน 30 วินาทีแล้วยังต่อไม่สำเร็จ / อัปเดตตารางแก้ปัญหาใน `discord_TEST.md` + ลิงก์ใน HandbookFeatures
+- **หมายเหตุ:** บนเครื่องของ AI ติดต่อ Discord API ได้ปกติ (token ปลอมถูกปฏิเสธทันที) รอผลจาก Render (log debug) + ผลจากการรันบนเครื่องด้วย token จริง
+
+### [2026-10-28] ย้าย Cloud host จาก Render ไป Railway
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature 1 (Cloud) + Feature 2 (Discord)
+- **Prompt:**
+  > งั้นเปลี่ยนเป็น Host ผ่าน Railway
+- **ผลลัพธ์:** เพิ่ม `railway.json` (build `npm run build`, start `npm start`, healthcheck `/`) โค้ดแอปไม่ต้องแก้ / เขียน `docs/features/cloud_TEST.md` ใหม่เป็นขั้นตอน deploy บน Railway (Variables, Region Singapore, Generate Domain) + หัวข้อ "ย้ายจาก Render" (ต้องลบ token ออกจาก Render กัน bot ซ้ำ) / เปลี่ยน Render → Railway ใน HandbookFeatures, ARCHITECTURE, README, discord_TEST, evidence (ชื่อไฟล์หลักฐาน `cloud-railway-*.png`)
+- **หมายเหตุ:** ยังไม่ได้ deploy จริง ยังไม่ยืนยันว่า Discord login บน Railway ได้ (ต้องดู log `[discord] logged in as ...`)
+
+### [2026-10-28] Discord ใช้ได้บนเครื่อง + พัก Feature cloud
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature cloud, Feature discord
+- **Prompt:**
+  > โอเคตอนนี้ใช้งานได้คิดว่าจะลบส่วนของ Cloud ไปก่อน
+  >
+  > (ตอบคำถาม: Discord bridge บนเครื่องใช้ได้ / Cloud: พักไว้ก่อน ไม่ลบโค้ด)
+- **ผลลัพธ์:** ลบ `railway.json` (ยังไม่เคย commit) / สถานะ: discord ✅ (ใช้ได้บนเครื่อง รอเก็บหลักฐาน), cloud ⏸ พักไว้ไม่นับคะแนน (โค้ด cloud.js + root package.json ยังอยู่) / อัปเดต README, HandbookFeatures, cloud_TEST (หมายเหตุว่าพักไว้ + ให้ลบ token ออกจาก Render), evidence
+- **หมายเหตุ:** การที่ Discord ใช้ได้บนเครื่องยืนยันว่าปัญหาก่อนหน้านี้อยู่ที่ Render (host)
+
+### [2026-10-28] ยังต้องเปิด 2 port ไหม
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** การรันแอป
+- **Prompt:**
+  > แล้วตอนนี้เรายังต้องเปิด 2 port แบบเดิมไหมเพราะไม่มี cloud แล้ว
+- **ผลลัพธ์:** ไม่ต้อง: โค้ด cloud.js ยังอยู่ ใช้แบบ port เดียว (`npm run build && npm start`) สำหรับ demo/ทดสอบข้ามเครื่อง ส่วนแบบ 2 port ใช้ตอนเขียนโค้ด / เปลี่ยนชื่อหัวข้อใน README จาก "รันแบบ Cloud" เป็น "รันแบบ port เดียว" พร้อมอธิบายว่าใช้ตอนไหน
+- **หมายเหตุ:** —
