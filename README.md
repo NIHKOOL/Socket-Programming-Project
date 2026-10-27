@@ -17,7 +17,8 @@
 ```
 .
 ├── server/              # โค้ดฝั่ง Server (ต้องแยกจาก client ตามโจทย์)
-│   └── index.js         #   Socket.IO server: เก็บรายชื่อ/กลุ่ม และ route ข้อความ
+│   ├── index.js         #   Socket.IO server: เก็บรายชื่อ/กลุ่ม และ route ข้อความ
+│   └── tests/           #   test อัตโนมัติ 1 ไฟล์ต่อ requirement (npm test)
 ├── client/              # โค้ดฝั่ง Client (React)
 │   └── src/
 │       ├── socket.js    #   ฟังก์ชันเชื่อมต่อ Socket.IO
@@ -91,6 +92,26 @@ npm run dev
 3. เปิด port 3000 (และ 5173 ถ้าให้เครื่องอื่นเปิดหน้าเว็บ) ใน Firewall ของเครื่อง Server (Windows Defender Firewall → Inbound Rules) หรือกด Allow ตอน Windows ถามครั้งแรก
 4. Wi-Fi มหาวิทยาลัยบางแห่งบล็อกการเชื่อมต่อระหว่างเครื่อง ถ้าต่อไม่ได้ให้ลองใช้ Mobile Hotspot
 
+## Test อัตโนมัติ
+
+```bash
+cd server
+npm test            # รันทั้งหมด
+npm test -- r07     # รันเฉพาะ R7
+```
+
+แต่ละไฟล์ใน `server/tests/` จะได้ server ตัวใหม่ของตัวเอง (port 4100 ขึ้นไป) **ไม่กระทบ server ที่รันอยู่ที่ port 3000**
+ไฟล์ใช้ `socket.io-client` จำลอง client หลายตัวต่อ server จริง แล้วตรวจว่าใครได้รับ event อะไรบ้าง
+
+```
+ok    r00-smoke.test.mjs  (7 passed, 0 failed)
+ok    r03-unique-name.test.mjs  (12 passed, 0 failed)
+...
+9/9 test files passed
+```
+
+ควรรันทุกครั้งก่อน commit ถ้าแก้ `server/index.js` หรือ `client/src/rooms.js`
+
 ## สถานะ Requirement
 
 ### Part 1 — System Architecture (1.5) ⚠️ ต้องครบก่อน Part 2 จะถูกตรวจ
@@ -112,7 +133,7 @@ npm run dev
 | R8 | สร้างกลุ่มได้ (เริ่มต้นมีแค่ผู้สร้าง) กลุ่มที่ไม่มีสมาชิกยังอยู่ · ทดสอบตาม [docs/R8_TEST.md](docs/R8_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r8--create-group)) | ✅ | |
 | R9 | เห็นรายชื่อกลุ่มทั้งหมด + สมาชิก อัปเดต real-time · ทดสอบตาม [docs/R9_TEST.md](docs/R9_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r9--group-list-with-members)) | ✅ | |
 | R10 | เข้ากลุ่มด้วยตัวเองเท่านั้น (ปุ่ม "เข้าร่วม") · ทดสอบตาม [docs/R10_TEST.md](docs/R10_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r10--join-group-by-self)) | ✅ | |
-| R11 | ส่งข้อความในกลุ่ม — เห็นแค่สมาชิก · ทดสอบตาม [docs/R11_TEST.md](docs/R11_TEST.md) | 🟨 | |
+| R11 | ส่งข้อความในกลุ่ม — เห็นแค่สมาชิก · ทดสอบตาม [docs/R11_TEST.md](docs/R11_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r11--group-message)) | ✅ | |
 
 ### Part 3 — Special Features (4, ข้อละ 1)
 

@@ -101,9 +101,14 @@
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
-| [R6-group-room.png](R5_R6/R6-group-room.png) | 2026-10-27 | (ใช้ซ้ำจาก R6) | สมาชิก 3 คนส่งข้อความในห้อง g1 พร้อมชื่อผู้ส่ง (ส่วน "send a text message to the group") |
-
-> รูปที่ต้องเก็บใน `R11/` (วิธีอยู่ใน [R11_TEST.md](../R11_TEST.md)): `R11-members-chat.png`, `R11-outsider-c3.png`, `R11-outsider-ws-frames.png`, `R11-not-a-member.png`, `R11-server-log.png`
+| [R11-member-chat-c1.png](R11/R11-member-chat-c1.png), [R11-member-chat-c2.png](R11/R11-member-chat-c2.png) | 2026-10-28 | client `localhost:5173` | C1 กับ C2 (สมาชิก g1) เห็นบทสนทนาเดียวกัน |
+| [R11-outsider-c3.png](R11/R11-outsider-c3.png) | 2026-10-28 | เหมือนด้านบน | C3 (ไม่ใช่สมาชิก) ไม่มี unread ที่ g1 |
+| [R11-insider-ws-frames.png](R11/R11-insider-ws-frames.png) | 2026-10-28 | เหมือนด้านบน | สมาชิก C2 ได้รับ frame `group_msg` เวลา 00:29:38 และ 00:29:43 |
+| [R11-outsider-ws-frames.png](R11/R11-outsider-ws-frames.png) | 2026-10-28 | เหมือนด้านบน | **Only members:** ช่วงเวลาเดียวกัน C3 ได้แค่ `group_list` + ping/pong (`2`/`3`) **ไม่มี `group_msg`** (ดูคู่กับรูปด้านบน) |
+| [R11-not-a-member.png](R11/R11-not-a-member.png) | 2026-10-28 | เหมือนด้านบน | C3 ส่ง `group_msg` ผ่าน Console → "ยังไม่ได้เข้ากลุ่มนี้" |
+| [R11-joined-later-no-history.png](R11/R11-joined-later-no-history.png) | 2026-10-28 | เหมือนด้านบน | C3 join ทีหลัง → เห็นเฉพาะข้อความใหม่ ไม่เห็นข้อความก่อนหน้า |
+| [R11-server-log.png](R11/R11-server-log.png) | 2026-10-28 | เหมือนด้านบน | `[recv] C1 -> group_msg {"group":"g1",...}` |
+| [R6-group-room.png](R5_R6/R6-group-room.png) | 2026-10-27 | (ใช้ซ้ำจาก R6) | สมาชิก 3 คนส่งข้อความในห้อง g1 พร้อมชื่อผู้ส่ง |
 
 ---
 

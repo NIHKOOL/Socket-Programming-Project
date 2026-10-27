@@ -30,9 +30,14 @@ Term project วิชา Computer Network: แอปแชท Client–Server �
 cd server && npm run dev     # server ที่ 0.0.0.0:3000 (restart อัตโนมัติ)
 cd client && npm run dev     # client ที่ http://localhost:5173 (--host เปิดให้เครื่องอื่นเข้าได้)
 cd client && npm run build   # เช็กว่า client build ผ่าน
+cd server && npm test        # รัน test อัตโนมัติทั้งหมด (แต่ละไฟล์ได้ server ใหม่ที่ port 4100+)
+cd server && npm test -- r07 # รันเฉพาะไฟล์ที่ชื่อมี "r07"
 ```
 
-ยังไม่มี test framework ถ้าจะทดสอบ server ให้เขียน script สั้น ๆ ด้วย `socket.io-client` แล้วจำลอง client หลายตัว
+Test อยู่ใน `server/tests/*.test.mjs` (1 ไฟล์ต่อ requirement) ไม่ใช้ framework แต่ใช้ `socket.io-client` จำลอง client หลายตัวต่อ server จริง
+- ใช้ `check(label, ok)` / `done()` จาก `tests/helpers.mjs` และอ่าน URL ของ server จาก `URL`
+- แก้ server เสร็จแล้วต้องรัน `npm test` ทุกครั้ง และเพิ่ม test ใหม่ทุกครั้งที่เพิ่ม event หรือกฎใหม่
+- ถ้า test ฟ้องว่าคนนอกได้รับข้อความ (R7, R11) ถือเป็นบั๊กร้ายแรง ห้ามแก้ test ให้ผ่าน
 
 ## แนวทางการเขียนโค้ด
 

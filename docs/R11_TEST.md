@@ -46,7 +46,9 @@ restart server + refresh client แล้ว login `C1`, `C2`, `C3`
 - `R11-not-a-member.png`: C3 ส่งผ่าน Console แล้วถูกปฏิเสธ
 - `R11-server-log.png`: `[recv] C1 -> group_msg ...` และการถูกปฏิเสธของ C3
 
-## ทดสอบอัตโนมัติ (ที่ AI รันแล้ว)
+## ทดสอบอัตโนมัติ
+
+รันเอง: `cd server && npm test -- r11`
 
 ผ่าน 17/17: สมาชิกได้รับข้อความ 1 ครั้ง, ผู้ส่งได้ echo 1 ครั้ง, group/from/timestamp กำหนดโดย server,
 **คนที่ไม่ใช่สมาชิก / สมาชิกของกลุ่มอื่น / socket ที่ยังไม่ register ไม่ได้รับ frame ใดเลย**,

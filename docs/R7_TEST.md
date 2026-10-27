@@ -37,7 +37,9 @@ restart server + refresh client แล้ว login `C1`, `C2`, `C3`
 - [x] `R7-server-log.png`: ยืนยันว่า C3 ออนไลน์อยู่ตอนที่ C1↔C2 คุยกัน
 - [ ] `R7-outsider-ws-frames.png`: แท็บ Messages ของ C3 ไม่มี frame `private_msg` ของ C1↔C2 _(แนะนำ ไม่บังคับ)_
 
-## ทดสอบอัตโนมัติ (ที่ AI รันแล้ว)
+## ทดสอบอัตโนมัติ
+
+รันเอง: `cd server && npm test -- r07`
 
 ผ่าน 13/13: ผู้รับได้ 1 ครั้ง, ผู้ส่งได้ echo 1 ครั้ง, from/to/timestamp ถูกต้อง,
 **คนนอก (C3) และ socket ที่ยังไม่ register ไม่ได้รับ frame ใดเลย**, ปลอม `from` ไม่ได้ (server ใช้ชื่อจริงของผู้ส่ง),
