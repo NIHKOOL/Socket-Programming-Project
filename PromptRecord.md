@@ -341,3 +341,12 @@
   > UI ฝั่ง Client ทำ Responsive ให้มือถือหน่อยได้ไหม
 - **ผลลัพธ์:** มือถือ (≤ 720px) แสดงทีละหน้า: หน้ารายชื่อ ↔ ห้องแชทเต็มจอ + ปุ่ม `[< back (n)]` (n = unread ของห้องอื่น) / `App.jsx`: `closeRoom()`, class `room-open`, `otherUnread` / `ChatRoom.jsx`: ปุ่ม back, prompt ย่อเหลือ `$` บนมือถือ, `enterKeyHint="send"` / `device.js`: ไม่ autofocus บนจอสัมผัส (คีย์บอร์ดไม่เด้งเอง) / `App.css`: `100dvh`, input 16px (กัน iPhone zoom), ปุ่มสูง ≥ 40–44px, ข้อความตัดบรรทัดเต็มจอ / `index.html`: `interactive-widget=resizes-content`, `theme-color` / เพิ่ม checklist มือถือใน `docs/R5_R6_TEST.md`, remap ลิงก์ใน Handbook 44 ตัว
 - **หมายเหตุ:** build ผ่าน, `npm test` 11/11 ยังไม่ได้ทดสอบบนมือถือจริง
+
+### [2026-10-28] Cloud ใช้งานได้แล้ว นับเป็น Feature 1
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature 1 (Cloud)
+- **Prompt:**
+  > ตอนนี้ On cloud ใช้ได้แล้วแต่ยังไม่เก็บ evidence เดี๋ยวค่อยเก็บ Cloud อันนี้นับเป็น Feature 1 ได้ไหม
+- **ผลลัพธ์:** นับได้ (โจทย์: "Cloud-based deployment ... will be marked as one special point") เปลี่ยนสถานะใน README และ HandbookFeatures เป็น ✅ และระบุใน evidence ว่ายังไม่ได้เก็บหลักฐาน
+- **หมายเหตุ:** Part 3 ต้องมีฟีเจอร์ AI อย่างน้อย 1 อย่าง / ยังต้องเก็บรูป 4 รูปตาม `docs/features/cloud_TEST.md`

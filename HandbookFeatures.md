@@ -69,7 +69,7 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 
 | # | Feature | ชื่อใน code | สถานะ | หัวข้อ |
 |---|---|---|---|---|
-| 1 | Deploy บน Cloud | `cloud` | 🟨 โค้ดเสร็จ รอ deploy | [Feature 1 — Cloud](#feature-1--cloud) |
+| 1 | Deploy บน Cloud | `cloud` | ✅ deploy แล้ว (รอเก็บหลักฐาน) | [Feature 1 — Cloud](#feature-1--cloud) |
 | 2 | AI ผ่าน slash command (`/ai`, `/summarize`) **(AI บังคับ)** | `ai` | ⬜ | — |
 | 3 | ส่งไฟล์/รูปผ่าน socket | `files` | ⬜ | — |
 | 4 | `/ping` วัด latency + typing indicator | `ping` | ⬜ | — |

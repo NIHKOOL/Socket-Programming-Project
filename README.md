@@ -163,7 +163,7 @@ ok    features/f00-feature-hooks.test.mjs  (3 passed, 0 failed)
 
 | # | ฟีเจอร์ | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| 1 | Deploy บน Cloud (`cloud`) — server เสิร์ฟหน้าเว็บเอง URL เดียว · [checklist + วิธี deploy](docs/features/cloud_TEST.md) · โค้ดเสร็จ ทดสอบบนเครื่องแล้ว **รอ deploy บน Render** | 🟨 | |
+| 1 | Deploy บน Cloud (`cloud`) — server เสิร์ฟหน้าเว็บเอง URL เดียว · [checklist + วิธี deploy](docs/features/cloud_TEST.md) · **deploy แล้วใช้งานได้** (หลักฐานยังไม่ได้เก็บ) | ✅ | |
 | 2 | AI ผ่าน slash command `/ai`, `/summarize` (`ai`) — **AI บังคับอย่างน้อย 1** | ⬜ | |
 | 3 | ส่งไฟล์/รูปผ่าน socket (`files`) | ⬜ | |
 | 4 | `/ping` วัด latency + typing indicator (`ping`) | ⬜ | |

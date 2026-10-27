@@ -11,4 +11,6 @@
 |---|---|---|---|
 | _(ยังไม่มี)_ | | | |
 
+> ⚠️ deploy แล้วใช้งานได้ (2026-10-28) แต่**ยังไม่ได้เก็บหลักฐาน**
+>
 > รูปที่ต้องเก็บใน `cloud/` (วิธีอยู่ใน [cloud_TEST.md](../../features/cloud_TEST.md)): `cloud-render-live.png`, `cloud-phone-4g.jpg`, `cloud-wss.png`, `cloud-render-logs.png`
