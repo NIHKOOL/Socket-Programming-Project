@@ -1,0 +1,4 @@
+/* Feature: discord — สี blurple ของ Discord ใช้กับป้ายและชื่อผู้ส่งที่มาจาก Discord */
+:root { --discord: #5865f2; }
+.discord-tag { color: var(--discord); font-weight: 600; font-size: 0.85em; }
+.msg.from-discord .msg-from { color: var(--discord); }

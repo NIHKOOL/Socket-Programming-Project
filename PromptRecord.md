@@ -350,3 +350,23 @@
   > ตอนนี้ On cloud ใช้ได้แล้วแต่ยังไม่เก็บ evidence เดี๋ยวค่อยเก็บ Cloud อันนี้นับเป็น Feature 1 ได้ไหม
 - **ผลลัพธ์:** นับได้ (โจทย์: "Cloud-based deployment ... will be marked as one special point") เปลี่ยนสถานะใน README และ HandbookFeatures เป็น ✅ และระบุใน evidence ว่ายังไม่ได้เก็บหลักฐาน
 - **หมายเหตุ:** Part 3 ต้องมีฟีเจอร์ AI อย่างน้อย 1 อย่าง / ยังต้องเก็บรูป 4 รูปตาม `docs/features/cloud_TEST.md`
+
+### [2026-10-28] Feature 2: Discord bridge
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature 2 (Discord)
+- **Prompt:**
+  > อยากทำให้เกี่ยวข้องกับ Discord
+  >
+  > (เลือก: เชื่อมกับ Discord จริง — bridge)
+- **ผลลัพธ์:** `server/features/discord.js` (discord.js 14.16.3): กลุ่ม `#discord` ↔ Discord channel, ขาออกผ่าน `onGroupMessage` (`**name**: text`, ปิด ping), ขาเข้าจาก Gateway → `io.to("group:discord")` + `source: "discord"`, ข้ามข้อความจาก bot (กันวนลูป), ปิดตัวเองถ้าไม่มี token / เพิ่มจุดเชื่อม `initFeatures` + `onGroupMessage` (core แตะ 2 จุด) / client: `client/src/features/discord/` (ป้าย `⇄ discord`, `[discord]`, สี blurple, ข้อความจาก Discord ไม่นับเป็นของเรา) / `server/.env.example` / `run-all.mjs` ตั้ง `NODE_ENV=test` + ล้าง token / test `f02-discord` / เอกสาร: `docs/features/discord_TEST.md` (สร้าง bot + ตั้งค่า + checklist), HandbookFeatures (Feature 2 + ตารางจุดเชื่อม 4 จุด), PROTOCOL (`bridge_info`, `source`), ARCHITECTURE (Gateway, REST, token), README, CLAUDE.md / shift ลิงก์ Handbook ด้วย git diff (100 ลิงก์)
+- **หมายเหตุ:** `npm test` 12/12 (discord 14/14), build ผ่าน, ทดสอบ server กับ token ปลอมแล้วไม่ crash **ยังไม่ได้ทดสอบกับ Discord จริง** (ต้องสร้าง bot ก่อน)
+
+### [2026-10-28] Discord: หา Channel ID ไม่เจอ
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature 2 (Discord)
+- **Prompt:**
+  > ขั้นตอน 1.4 หาไม่เจอ
+- **ผลลัพธ์:** อธิบาย 2 วิธี: ดู Channel ID จาก URL ใน browser (`/channels/<server>/<channel>`) และเปิด Developer Mode (App Settings → Advanced) อัปเดตขั้นตอน 1.4 ใน `docs/features/discord_TEST.md`
+- **หมายเหตุ:** —

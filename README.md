@@ -65,11 +65,8 @@ cd server && npm install
 cd ../client && npm install
 ```
 
-ถ้าใช้ฟีเจอร์ AI ให้สร้างไฟล์ `server/.env` (ห้าม commit ไฟล์นี้):
-
-```
-AI_API_KEY=your-key-here
-```
+Feature เสริมบางตัวต้องใช้ค่าลับ (token / API key) ให้คัดลอก [server/.env.example](server/.env.example) เป็น `server/.env` แล้วใส่ค่า (**ห้าม commit** `.env`)
+ถ้าไม่ใส่ feature นั้นจะปิดตัวเอง แอปยังทำงานปกติ บน Render ให้ใส่ค่าเดียวกันที่ Dashboard → Environment
 
 ## วิธีรัน
 
@@ -164,9 +161,9 @@ ok    features/f00-feature-hooks.test.mjs  (3 passed, 0 failed)
 | # | ฟีเจอร์ | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
 | 1 | Deploy บน Cloud (`cloud`) — server เสิร์ฟหน้าเว็บเอง URL เดียว · [checklist + วิธี deploy](docs/features/cloud_TEST.md) · **deploy แล้วใช้งานได้** (หลักฐานยังไม่ได้เก็บ) | ✅ | |
-| 2 | AI ผ่าน slash command `/ai`, `/summarize` (`ai`) — **AI บังคับอย่างน้อย 1** | ⬜ | |
-| 3 | ส่งไฟล์/รูปผ่าน socket (`files`) | ⬜ | |
-| 4 | `/ping` วัด latency + typing indicator (`ping`) | ⬜ | |
+| 2 | Discord bridge (`discord`) — กลุ่ม `#discord` ↔ channel ใน Discord จริง · [checklist + วิธีตั้ง bot](docs/features/discord_TEST.md) · โค้ดเสร็จ **รอตั้ง bot + ทดสอบกับ Discord จริง** | 🟨 | |
+| 3 | AI ผ่าน slash command `/ai`, `/summarize` (`ai`) — **AI บังคับอย่างน้อย 1** | ⬜ | |
+| 4 | (ยังไม่เลือก: ส่งไฟล์ / `/ping` + typing) | ⬜ | |
 
 สัญลักษณ์: ⬜ ยังไม่เริ่ม · 🟨 กำลังทำ · ✅ เสร็จและทดสอบข้ามเครื่องแล้ว
 

@@ -4,7 +4,7 @@
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { Server } from "socket.io";
-import { featureNames, handleHttp, setupSocket } from "./features/index.js";
+import { featureNames, handleHttp, initFeatures, onGroupMessage, setupSocket } from "./features/index.js";
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -33,6 +33,9 @@ const MAX_GROUP_NAME_LENGTH = 30;
 const REGISTERED = "registered";
 
 const now = () => new Date().toISOString();
+
+// จุดเชื่อม Feature เสริม (Part 3): ให้ feature เตรียมตัวครั้งเดียวตอน server เริ่ม (เช่น discord login)
+initFeatures({ io, clients, groups, now });
 
 // R3: เทียบชื่อแบบไม่สนตัวพิมพ์เล็ก/ใหญ่ ("Alice" กับ "alice" ถือเป็นชื่อเดียวกัน)
 function isNameTaken(name) {
@@ -171,7 +174,9 @@ io.on("connection", (socket) => {
     // members กับ room ตรงกันเสมอ: create/join → เพิ่มทั้งสองที่พร้อมกัน
     // disconnect → ลบออกจาก members และ Socket.IO ถอด socket ออกจากทุก room ให้เอง
     // ผู้ส่งอยู่ใน room ด้วย จึงได้รับข้อความของตัวเองกลับมา (echo) แสดงในห้องของตัวเอง
-    io.to(`group:${group}`).emit("group_msg", { group, from, text, timestamp: now() });
+    const msg = { group, from, text, timestamp: now() };
+    io.to(`group:${group}`).emit("group_msg", msg);
+    onGroupMessage(msg); // จุดเชื่อม Feature เสริม: เช่น discord bridge ส่งต่อข้อความออกไป Discord
   });
 
   socket.on("disconnect", () => {

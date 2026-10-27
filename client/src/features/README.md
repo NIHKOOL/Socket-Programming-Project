@@ -15,4 +15,5 @@
 
 | Feature | โฟลเดอร์ | หมายเหตุ |
 |---|---|---|
+| Discord bridge (`discord`) | [discord/](discord/index.jsx) | ป้าย `⇄ discord` / `[discord]`, แตะ core ที่ `App.jsx` และ `ChatRoom.jsx` (ค้น `Feature: discord`) |
 | Cloud (`cloud`) | — (ไม่มีโฟลเดอร์) | แก้ core จุดเดียว: `client/src/socket.js` ให้ build แล้วใช้ Server URL = URL เดียวกับหน้าเว็บ |

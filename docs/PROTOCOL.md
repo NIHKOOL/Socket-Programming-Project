@@ -115,6 +115,13 @@ event ของ Feature เสริมอยู่ในหัวข้อน�
 | Feature | event | ทิศทาง | payload | ความหมาย |
 |---|---|---|---|---|
 | `cloud` | _(ไม่มี event ใหม่)_ | — | — | server เสิร์ฟไฟล์หน้าเว็บผ่าน HTTP `GET` เท่านั้น ข้อความแชทยังใช้ event ของ core ทั้งหมด |
+| `discord` | `bridge_info` | Server → Client | `group`, `platform`, `channel` | บอกว่ากลุ่มไหน bridge กับ Discord (ส่งตอนเชื่อมต่อ ถ้า feature เปิดอยู่) |
+| `discord` | `group_msg` (field เพิ่ม) | Server → Client | `source: "discord"` | ข้อความที่มาจาก Discord ใช้ event `group_msg` เดิม + `source` ส่วน `from` เป็นชื่อใน Discord **client ต้องไม่ถือว่าเป็นผู้ใช้ในแอป** |
+
+```js
+"bridge_info" → {"group": "discord", "platform": "discord", "channel": "#general"}
+"group_msg"   → {"group": "discord", "from": "Bobby", "text": "hi", "timestamp": "...", "source": "discord"}
+```
 
 ## Changelog
 
@@ -126,3 +133,4 @@ event ของ Feature เสริมอยู่ในหัวข้อน�
 | 2026-10-27 | — | R7: ข้อความ trim + จำกัด 1–1000 ตัวอักษร เพิ่ม error `INVALID_TEXT` (ใช้กับ `group_msg` ด้วย) |
 | 2026-10-27 | — | R8: เพิ่ม event `create_group_ok`, ชื่อกลุ่มจำกัด 30 ตัวอักษร + ห้ามซ้ำแบบไม่สนตัวพิมพ์, กลุ่มที่ไม่มีสมาชิกยังไม่ถูกลบ |
 | 2026-10-27 | — | R10: เพิ่ม event `join_group_ok` และ error `ALREADY_MEMBER` |
+| 2026-10-28 | — | Feature discord: เพิ่ม event `bridge_info` และ field `source` ใน `group_msg` |

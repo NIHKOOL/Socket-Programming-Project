@@ -3,6 +3,7 @@ import { connect, DEFAULT_SERVER_URL } from "./socket.js";
 import { dmRoomId, groupRoomId, parseRoomId, roomOfPrivateMsg } from "./rooms.js";
 import ChatRoom from "./ChatRoom.jsx";
 import { isTouchDevice } from "./device.js";
+import { BridgeMark, bridgeSubtitle } from "./features/discord/index.jsx"; // Feature: discord
 import "./App.css";
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [groupInput, setGroupInput] = useState("");
+  const [bridges, setBridges] = useState({}); // Feature: discord — { groupName: { platform, channel } }
 
   // R5: ข้อความเก็บแยกตามห้อง { "dm:C2": [...], "group:g1": [...] }
   const [messages, setMessages] = useState({});
@@ -47,6 +49,7 @@ export default function App() {
     setMe(null);
     setUsers([]);
     setGroups([]);
+    setBridges({}); // Feature: discord
     setMessages({});
     setUnread({});
     setActiveRoom(null);
@@ -90,6 +93,8 @@ export default function App() {
     socket.on("create_group_ok", ({ group }) => openRoom(groupRoomId(group)));
     // R10: เข้ากลุ่มสำเร็จ → เปิดห้องกลุ่มให้ทันที
     socket.on("join_group_ok", ({ group }) => openRoom(groupRoomId(group)));
+    // Feature: discord — server บอกว่ากลุ่มไหน bridge กับ Discord
+    socket.on("bridge_info", (info) => setBridges((prev) => ({ ...prev, [info.group]: info })));
 
     // R5: ข้อความที่เข้ามาถูกแยกลงห้องของตัวเอง
     socket.on("private_msg", (msg) => addMessage(roomOfPrivateMsg(msg, myName), msg));
@@ -242,6 +247,7 @@ export default function App() {
                     >
                       <span>
                         #{g.name}
+                        {bridges[g.name] && <BridgeMark /> /* Feature: discord */}
                         <small>
                           {g.members.length > 0
                             ? `${memberCount(g.members.length)}: ${g.members.map(withYou).join(", ")}`
@@ -304,7 +310,10 @@ export default function App() {
       <ChatRoom
         key={activeRoom}
         title={`#${name}`}
-        subtitle={group ? `group · ${memberCount(group.members.length)}: ${group.members.join(", ")}` : "group"}
+        subtitle={
+          (group ? `group · ${memberCount(group.members.length)}: ${group.members.join(", ")}` : "group") +
+          bridgeSubtitle(bridges[name]) // Feature: discord
+        }
         messages={roomMessages}
         me={me}
         onSend={sendToActiveRoom}

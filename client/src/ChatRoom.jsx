@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { isTouchDevice } from "./device.js";
+import { DiscordTag, isFromDiscord } from "./features/discord/index.jsx"; // Feature: discord
 
 const formatTime = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
@@ -38,13 +39,21 @@ export default function ChatRoom({ title, subtitle, messages, me, onSend, onBack
 
       <div className="chat-window">
         {messages.length === 0 && <p className="muted">-- no messages yet --</p>}
-        {messages.map((m, i) => (
-          <div key={i} className={`msg ${m.from === me ? "mine" : ""}`}>
-            <span className="msg-time">[{formatTime(m.timestamp)}]</span>
-            <span className="msg-from">{m.from}:</span>
-            <span className="msg-text">{m.text}</span>
-          </div>
-        ))}
+        {messages.map((m, i) => {
+          // Feature: discord — ข้อความจาก Discord ไม่ใช่ของเรา แม้ชื่อจะตรงกับเรา
+          const discord = isFromDiscord(m);
+          const mine = m.from === me && !discord;
+          return (
+            <div key={i} className={`msg ${mine ? "mine" : ""} ${discord ? "from-discord" : ""}`}>
+              <span className="msg-time">[{formatTime(m.timestamp)}]</span>
+              <span className="msg-from">
+                {m.from}
+                {discord && <> <DiscordTag /></>}:
+              </span>
+              <span className="msg-text">{m.text}</span>
+            </div>
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 

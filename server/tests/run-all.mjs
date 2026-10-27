@@ -13,6 +13,10 @@ const serverEntry = join(here, "..", "index.js");
 const BASE_PORT = 4100;
 const TIMEOUT_MS = 30_000;
 
+// env ของ server และ test: NODE_ENV=test → ไม่โหลด server/.env และล้าง token
+// test จึงไม่ไปต่อ Discord จริง และไม่มีกลุ่ม #discord โผล่มากวน test ของ core (R8, R9)
+const TEST_ENV = { ...process.env, NODE_ENV: "test", DISCORD_BOT_TOKEN: "", DISCORD_CHANNEL_ID: "" };
+
 const filter = process.argv[2] ?? "";
 const listTests = (dir, prefix) =>
   existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.mjs")).map((f) => prefix + f).sort() : [];
@@ -23,7 +27,7 @@ const files = [...listTests(here, ""), ...listTests(join(here, "features"), "fea
 // เปิด server ที่ port ที่กำหนด รอจนพิมพ์ "listening" แล้วค่อยเริ่ม test
 function startServer(port) {
   return new Promise((resolve, reject) => {
-    const proc = spawn(process.execPath, [serverEntry], { env: { ...process.env, PORT: String(port) } });
+    const proc = spawn(process.execPath, [serverEntry], { env: { ...TEST_ENV, PORT: String(port) } });
     let log = "";
     proc.stdout.on("data", (d) => {
       log += d;
@@ -37,7 +41,7 @@ function startServer(port) {
 function runTest(file, port) {
   return new Promise((resolve) => {
     const proc = spawn(process.execPath, [join(here, file)], {
-      env: { ...process.env, TEST_URL: `http://localhost:${port}` },
+      env: { ...TEST_ENV, TEST_URL: `http://localhost:${port}` },
     });
     let out = "";
     proc.stdout.on("data", (d) => (out += d));

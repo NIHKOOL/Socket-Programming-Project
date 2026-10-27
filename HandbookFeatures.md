@@ -14,6 +14,7 @@
 - [0. โครงสร้างและการแยก Feature ออกจาก core](#0-โครงสร้างและการแยก-feature-ออกจาก-core)
 - [Feature ที่วางแผนไว้](#feature-ที่วางแผนไว้)
 - [Feature 1 — Cloud](#feature-1--cloud)
+- [Feature 2 — Discord bridge](#feature-2--discord-bridge)
 - [คู่มือเพิ่ม Feature ใหม่](#คู่มือเพิ่ม-feature-ใหม่)
 
 ---
@@ -22,7 +23,7 @@
 
 ```
 server/
-├── index.js                 core R1–R11 (เรียก feature ผ่าน 2 จุดเชื่อมเท่านั้น)
+├── index.js                 core R1–R11 (เรียก feature ผ่าน 4 จุดเชื่อมเท่านั้น)
 ├── features/
 │   ├── index.js             ทะเบียน feature: รวมทุก feature แล้วส่งต่อให้ core
 │   └── <ชื่อ>.js             โค้ดฝั่ง server ของแต่ละ feature
@@ -42,10 +43,12 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 
 | # | จุดเชื่อม | core เรียกตอนไหน | feature ใช้ทำอะไร | โค้ด |
 |---|---|---|---|---|
-| 1 | `handleHttp(req, res)` | ทุก HTTP request ที่ไม่ใช่ `/socket.io/` **ก่อน**ตอบ 404 | เสิร์ฟไฟล์หน้าเว็บ (Cloud) ถ้า return `true` ถือว่า feature ตอบไปแล้ว | core: [server/index.js:17](server/index.js#L17) → [features/index.js:21-23](server/features/index.js#L21-L23) |
-| 2 | `setupSocket(socket, ctx)` | ทุกครั้งที่มี socket ใหม่ (หลังสร้าง `requireName`) | เพิ่ม `socket.on("<event ของ feature>")` | core: [server/index.js:108-110](server/index.js#L108-L110) → [features/index.js:26-28](server/features/index.js#L26-L28) |
+| 1 | `initFeatures(app)` | ครั้งเดียวตอน server เริ่ม (หลังสร้าง `io`, `clients`, `groups`) ได้ `{ io, clients, groups, now }` | login บริการภายนอก, เตรียมกลุ่ม (Discord) | core: [server/index.js:38](server/index.js#L38) → [features/index.js:25-27](server/features/index.js#L25-L27) |
+| 2 | `handleHttp(req, res)` | ทุก HTTP request ที่ไม่ใช่ `/socket.io/` **ก่อน**ตอบ 404 | เสิร์ฟไฟล์หน้าเว็บ (Cloud) ถ้า return `true` ถือว่า feature ตอบไปแล้ว | core: [server/index.js:17](server/index.js#L17) → [features/index.js:31-33](server/features/index.js#L31-L33) |
+| 3 | `setupSocket(socket, ctx)` | ทุกครั้งที่มี socket ใหม่ (หลังสร้าง `requireName`) | เพิ่ม `socket.on("<event ของ feature>")` / ส่งข้อมูลเริ่มต้น (Discord: `bridge_info`) | core: [server/index.js:111-113](server/index.js#L111-L113) → [features/index.js:36-38](server/features/index.js#L36-L38) |
+| 4 | `onGroupMessage(msg)` | หลัง core ส่ง `group_msg` ให้สมาชิกแล้ว (**ผ่านการตรวจสิทธิ์ R11 แล้ว**) | ส่งต่อข้อความออกนอกระบบ (Discord) | core: [server/index.js:179](server/index.js#L179) → [features/index.js:41-43](server/features/index.js#L41-L43) |
 
-**`ctx` ที่ feature ได้รับ** ([server/index.js:109](server/index.js#L109)) เป็นตัวเดียวกับที่ core ใช้:
+**`ctx` ที่ feature ได้รับ** ([server/index.js:112](server/index.js#L112)) เป็นตัวเดียวกับที่ core ใช้:
 
 | ชื่อ | คืออะไร |
 |---|---|
@@ -60,6 +63,7 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 - ตัวตนมาจาก `requireName()` เท่านั้น ห้ามเชื่อชื่อจาก payload
 - ข้อความในห้องไหน ต้องส่งเฉพาะคนที่มีสิทธิ์เห็นห้องนั้น (private → 2 คน, group → สมาชิก)
 - feature ห้ามแก้ `clients` / `groups` โดยตรง ถ้าจำเป็นต้องแก้ ให้คุยกับทีมก่อน เพราะกระทบ R3–R11
+  (ข้อยกเว้นที่ทีมตกลงแล้ว: Discord สร้างกลุ่ม `#discord` แบบไม่มีสมาชิกใน `init` ตอน server เริ่ม)
 
 **Test:** [server/tests/features/f00-feature-hooks.test.mjs](server/tests/features/f00-feature-hooks.test.mjs) ตรวจว่าจุดเชื่อมไม่ทำให้ core เปลี่ยนพฤติกรรม (path อื่นยัง 404, handshake ยังทำงาน, register ยังทำงาน)
 
@@ -70,9 +74,9 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 | # | Feature | ชื่อใน code | สถานะ | หัวข้อ |
 |---|---|---|---|---|
 | 1 | Deploy บน Cloud | `cloud` | ✅ deploy แล้ว (รอเก็บหลักฐาน) | [Feature 1 — Cloud](#feature-1--cloud) |
-| 2 | AI ผ่าน slash command (`/ai`, `/summarize`) **(AI บังคับ)** | `ai` | ⬜ | — |
-| 3 | ส่งไฟล์/รูปผ่าน socket | `files` | ⬜ | — |
-| 4 | `/ping` วัด latency + typing indicator | `ping` | ⬜ | — |
+| 2 | Discord bridge: กลุ่ม `#discord` ↔ channel ใน Discord จริง | `discord` | 🟨 โค้ดเสร็จ รอตั้ง bot + ทดสอบกับ Discord จริง | [Feature 2 — Discord bridge](#feature-2--discord-bridge) |
+| 3 | AI ผ่าน slash command (`/ai`, `/summarize`) **(AI บังคับ)** | `ai` | ⬜ | — |
+| 4 | (ยังไม่เลือก: ส่งไฟล์ / `/ping` + typing) | — | ⬜ | — |
 
 (อัปเดตตารางนี้และเพิ่มหัวข้อของแต่ละ feature เมื่อทำเสร็จ)
 
@@ -126,6 +130,78 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 | **DNS** | `<app>.onrender.com` → IP ของ Render (บน LAN เราใช้ IP ตรง ๆ ไม่ผ่าน DNS) |
 
 **Test:** [server/tests/features/f01-cloud.test.mjs](server/tests/features/f01-cloud.test.mjs) · `npm test -- f01`
+
+---
+
+## Feature 2 — Discord bridge
+
+> กลุ่ม `#discord` ในแอป ↔ channel หนึ่งใน Discord server จริง พิมพ์ในแอปแล้วขึ้นใน Discord และพิมพ์ใน Discord แล้วขึ้นในแอป
+> Checklist + วิธีตั้ง bot: [docs/features/discord_TEST.md](docs/features/discord_TEST.md)
+
+```
+ Client (แอปเรา)          Our server (Node.js)                         Discord
+┌────────────┐  Socket.IO  ┌──────────────────────────┐  Gateway (WSS, TLS)  ┌──────────┐
+│ #discord   │ ══════════> │ core: group_msg (R11)     │ <══════════════════> │ #general │
+│ [join]     │ <══════════ │ features/discord.js (bot) │  REST API (HTTPS)    │          │
+└────────────┘             └──────────────────────────┘ ───────────────────> └──────────┘
+```
+
+server ของเราเป็น **client ของ Discord**: login ผ่าน Discord Gateway (WebSocket over TLS) เพื่อรอรับข้อความ และส่งข้อความผ่าน REST API (HTTPS)
+ส่วนแอปเรากับ browser ยังคุยกันผ่าน Socket.IO ทุกอย่าง **R2 ยังเป็นจริง**
+
+**ไฟล์ที่เกี่ยวข้อง**
+
+| ไฟล์ | หน้าที่ |
+|---|---|
+| [server/features/discord.js](server/features/discord.js) | bot (discord.js): login, รับ/ส่งข้อความ, แปลงข้อความทั้ง 2 ทิศทาง |
+| [server/.env.example](server/.env.example) | ตัวอย่าง env ที่ต้องตั้ง (`DISCORD_BOT_TOKEN`, `DISCORD_CHANNEL_ID`, `DISCORD_GROUP`) |
+| [client/src/features/discord/](client/src/features/discord/index.jsx) | ป้าย `⇄ discord` ข้างกลุ่ม, `[discord]` ข้างชื่อผู้ส่ง, สี blurple |
+| core ที่แตะ (มี comment `Feature: discord`) | [App.jsx:6](client/src/App.jsx#L6), [:18](client/src/App.jsx#L18), [:52](client/src/App.jsx#L52), [:96-97](client/src/App.jsx#L96-L97), [:250](client/src/App.jsx#L250), [:315](client/src/App.jsx#L315) · [ChatRoom.jsx:3](client/src/ChatRoom.jsx#L3), [:43-54](client/src/ChatRoom.jsx#L43-L54) |
+
+**ลำดับการทำงาน: server เริ่ม**
+
+| # | เกิดอะไรขึ้น | โค้ด |
+|---|---|---|
+| 1 | โหลด `server/.env` (ถ้ามี ยกเว้นตอน test) แล้วอ่าน token / channel id / ชื่อกลุ่ม | [server/features/discord.js:19-31](server/features/discord.js#L19-L31) |
+| 2 | ไม่มี token หรือ channel → feature ปิดตัวเอง (`discord (off: ...)`) แอปทำงานปกติ | [:31](server/features/discord.js#L31), [:62](server/features/discord.js#L62) |
+| 3 | core เรียก `initFeatures` → สร้างกลุ่ม `#discord` แบบ**ไม่มีสมาชิก** ใครอยากคุยก็กด `[join]` เอง (R10) | [server/index.js:38](server/index.js#L38) → [discord.js:64-69](server/features/discord.js#L64-L69) |
+| 4 | สร้าง Discord client ขอ intent: Guilds, GuildMessages, **MessageContent** (ต้องเปิดใน Developer Portal) | [discord.js:71-73](server/features/discord.js#L71-L73) |
+| 5 | `client.login(token)` → ต่อ Discord Gateway (WSS) → `ClientReady` → เปิด channel ตาม id | [discord.js:94](server/features/discord.js#L94), [:75-82](server/features/discord.js#L75-L82) |
+
+**ลำดับการทำงาน: ขาออก (แอป → Discord)**
+
+| # | เกิดอะไรขึ้น | โค้ด |
+|---|---|---|
+| 1 | สมาชิก `#discord` ส่งข้อความ → core ตรวจสิทธิ์ (R11) → ส่งให้สมาชิกในแอป | [server/index.js:177-178](server/index.js#L177-L178) |
+| 2 | core เรียก `onGroupMessage(msg)` | [server/index.js:179](server/index.js#L179) |
+| 3 | discord: ไม่ใช่กลุ่มที่ bridge หรือยังไม่ได้เปิด channel → ข้าม | [discord.js:105](server/features/discord.js#L105) |
+| 4 | แปลงเป็น `**C1**: text` (escape markdown ในชื่อ) | [discord.js:36-38](server/features/discord.js#L36-L38) |
+| 5 | `channel.send(...)` ผ่าน REST API โดย `allowedMentions: { parse: [] }` → **ไม่ ping `@everyone` / `@user`** | [discord.js:107-109](server/features/discord.js#L107-L109) |
+
+**ลำดับการทำงาน: ขาเข้า (Discord → แอป)**
+
+| # | เกิดอะไรขึ้น | โค้ด |
+|---|---|---|
+| 1 | มีคนพิมพ์ใน Discord → Gateway ส่ง event `MessageCreate` มาที่ bot | [discord.js:85](server/features/discord.js#L85) |
+| 2 | ไม่ใช่ channel ที่ bridge → ข้าม | [discord.js:86](server/features/discord.js#L86) |
+| 3 | **ข้อความจาก bot (รวมถึงของตัวเอง) → ข้าม** กันวนลูป: ข้อความที่เราส่งออกไปจะไม่ย้อนกลับมา | [discord.js:43](server/features/discord.js#L43) |
+| 4 | แปลงเป็น payload `group_msg`: ชื่อ = nickname ใน server, แนบ URL ของไฟล์, ตัดที่ 1000 ตัวอักษร (เท่า core), `source: "discord"` | [discord.js:42-55](server/features/discord.js#L42-L55) |
+| 5 | ส่งให้ **room `group:discord` เท่านั้น** (เหมือน R11 คนที่ไม่ใช่สมาชิกไม่ได้รับ) | [discord.js:90](server/features/discord.js#L90) |
+| 6 | Client: ข้อความที่ `source === "discord"` แสดงป้าย `[discord]` สี blurple และ**ไม่นับเป็นข้อความของเรา** แม้ชื่อจะตรงกับเรา (กันปลอมตัว) | [ChatRoom.jsx:43-54](client/src/ChatRoom.jsx#L43-L54) |
+
+**ลำดับการทำงาน: UI รู้ได้อย่างไรว่ากลุ่มไหน bridge**
+
+| # | เกิดอะไรขึ้น | โค้ด |
+|---|---|---|
+| 1 | socket ใหม่ → `setupSocket` ของ discord ส่ง `bridge_info { group, platform, channel }` | [discord.js:98-100](server/features/discord.js#L98-L100) |
+| 2 | Client เก็บไว้ใน `bridges` → แสดง `⇄ discord` ข้างชื่อกลุ่ม และ "bridged to Discord #channel" ในหัวห้อง | [App.jsx:96-97](client/src/App.jsx#L96-L97), [:250](client/src/App.jsx#L250), [:315](client/src/App.jsx#L315) |
+
+**ความปลอดภัย / ความเป็นส่วนตัว**
+- **token ห้าม commit** อยู่ใน `server/.env` (gitignore แล้ว) หรือ Environment ของ Render เท่านั้น
+- ข้อความในกลุ่ม `#discord` **คนใน Discord channel เห็นด้วย** UI จึงบอกไว้ชัดเจนด้วยป้าย `⇄ discord` / "bridged to Discord" ส่วนกลุ่มอื่นและ private message ไม่ถูกส่งออกไปเลย
+- ข้อความจาก Discord มีป้าย `[discord]` เสมอ คนใน Discord จึงปลอมเป็นผู้ใช้ในแอปไม่ได้
+
+**Test:** [server/tests/features/f02-discord.test.mjs](server/tests/features/f02-discord.test.mjs) · `npm test -- f02` (ไม่ต่อ Discord จริง ทดสอบการแปลงข้อความด้วย message ปลอม + ตรวจว่า feature ปิดเองเมื่อไม่มี token)
 
 ---
 

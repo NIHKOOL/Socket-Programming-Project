@@ -80,4 +80,14 @@ Cloud:  browser ──HTTPS/WSS (TLS)──> Render reverse proxy ──HTTP/WS�
 | Application/Transport | **TLS** (HTTPS, WSS) | เข้ารหัสข้อมูลระหว่างทาง ข้อความแชทที่วิ่งผ่าน internet ไม่ถูกอ่าน/แก้ระหว่างทาง Render จัดการใบรับรองให้ |
 | Application | **HTTP header `X-Forwarded-For`** | reverse proxy บอก IP จริงของ client ให้ server (ใช้ใน log) |
 
+**Feature discord: server ของเราเป็น client ของบริการอื่น**
+
+| Protocol | ใช้อย่างไร |
+|---|---|
+| **Discord Gateway** (WebSocket over TLS, `wss://gateway.discord.gg`) | bot เปิด connection ค้างไว้รับ event `MessageCreate` แบบ real-time ใช้หลักเดียวกับที่ client ของเราต่อ server ด้วย WebSocket |
+| **Discord REST API** (HTTPS) | bot ส่งข้อความเข้า channel (`POST /channels/{id}/messages`) |
+| **Bot token** (header `Authorization`) | ยืนยันตัวตนของ bot เก็บใน env ไม่ commit |
+
+รายละเอียด: [HandbookFeatures.md → Feature 2](../HandbookFeatures.md#feature-2--discord-bridge)
+
 รายละเอียดการทำงาน + ลิงก์โค้ด: [HandbookFeatures.md → Feature 1 — Cloud](../HandbookFeatures.md#feature-1--cloud) · ขั้นตอน deploy: [features/cloud_TEST.md](features/cloud_TEST.md)

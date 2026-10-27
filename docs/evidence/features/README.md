@@ -14,3 +14,11 @@
 > ⚠️ deploy แล้วใช้งานได้ (2026-10-28) แต่**ยังไม่ได้เก็บหลักฐาน**
 >
 > รูปที่ต้องเก็บใน `cloud/` (วิธีอยู่ใน [cloud_TEST.md](../../features/cloud_TEST.md)): `cloud-render-live.png`, `cloud-phone-4g.jpg`, `cloud-wss.png`, `cloud-render-logs.png`
+
+## discord
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| _(ยังไม่มี)_ | | | |
+
+> รูปที่ต้องเก็บใน `discord/` (วิธีอยู่ใน [discord_TEST.md](../../features/discord_TEST.md)): `discord-app-to-discord.png`, `discord-discord-to-app.png`, `discord-server-log.png`, `discord-non-member.png`

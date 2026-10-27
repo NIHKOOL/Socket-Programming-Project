@@ -64,7 +64,7 @@ groups:  Map<groupName, Set<name>>  // กลุ่มทั้งหมด + �
 socket.data.name                    // ชื่อที่ผูกกับ socket ตอน register (ใช้ระบุตัวตนทุก event)
 ```
 
-**Client** ([client/src/App.jsx:9-23](client/src/App.jsx#L9-L23)) เป็นแค่สำเนาที่ server ส่งมา
+**Client** ([client/src/App.jsx:10-25](client/src/App.jsx#L10-L25)) เป็นแค่สำเนาที่ server ส่งมา
 ```js
 me, users, groups      // ได้จาก register_ok / user_list / group_list
 messages               // { "dm:C2": [...], "group:g1": [...] } แยกตามห้อง
@@ -97,13 +97,13 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 |---|---|---|
 | 1 | สร้าง HTTP server สำหรับรับ handshake ครั้งแรก | [server/index.js:16-20](server/index.js#L16-L20) |
 | 2 | ให้ Socket.IO ทำงานบน HTTP server นั้น และเปิด CORS เพราะหน้าเว็บอยู่คนละ origin | [server/index.js:21-23](server/index.js#L21-L23) |
-| 3 | `listen(PORT, "0.0.0.0")` รับ connection จาก**ทุก** network interface ถ้าใช้ `127.0.0.1` จะรับได้แค่จากเครื่องตัวเอง | [server/index.js:191](server/index.js#L191) |
-| 4 | พิมพ์ IP ของเครื่องออกมา ให้รู้ว่าเครื่องอื่นต้องใส่ URL อะไร | [server/index.js:194-200](server/index.js#L194-L200) |
+| 3 | `listen(PORT, "0.0.0.0")` รับ connection จาก**ทุก** network interface ถ้าใช้ `127.0.0.1` จะรับได้แค่จากเครื่องตัวเอง | [server/index.js:196](server/index.js#L196) |
+| 4 | พิมพ์ IP ของเครื่องออกมา ให้รู้ว่าเครื่องอื่นต้องใส่ URL อะไร | [server/index.js:199-205](server/index.js#L199-L205) |
 | 5 | Client: URL เริ่มต้น = host ของหน้าเว็บ + port 3000 (ตอน dev) หรือ URL เดียวกับหน้าเว็บ (เมื่อ server เสิร์ฟหน้าเว็บเอง ดู [Feature: cloud](HandbookFeatures.md#feature-1--cloud)) แก้ได้ที่หน้า login | [client/src/socket.js:7-9](client/src/socket.js#L7-L9) |
-| 6 | ผู้ใช้กด "login" → `connect(serverUrl)` | [client/src/App.jsx:61](client/src/App.jsx#L61) |
+| 6 | ผู้ใช้กด "login" → `connect(serverUrl)` | [client/src/App.jsx:64](client/src/App.jsx#L64) |
 | 7 | `io(url, { transports: ["websocket"] })` เปิด TCP → HTTP GET + `Upgrade: websocket` → `101 Switching Protocols` | [client/src/socket.js:15](client/src/socket.js#L15) |
-| 8 | Server: `io.on("connection")` ทำงาน และ log IP ของ client (ใช้ยืนยันว่ามาจากคนละเครื่อง) | [server/index.js:74-75](server/index.js#L74-L75) |
-| 9 | ต่อไม่ได้ (IP ผิด หรือ firewall บล็อก) → ขึ้นข้อความแจ้งในหน้า login | [client/src/App.jsx:70](client/src/App.jsx#L70) |
+| 8 | Server: `io.on("connection")` ทำงาน และ log IP ของ client (ใช้ยืนยันว่ามาจากคนละเครื่อง) | [server/index.js:77-78](server/index.js#L77-L78) |
+| 9 | ต่อไม่ได้ (IP ผิด หรือ firewall บล็อก) → ขึ้นข้อความแจ้งในหน้า login | [client/src/App.jsx:73](client/src/App.jsx#L73) |
 
 **อ่านเพิ่ม:** ตารางโปรโตคอล What/Why/How → [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · วิธีทดสอบ + firewall → [docs/R1_TEST.md](docs/R1_TEST.md)
 
@@ -117,9 +117,9 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | Client ส่งทุก action เป็น event ผ่าน `socketRef.current.emit(...)` | [client/src/App.jsx:101-106](client/src/App.jsx#L101-L106) |
-| 2 | Server log ทุก event ที่เข้ามาผ่าน socket (`[recv] ...`) ใช้โชว์ตอน demo | [server/index.js:78-80](server/index.js#L78-L80) |
-| 3 | Server ส่งกลับด้วย `emit` บน socket เดิม → client รับด้วย `socket.on(...)` | [client/src/App.jsx:87-96](client/src/App.jsx#L87-L96) |
+| 1 | Client ส่งทุก action เป็น event ผ่าน `socketRef.current.emit(...)` | [client/src/App.jsx:106-111](client/src/App.jsx#L106-L111) |
+| 2 | Server log ทุก event ที่เข้ามาผ่าน socket (`[recv] ...`) ใช้โชว์ตอน demo | [server/index.js:81-83](server/index.js#L81-L83) |
+| 3 | Server ส่งกลับด้วย `emit` บน socket เดิม → client รับด้วย `socket.on(...)` | [client/src/App.jsx:90-101](client/src/App.jsx#L90-L101) |
 | 4 | HTTP request อื่นที่ไม่ใช่ `/socket.io/` ได้ **404** ทั้งหมด จึงไม่มี REST API ให้ส่งหรือดึงข้อความ | [server/index.js:16-20](server/index.js#L16-L20) |
 
 **รูปแบบ frame บน WebSocket:** `42["private_msg",{"to":"C2","text":"hi"}]` → `4` = Engine.IO MESSAGE, `2` = Socket.IO EVENT, ตามด้วย `[ชื่อ event, payload]` (ดูได้ใน DevTools → Network → WS → Messages)
@@ -136,16 +136,16 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | ผู้ใช้กรอกชื่อ (จำกัด 20 ตัวที่ฝั่ง client) แล้วกดเข้าสู่ระบบ | [client/src/App.jsx:148](client/src/App.jsx#L148) (หน้า login: [:124-163](client/src/App.jsx#L124-L163)) |
-| 2 | เชื่อมต่อสำเร็จ → `emit("register", { name })` ทันที | [client/src/App.jsx:69](client/src/App.jsx#L69) |
-| 3 | Server trim ชื่อ แล้วตรวจว่าว่างหรือยาวเกิน 20 → `INVALID_NAME` | [server/index.js:83-86](server/index.js#L83-L86) |
-| 4 | socket นี้ register ไปแล้ว → `ALREADY_REGISTERED` | [server/index.js:87](server/index.js#L87) |
-| 5 | **ชื่อซ้ำ** (เทียบแบบไม่สนตัวพิมพ์ `C1` = `c1`) → `NAME_TAKEN` | [server/index.js:88](server/index.js#L88) → [`isNameTaken` :38-41](server/index.js#L38-L41) |
-| 6 | ผ่าน → ผูกชื่อกับ socket (`socket.data.name`), เพิ่มเข้า `clients`, join room `registered` | [server/index.js:91-93](server/index.js#L91-L93) |
-| 7 | ส่ง `register_ok` ให้คนนี้ แล้ว broadcast รายชื่อ + กลุ่มให้ทุกคน | [server/index.js:94-96](server/index.js#L94-L96) |
-| 8 | Client ได้ `register_ok` → ตั้ง `me` → React เปลี่ยนจากหน้า login เป็นหน้าแชท | [client/src/App.jsx:71-75](client/src/App.jsx#L71-L75) |
-| 8′ | ถ้าได้ `error_msg` แทน → แสดง error และตัด connection ทิ้ง ผู้ใช้เปลี่ยนชื่อแล้วกดเข้าใหม่ได้เลย | [client/src/App.jsx:76-80](client/src/App.jsx#L76-L80) |
-| 9 | ชื่อจะว่างอีกครั้งเมื่อเจ้าของ disconnect | [server/index.js:181](server/index.js#L181) |
+| 1 | ผู้ใช้กรอกชื่อ (จำกัด 20 ตัวที่ฝั่ง client) แล้วกดเข้าสู่ระบบ | [client/src/App.jsx:153](client/src/App.jsx#L153) (หน้า login: [:129-168](client/src/App.jsx#L129-L168)) |
+| 2 | เชื่อมต่อสำเร็จ → `emit("register", { name })` ทันที | [client/src/App.jsx:72](client/src/App.jsx#L72) |
+| 3 | Server trim ชื่อ แล้วตรวจว่าว่างหรือยาวเกิน 20 → `INVALID_NAME` | [server/index.js:86-89](server/index.js#L86-L89) |
+| 4 | socket นี้ register ไปแล้ว → `ALREADY_REGISTERED` | [server/index.js:90](server/index.js#L90) |
+| 5 | **ชื่อซ้ำ** (เทียบแบบไม่สนตัวพิมพ์ `C1` = `c1`) → `NAME_TAKEN` | [server/index.js:91](server/index.js#L91) → [`isNameTaken` :41-44](server/index.js#L41-L44) |
+| 6 | ผ่าน → ผูกชื่อกับ socket (`socket.data.name`), เพิ่มเข้า `clients`, join room `registered` | [server/index.js:94-96](server/index.js#L94-L96) |
+| 7 | ส่ง `register_ok` ให้คนนี้ แล้ว broadcast รายชื่อ + กลุ่มให้ทุกคน | [server/index.js:97-99](server/index.js#L97-L99) |
+| 8 | Client ได้ `register_ok` → ตั้ง `me` → React เปลี่ยนจากหน้า login เป็นหน้าแชท | [client/src/App.jsx:74-78](client/src/App.jsx#L74-L78) |
+| 8′ | ถ้าได้ `error_msg` แทน → แสดง error และตัด connection ทิ้ง ผู้ใช้เปลี่ยนชื่อแล้วกดเข้าใหม่ได้เลย | [client/src/App.jsx:79-83](client/src/App.jsx#L79-L83) |
+| 9 | ชื่อจะว่างอีกครั้งเมื่อเจ้าของ disconnect | [server/index.js:186](server/index.js#L186) |
 
 **จุดสำคัญ:** ต้องตรวจที่ server เพราะ server เป็นที่เดียวที่รู้รายชื่อทุกคน ส่วน `maxLength` ฝั่ง client มีไว้ช่วยผู้ใช้เท่านั้น
 
@@ -161,11 +161,11 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1a | มีคน register สำเร็จ → `broadcastUserList()` | [server/index.js:95](server/index.js#L95) |
-| 1b | มีคน disconnect → ลบจาก `clients` → `broadcastUserList()` | [server/index.js:181-185](server/index.js#L181-L185) |
-| 2 | ส่ง**รายชื่อทั้งหมด**ให้ทุกคนใน room `registered` (คนที่ยังไม่ login ไม่ได้รับ) | [server/index.js:63-65](server/index.js#L63-L65) |
-| 3 | Client ได้ `user_list` → แทนที่ `users` เดิมทั้งก้อน | [client/src/App.jsx:87](client/src/App.jsx#L87) |
-| 4 | Render: ชื่อตัวเองอยู่บนสุดพร้อม `(you)` ที่เหลือเรียงตามตัวอักษร | [client/src/App.jsx:198-215](client/src/App.jsx#L198-L215) |
+| 1a | มีคน register สำเร็จ → `broadcastUserList()` | [server/index.js:98](server/index.js#L98) |
+| 1b | มีคน disconnect → ลบจาก `clients` → `broadcastUserList()` | [server/index.js:186-190](server/index.js#L186-L190) |
+| 2 | ส่ง**รายชื่อทั้งหมด**ให้ทุกคนใน room `registered` (คนที่ยังไม่ login ไม่ได้รับ) | [server/index.js:66-68](server/index.js#L66-L68) |
+| 3 | Client ได้ `user_list` → แทนที่ `users` เดิมทั้งก้อน | [client/src/App.jsx:90](client/src/App.jsx#L90) |
+| 4 | Render: ชื่อตัวเองอยู่บนสุดพร้อม `(you)` ที่เหลือเรียงตามตัวอักษร | [client/src/App.jsx:203-220](client/src/App.jsx#L203-L220) |
 
 **จุดสำคัญ:** ส่งรายการทั้งหมดทุกครั้ง ไม่ส่งแค่ส่วนที่เปลี่ยน รายชื่อจึงไม่มีทางเพี้ยนสะสม และคนที่เพิ่งเข้าได้รายชื่อครบตั้งแต่ครั้งแรก
 
@@ -182,13 +182,13 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
 | 1 | ทุกห้องมี id ไม่ซ้ำกัน: `dm:<ชื่อคู่สนทนา>` / `group:<ชื่อกลุ่ม>` | [client/src/rooms.js:4-5](client/src/rooms.js#L4-L5) |
-| 2 | ได้ `private_msg` → หาห้องด้วย `roomOfPrivateMsg` | [client/src/App.jsx:95](client/src/App.jsx#L95) |
+| 2 | ได้ `private_msg` → หาห้องด้วย `roomOfPrivateMsg` | [client/src/App.jsx:100](client/src/App.jsx#L100) |
 | 3 | **กฎของห้อง private:** อยู่ห้องของ "อีกฝ่าย" เสมอ (เราส่งหา C2 หรือ C2 ส่งหาเรา → `dm:C2` ทั้งคู่) | [client/src/rooms.js:15-17](client/src/rooms.js#L15-L17) |
-| 4 | ได้ `group_msg` → ห้อง `group:<msg.group>` | [client/src/App.jsx:96](client/src/App.jsx#L96) |
-| 5 | `addMessage` เพิ่มลง `messages[roomId]` ถ้าห้องนี้ไม่ได้เปิดอยู่ unread +1 | [client/src/App.jsx:39-44](client/src/App.jsx#L39-L44) |
-| 6 | ผู้ใช้คลิกชื่อหรือกลุ่ม → `openRoom` ตั้งห้องที่เปิด + ล้าง unread | [client/src/App.jsx:27-31](client/src/App.jsx#L27-L31) |
+| 4 | ได้ `group_msg` → ห้อง `group:<msg.group>` | [client/src/App.jsx:101](client/src/App.jsx#L101) |
+| 5 | `addMessage` เพิ่มลง `messages[roomId]` ถ้าห้องนี้ไม่ได้เปิดอยู่ unread +1 | [client/src/App.jsx:41-46](client/src/App.jsx#L41-L46) |
+| 6 | ผู้ใช้คลิกชื่อหรือกลุ่ม → `openRoom` ตั้งห้องที่เปิด + ล้าง unread | [client/src/App.jsx:29-33](client/src/App.jsx#L29-L33) |
 
-**จุดสำคัญ:** socket handler ถูกสร้างครั้งเดียวตอน login ถ้าอ่าน state `activeRoom` ตรง ๆ จะได้ค่าเก่าตลอด จึงต้องอ่านผ่าน `activeRoomRef` ([:23](client/src/App.jsx#L23)) และใช้ตัวแปร `myName` ในฟังก์ชัน login แทน state `me` ([:68](client/src/App.jsx#L68)) ด้วยเหตุผลเดียวกัน
+**จุดสำคัญ:** socket handler ถูกสร้างครั้งเดียวตอน login ถ้าอ่าน state `activeRoom` ตรง ๆ จะได้ค่าเก่าตลอด จึงต้องอ่านผ่าน `activeRoomRef` ([:25](client/src/App.jsx#L25)) และใช้ตัวแปร `myName` ในฟังก์ชัน login แทน state `me` ([:71](client/src/App.jsx#L71)) ด้วยเหตุผลเดียวกัน
 
 **ทดสอบ:** [docs/R5_R6_TEST.md](docs/R5_R6_TEST.md) · `npm test -- r05` (test import `rooms.js` ตัวเดียวกับ client)
 
@@ -202,13 +202,13 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | `renderRoom` เลือก props ตามประเภทห้อง แล้ว render `ChatRoom` (component เดียวใช้ทั้ง 2 ประเภท) | [client/src/App.jsx:281-316](client/src/App.jsx#L281-L316) |
-| 2 | ผู้ใช้พิมพ์ + Enter → trim → `onSend(text)` → ล้างช่องพิมพ์ | [client/src/ChatRoom.jsx:19-25](client/src/ChatRoom.jsx#L19-L25) |
-| 3 | `sendToActiveRoom` ดูประเภทห้อง → `emit("private_msg")` หรือ `emit("group_msg")` | [client/src/App.jsx:101-106](client/src/App.jsx#L101-L106) |
-| 4 | **ยังไม่ขึ้นจอ** รอ server ส่งกลับ → `addMessage` (ดู R5 ขั้น 2-5) | [client/src/App.jsx:95-96](client/src/App.jsx#L95-L96) |
-| 5 | Chat window: ทุกข้อความเป็นบรรทัด log `[เวลา] ผู้ส่ง: ข้อความ` ชื่อของตัวเองสีเขียว (`mine`) ของคนอื่นสีน้ำเงิน | [client/src/ChatRoom.jsx:39-49](client/src/ChatRoom.jsx#L39-L49) |
-| 6 | มีข้อความใหม่ → scroll ลงล่างสุดเอง | [client/src/ChatRoom.jsx:15-17](client/src/ChatRoom.jsx#L15-L17) |
-| 7 | ห้องที่ส่งไม่ได้ (อีกฝ่ายออฟไลน์ / ไม่เป็นสมาชิกแล้ว) → ปิดช่องพิมพ์ + แสดงเหตุผล | [client/src/App.jsx:297](client/src/App.jsx#L297), [:313](client/src/App.jsx#L313) |
+| 1 | `renderRoom` เลือก props ตามประเภทห้อง แล้ว render `ChatRoom` (component เดียวใช้ทั้ง 2 ประเภท) | [client/src/App.jsx:287-325](client/src/App.jsx#L287-L325) |
+| 2 | ผู้ใช้พิมพ์ + Enter → trim → `onSend(text)` → ล้างช่องพิมพ์ | [client/src/ChatRoom.jsx:20-26](client/src/ChatRoom.jsx#L20-L26) |
+| 3 | `sendToActiveRoom` ดูประเภทห้อง → `emit("private_msg")` หรือ `emit("group_msg")` | [client/src/App.jsx:106-111](client/src/App.jsx#L106-L111) |
+| 4 | **ยังไม่ขึ้นจอ** รอ server ส่งกลับ → `addMessage` (ดู R5 ขั้น 2-5) | [client/src/App.jsx:100-101](client/src/App.jsx#L100-L101) |
+| 5 | Chat window: ทุกข้อความเป็นบรรทัด log `[เวลา] ผู้ส่ง: ข้อความ` ชื่อของตัวเองสีเขียว (`mine`) ของคนอื่นสีน้ำเงิน | [client/src/ChatRoom.jsx:40-58](client/src/ChatRoom.jsx#L40-L58) |
+| 6 | มีข้อความใหม่ → scroll ลงล่างสุดเอง | [client/src/ChatRoom.jsx:16-18](client/src/ChatRoom.jsx#L16-L18) |
+| 7 | ห้องที่ส่งไม่ได้ (อีกฝ่ายออฟไลน์ / ไม่เป็นสมาชิกแล้ว) → ปิดช่องพิมพ์ + แสดงเหตุผล | [client/src/App.jsx:303](client/src/App.jsx#L303), [:322](client/src/App.jsx#L322) |
 
 **ทดสอบ:** [docs/R5_R6_TEST.md](docs/R5_R6_TEST.md)
 
@@ -222,14 +222,14 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | C1 คลิก `C2` ในรายชื่อ → เปิดห้อง `dm:C2` (คลิกชื่อตัวเองไม่ได้) | [client/src/App.jsx:207-208](client/src/App.jsx#L207-L208) |
-| 2 | พิมพ์ + ส่ง → `emit("private_msg", { to: "C2", text })` | [client/src/App.jsx:104](client/src/App.jsx#L104) |
-| 3 | Server: register แล้วหรือยัง → `NOT_REGISTERED` | [server/index.js:113-114](server/index.js#L113-L114) → [`requireName` :100-106](server/index.js#L100-L106) |
-| 4 | C2 ออนไลน์ไหม → `USER_NOT_FOUND` | [server/index.js:115-116](server/index.js#L115-L116) |
-| 5 | ข้อความว่างหรือยาวเกิน 1000 → `INVALID_TEXT` | [server/index.js:117-118](server/index.js#L117-L118) → [`cleanText` :54-61](server/index.js#L54-L61) |
-| 6 | สร้าง msg โดย **`from` มาจาก socket** ไม่ใช่จาก payload | [server/index.js:122](server/index.js#L122) |
-| 7 | **ส่งตรงถึง socket ของ C2** + echo กลับให้ C1 (ไม่ใช่ broadcast) | [server/index.js:123-124](server/index.js#L123-L124) |
-| 8 | C1 และ C2 ได้ `private_msg` → ลงห้อง `dm:C2` / `dm:C1` (ดู R5) | [client/src/App.jsx:95](client/src/App.jsx#L95) |
+| 1 | C1 คลิก `C2` ในรายชื่อ → เปิดห้อง `dm:C2` (คลิกชื่อตัวเองไม่ได้) | [client/src/App.jsx:212-213](client/src/App.jsx#L212-L213) |
+| 2 | พิมพ์ + ส่ง → `emit("private_msg", { to: "C2", text })` | [client/src/App.jsx:109](client/src/App.jsx#L109) |
+| 3 | Server: register แล้วหรือยัง → `NOT_REGISTERED` | [server/index.js:116-117](server/index.js#L116-L117) → [`requireName` :103-109](server/index.js#L103-L109) |
+| 4 | C2 ออนไลน์ไหม → `USER_NOT_FOUND` | [server/index.js:118-119](server/index.js#L118-L119) |
+| 5 | ข้อความว่างหรือยาวเกิน 1000 → `INVALID_TEXT` | [server/index.js:120-121](server/index.js#L120-L121) → [`cleanText` :57-64](server/index.js#L57-L64) |
+| 6 | สร้าง msg โดย **`from` มาจาก socket** ไม่ใช่จาก payload | [server/index.js:125](server/index.js#L125) |
+| 7 | **ส่งตรงถึง socket ของ C2** + echo กลับให้ C1 (ไม่ใช่ broadcast) | [server/index.js:126-127](server/index.js#L126-L127) |
+| 8 | C1 และ C2 ได้ `private_msg` → ลงห้อง `dm:C2` / `dm:C1` (ดู R5) | [client/src/App.jsx:100](client/src/App.jsx#L100) |
 
 **จุดสำคัญ:** ข้อความไม่เคยถูกส่งไปที่ C3 เลย เปิด DevTools ของ C3 ก็จะไม่เห็น frame `private_msg`
 
@@ -245,16 +245,16 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | C1 กรอกชื่อกลุ่ม + กด "[+ create]" | [client/src/App.jsx:218-230](client/src/App.jsx#L218-L230) |
-| 2 | `emit("create_group", { group })` | [client/src/App.jsx:109-116](client/src/App.jsx#L109-L116) |
-| 3 | Server: trim ชื่อ แล้วตรวจว่าว่างหรือยาวเกิน 30 → `INVALID_GROUP` | [server/index.js:130-133](server/index.js#L130-L133) |
-| 4 | ชื่อซ้ำ (ไม่สนตัวพิมพ์ รวมกลุ่มที่ไม่มีสมาชิกแล้ว) → `GROUP_EXISTS` | [server/index.js:134](server/index.js#L134) → [`isGroupTaken` :48-51](server/index.js#L48-L51) |
-| 5 | **สร้างกลุ่มที่มีแค่ผู้สร้าง** `new Set([name])` | [server/index.js:137](server/index.js#L137) |
-| 6 | socket ของ C1 join room `group:g1` (เตรียมรับข้อความ R11) | [server/index.js:138](server/index.js#L138) |
-| 7 | broadcast `group_list` → ทุกคนเห็นกลุ่มใหม่ (R9) | [server/index.js:139](server/index.js#L139) |
-| 8 | ส่ง `create_group_ok` ให้ C1 คนเดียว → client เปิดห้อง `#g1` อัตโนมัติ | [server/index.js:140](server/index.js#L140) → [client/src/App.jsx:90](client/src/App.jsx#L90) |
+| 1 | C1 กรอกชื่อกลุ่ม + กด "[+ create]" | [client/src/App.jsx:223-235](client/src/App.jsx#L223-L235) |
+| 2 | `emit("create_group", { group })` | [client/src/App.jsx:114-121](client/src/App.jsx#L114-L121) |
+| 3 | Server: trim ชื่อ แล้วตรวจว่าว่างหรือยาวเกิน 30 → `INVALID_GROUP` | [server/index.js:133-136](server/index.js#L133-L136) |
+| 4 | ชื่อซ้ำ (ไม่สนตัวพิมพ์ รวมกลุ่มที่ไม่มีสมาชิกแล้ว) → `GROUP_EXISTS` | [server/index.js:137](server/index.js#L137) → [`isGroupTaken` :51-54](server/index.js#L51-L54) |
+| 5 | **สร้างกลุ่มที่มีแค่ผู้สร้าง** `new Set([name])` | [server/index.js:140](server/index.js#L140) |
+| 6 | socket ของ C1 join room `group:g1` (เตรียมรับข้อความ R11) | [server/index.js:141](server/index.js#L141) |
+| 7 | broadcast `group_list` → ทุกคนเห็นกลุ่มใหม่ (R9) | [server/index.js:142](server/index.js#L142) |
+| 8 | ส่ง `create_group_ok` ให้ C1 คนเดียว → client เปิดห้อง `#g1` อัตโนมัติ | [server/index.js:143](server/index.js#L143) → [client/src/App.jsx:93](client/src/App.jsx#L93) |
 
-**การตัดสินใจของทีม:** กลุ่มที่สมาชิกออกหมดแล้ว**ไม่ถูกลบ** ยังแสดงว่า "No members" และคนอื่น join ได้ ([server/index.js:183](server/index.js#L183))
+**การตัดสินใจของทีม:** กลุ่มที่สมาชิกออกหมดแล้ว**ไม่ถูกลบ** ยังแสดงว่า "No members" และคนอื่น join ได้ ([server/index.js:188](server/index.js#L188))
 
 **ทดสอบ:** [docs/R8_TEST.md](docs/R8_TEST.md) · `npm test -- r08`
 
@@ -268,10 +268,10 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | Server เรียก `broadcastGroupList()` ใน 4 จุด: register / create / join / disconnect | [:96](server/index.js#L96), [:139](server/index.js#L139), [:155](server/index.js#L155), [:186](server/index.js#L186) |
-| 2 | ส่ง**ทุกกลุ่ม**พร้อมสมาชิก ไม่กรองตามผู้สร้างหรือตามสมาชิก | [server/index.js:69-72](server/index.js#L69-L72) |
-| 3 | Client ได้ `group_list` → แทนที่ `groups` เดิมทั้งก้อน | [client/src/App.jsx:88](client/src/App.jsx#L88) |
-| 4 | Render ทุกกลุ่ม: `<n> members: <names>` ชื่อตัวเองมี `(you)` ถ้ายังไม่เป็นสมาชิกขึ้น "not a member" | [client/src/App.jsx:233-262](client/src/App.jsx#L233-L262) |
+| 1 | Server เรียก `broadcastGroupList()` ใน 4 จุด: register / create / join / disconnect | [:99](server/index.js#L99), [:142](server/index.js#L142), [:158](server/index.js#L158), [:191](server/index.js#L191) |
+| 2 | ส่ง**ทุกกลุ่ม**พร้อมสมาชิก ไม่กรองตามผู้สร้างหรือตามสมาชิก | [server/index.js:72-75](server/index.js#L72-L75) |
+| 3 | Client ได้ `group_list` → แทนที่ `groups` เดิมทั้งก้อน | [client/src/App.jsx:91](client/src/App.jsx#L91) |
+| 4 | Render ทุกกลุ่ม: `<n> members: <names>` ชื่อตัวเองมี `(you)` ถ้ายังไม่เป็นสมาชิกขึ้น "not a member" | [client/src/App.jsx:238-268](client/src/App.jsx#L238-L268) |
 
 **จุดสำคัญ:** R9 ให้ทุกคนเห็นว่า "มีกลุ่มอะไร และใครอยู่" ส่วน R11 ให้เฉพาะสมาชิกเห็น "ข้อความ" การกรองจึงเกิดตอนส่งข้อความเท่านั้น
 
@@ -287,17 +287,17 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | กลุ่มที่ยังไม่เป็นสมาชิก → แสดงปุ่ม "[join]" (ห้องยังคลิกเข้าไม่ได้) | [client/src/App.jsx:241](client/src/App.jsx#L241), [:254-258](client/src/App.jsx#L254-L258) |
-| 2 | `emit("join_group", { group })` ส่งแค่ชื่อกลุ่ม | [client/src/App.jsx:119-122](client/src/App.jsx#L119-L122) |
-| 3 | Server: register แล้วหรือยัง / มีกลุ่มนี้ไหม (`GROUP_NOT_FOUND`) | [server/index.js:144-147](server/index.js#L144-L147) |
-| 4 | เป็นสมาชิกอยู่แล้ว → `ALREADY_MEMBER` (ไม่ broadcast ซ้ำ) | [server/index.js:148](server/index.js#L148) |
-| 5 | **เพิ่มชื่อจาก socket** (`name` ใน payload ถูกเมิน) | [server/index.js:153](server/index.js#L153) |
-| 6 | socket ของ C2 join room `group:g1` เริ่มรับข้อความกลุ่มตั้งแต่ตอนนี้ (ไม่ได้ข้อความเก่า) | [server/index.js:154](server/index.js#L154) |
-| 7 | broadcast `group_list` (R9) + ส่ง `join_group_ok` ให้ C2 → เปิดห้องอัตโนมัติ | [server/index.js:155-156](server/index.js#L155-L156) → [client/src/App.jsx:92](client/src/App.jsx#L92) |
+| 1 | กลุ่มที่ยังไม่เป็นสมาชิก → แสดงปุ่ม "[join]" (ห้องยังคลิกเข้าไม่ได้) | [client/src/App.jsx:246](client/src/App.jsx#L246), [:260-264](client/src/App.jsx#L260-L264) |
+| 2 | `emit("join_group", { group })` ส่งแค่ชื่อกลุ่ม | [client/src/App.jsx:124-127](client/src/App.jsx#L124-L127) |
+| 3 | Server: register แล้วหรือยัง / มีกลุ่มนี้ไหม (`GROUP_NOT_FOUND`) | [server/index.js:147-150](server/index.js#L147-L150) |
+| 4 | เป็นสมาชิกอยู่แล้ว → `ALREADY_MEMBER` (ไม่ broadcast ซ้ำ) | [server/index.js:151](server/index.js#L151) |
+| 5 | **เพิ่มชื่อจาก socket** (`name` ใน payload ถูกเมิน) | [server/index.js:156](server/index.js#L156) |
+| 6 | socket ของ C2 join room `group:g1` เริ่มรับข้อความกลุ่มตั้งแต่ตอนนี้ (ไม่ได้ข้อความเก่า) | [server/index.js:157](server/index.js#L157) |
+| 7 | broadcast `group_list` (R9) + ส่ง `join_group_ok` ให้ C2 → เปิดห้องอัตโนมัติ | [server/index.js:158-159](server/index.js#L158-L159) → [client/src/App.jsx:95](client/src/App.jsx#L95) |
 
 **ทำไมผู้สร้างดึงคนอื่นเข้าไม่ได้ (3 ชั้น)**
-1. `create_group` ไม่มีพารามิเตอร์ให้ใส่สมาชิกคนอื่น ([:137](server/index.js#L137))
-2. `join_group` เพิ่มได้แค่เจ้าของ socket ที่ส่ง event ([:153](server/index.js#L153))
+1. `create_group` ไม่มีพารามิเตอร์ให้ใส่สมาชิกคนอื่น ([:140](server/index.js#L140))
+2. `join_group` เพิ่มได้แค่เจ้าของ socket ที่ส่ง event ([:156](server/index.js#L156))
 3. protocol ไม่มี event สำหรับเชิญหรือเพิ่มสมาชิก
 
 **ทดสอบ:** [docs/R10_TEST.md](docs/R10_TEST.md) · `npm test -- r10` (มี test ว่าส่ง `name: "C3"` มาแล้ว C3 ไม่ถูกเพิ่ม)
@@ -312,21 +312,21 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | A เปิดห้อง `#g1` (เปิดได้เฉพาะกลุ่มที่เป็นสมาชิก) → พิมพ์ + ส่ง | [client/src/App.jsx:241](client/src/App.jsx#L241) |
-| 2 | `emit("group_msg", { group: "g1", text })` | [client/src/App.jsx:105](client/src/App.jsx#L105) |
-| 3 | Server: register แล้วหรือยัง / มีกลุ่มนี้ไหม | [server/index.js:160-163](server/index.js#L160-L163) |
-| 4 | **ชั้นที่ 1 (ใครส่งได้):** A เป็นสมาชิกไหม → `NOT_A_MEMBER` | [server/index.js:164](server/index.js#L164) |
-| 5 | ตรวจข้อความ → `INVALID_TEXT` | [server/index.js:165-166](server/index.js#L165-L166) |
-| 6 | **ชั้นที่ 2 (ใครได้รับ):** `io.to("group:g1").emit(...)` ส่งเฉพาะ socket ใน room รวมผู้ส่งด้วย (echo) | [server/index.js:174](server/index.js#L174) |
-| 7 | สมาชิกได้ `group_msg` → ลงห้อง `group:g1` (ดู R5) | [client/src/App.jsx:96](client/src/App.jsx#L96) |
+| 1 | A เปิดห้อง `#g1` (เปิดได้เฉพาะกลุ่มที่เป็นสมาชิก) → พิมพ์ + ส่ง | [client/src/App.jsx:246](client/src/App.jsx#L246) |
+| 2 | `emit("group_msg", { group: "g1", text })` | [client/src/App.jsx:110](client/src/App.jsx#L110) |
+| 3 | Server: register แล้วหรือยัง / มีกลุ่มนี้ไหม | [server/index.js:163-166](server/index.js#L163-L166) |
+| 4 | **ชั้นที่ 1 (ใครส่งได้):** A เป็นสมาชิกไหม → `NOT_A_MEMBER` | [server/index.js:167](server/index.js#L167) |
+| 5 | ตรวจข้อความ → `INVALID_TEXT` | [server/index.js:168-169](server/index.js#L168-L169) |
+| 6 | **ชั้นที่ 2 (ใครได้รับ):** `io.to("group:g1").emit(...)` ส่งเฉพาะ socket ใน room รวมผู้ส่งด้วย (echo) | [server/index.js:177-178](server/index.js#L177-L178) |
+| 7 | สมาชิกได้ `group_msg` → ลงห้อง `group:g1` (ดู R5) | [client/src/App.jsx:101](client/src/App.jsx#L101) |
 
 **`members` Set กับ room ต้องตรงกันเสมอ**
 
 | จังหวะ | `members` Set | Socket.IO room |
 |---|---|---|
-| create | เพิ่มผู้สร้าง [:137](server/index.js#L137) | join [:138](server/index.js#L138) |
-| join | เพิ่มผู้ join [:153](server/index.js#L153) | join [:154](server/index.js#L154) |
-| disconnect | ลบออกจากทุกกลุ่ม [:184](server/index.js#L184) | Socket.IO ถอด socket ออกจากทุก room ให้เอง |
+| create | เพิ่มผู้สร้าง [:140](server/index.js#L140) | join [:141](server/index.js#L141) |
+| join | เพิ่มผู้ join [:156](server/index.js#L156) | join [:157](server/index.js#L157) |
+| disconnect | ลบออกจากทุกกลุ่ม [:189](server/index.js#L189) | Socket.IO ถอด socket ออกจากทุก room ให้เอง |
 
 ถ้าแก้โค้ดส่วนนี้ ต้องให้ทั้งสองที่เปลี่ยนพร้อมกันเสมอ ไม่อย่างนั้นคนที่ไม่ใช่สมาชิกอาจได้รับข้อความ
 
@@ -339,11 +339,11 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
 | 1 | ปิด tab → TCP ปิดทันที / เน็ตหลุด → รู้ได้จาก heartbeat (ประมาณ 45 วินาที) | — |
-| 2 | Server: ลบออกจาก `clients` → ชื่อว่าง (R3) | [server/index.js:181](server/index.js#L181) |
-| 3 | ลบออกจากทุกกลุ่ม แต่**ไม่ลบตัวกลุ่ม** (R8, R11) | [server/index.js:184](server/index.js#L184) |
-| 4 | broadcast รายชื่อ + กลุ่มใหม่ (R4, R9) | [server/index.js:185-186](server/index.js#L185-L186) |
+| 2 | Server: ลบออกจาก `clients` → ชื่อว่าง (R3) | [server/index.js:186](server/index.js#L186) |
+| 3 | ลบออกจากทุกกลุ่ม แต่**ไม่ลบตัวกลุ่ม** (R8, R11) | [server/index.js:189](server/index.js#L189) |
+| 4 | broadcast รายชื่อ + กลุ่มใหม่ (R4, R9) | [server/index.js:190-191](server/index.js#L190-L191) |
 | 5 | Client: ปิด auto-reconnect (ถ้า reconnect อาจได้ `NAME_TAKEN` จนรายชื่อค้าง) | [client/src/socket.js:13-15](client/src/socket.js#L13-L15) |
-| 6 | Client: หลุดหลัง login แล้ว → ล้างทุกอย่าง กลับหน้า login พร้อมข้อความแจ้ง | [client/src/App.jsx:81-86](client/src/App.jsx#L81-L86) → [`resetSession` :46-54](client/src/App.jsx#L46-L54) |
+| 6 | Client: หลุดหลัง login แล้ว → ล้างทุกอย่าง กลับหน้า login พร้อมข้อความแจ้ง | [client/src/App.jsx:84-89](client/src/App.jsx#L84-L89) → [`resetSession` :48-57](client/src/App.jsx#L48-L57) |
 
 อ่านเพิ่ม: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) หัวข้อ "การหลุดการเชื่อมต่อ"
 
@@ -354,12 +354,12 @@ unread, activeRoom     // ตัวเลข unread ต่อห้อง + ห�
 ใช้ตอนทำ Part 3 เช่น เพิ่มฟีเจอร์ AI, ส่งไฟล์, typing indicator
 
 1. **ออกแบบก่อน** → เพิ่ม event ใน [docs/PROTOCOL.md](docs/PROTOCOL.md) (ตาราง + ตัวอย่าง + Changelog) แล้วแจ้งทีม
-2. **Server** → เพิ่ม `socket.on("ชื่อ_event", ...)` ใน `io.on("connection")` ([server/index.js:74](server/index.js#L74)) ตามลำดับนี้:
+2. **Server** → เพิ่ม `socket.on("ชื่อ_event", ...)` ใน `io.on("connection")` ([server/index.js:77](server/index.js#L77)) ตามลำดับนี้:
    - `requireName()` ก่อนเสมอ
    - ตรวจ input แล้วส่ง `sendError(socket, "CODE", "ข้อความ")` ถ้าไม่ผ่าน
    - ใช้ `socket.data.name` เป็นตัวตน **ห้ามเชื่อชื่อจาก payload**
    - เลือก emit ให้ถูก: คนเดียว → `socket.emit` / กลุ่ม → `io.to(room).emit` / ทุกคน → `io.to(REGISTERED).emit`
-3. **Client** → เพิ่ม `socket.on(...)` ใน `handleLogin` ([client/src/App.jsx:87-96](client/src/App.jsx#L87-L96)) ถ้าต้องอ่าน state ใน handler ให้ใช้ ref (ดู R5)
+3. **Client** → เพิ่ม `socket.on(...)` ใน `handleLogin` ([client/src/App.jsx:90-101](client/src/App.jsx#L90-L101)) ถ้าต้องอ่าน state ใน handler ให้ใช้ ref (ดู R5)
 4. **Test** → สร้าง `server/tests/rXX-ชื่อ.test.mjs` (copy โครงจากไฟล์ที่มีอยู่) อย่างน้อยต้องมี: กรณีสำเร็จ, กรณี error แต่ละ code, และ**คนที่ไม่ควรได้รับต้องไม่ได้รับ**
 5. **รัน** `cd server && npm test` ต้องผ่านทุกไฟล์ + `cd client && npm run build` ต้องผ่าน
 6. **เอกสาร** → README (สถานะ), checklist `docs/RXX_TEST.md`, Handbook นี้ (เพิ่มหัวข้อ + อัปเดตเลขบรรทัดที่เลื่อน), `PromptRecord.md`

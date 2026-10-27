@@ -5,6 +5,7 @@
 
 | Feature | Checklist | หลักฐาน |
 |---|---|---|
+| Discord bridge (`discord`) | [discord_TEST.md](discord_TEST.md) (มีขั้นตอนสร้าง bot) | [evidence/features/discord/](../evidence/features/README.md#discord) |
 | Cloud (`cloud`) | [cloud_TEST.md](cloud_TEST.md) (มีขั้นตอน deploy บน Render) | [evidence/features/cloud/](../evidence/features/README.md#cloud) |
 
 คำอธิบายการทำงานพร้อมลิงก์ไปที่โค้ดอยู่ใน [HandbookFeatures.md](../../HandbookFeatures.md)

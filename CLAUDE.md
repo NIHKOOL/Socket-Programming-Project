@@ -58,6 +58,9 @@ Test อยู่ใน `server/tests/*.test.mjs` (1 ไฟล์ต่อ requi
 - Test: `server/tests/features/fXX-<ชื่อ>.test.mjs` (รันด้วย `npm test -- features/`) และ `npm test` ของ core ต้องยังผ่าน
 - Docs: `docs/features/<ชื่อ>_TEST.md`, `docs/evidence/features/<ชื่อ>/`, หัวข้อใน `HandbookFeatures.md`
 - event ใหม่ต้องเพิ่มใน `docs/PROTOCOL.md` หัวข้อ "Feature เสริม"
+- จุดเชื่อม 4 จุด: `initFeatures`, `handleHttp`, `setupSocket`, `onGroupMessage` (ดู `server/features/index.js`)
+- ค่าลับอยู่ใน `server/.env` (ตัวอย่างที่ `server/.env.example`) feature ที่ไม่มีค่าที่ต้องใช้ต้องปิดตัวเองได้ โดยแอปยังทำงานปกติ
+- test ห้ามต่อบริการจริง: `run-all.mjs` ตั้ง `NODE_ENV=test` + ล้าง token ไว้แล้ว
 
 ## Handbook
 
