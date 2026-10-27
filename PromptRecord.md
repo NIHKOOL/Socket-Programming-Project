@@ -256,3 +256,12 @@
   > ได้เลยย้าย test อัตโนมัติทั้งหมดอยู่ในโฟลเดอร์ชั่วคราว เข้ามาในโปรเจกต์เลย
 - **ผลลัพธ์:** ตรวจรูป R11 8 รูปผ่าน (รวม WS frame ของคนนอกที่ไม่มี `group_msg`) เปลี่ยนชื่อ 1 ไฟล์ เปลี่ยน R11 เป็น ✅ / ย้าย test 9 ไฟล์ไป `server/tests/*.test.mjs` + `helpers.mjs` + `run-all.mjs` (แต่ละไฟล์ได้ server ใหม่ที่ port 4100+), เพิ่ม `npm test` และ devDependency `socket.io-client@4.8.1` ใน server, แก้ check ใน R7 test ที่ผ่านง่ายเกินไป (`|| length === 3`) ให้เทียบข้อความทุกตัวอักษร / อัปเดต README, CLAUDE.md, R*_TEST.md (เพิ่มคำสั่งรัน)
 - **หมายเหตุ:** `npm test` ผ่าน 9/9 ไฟล์ (107 ข้อ) ทดลองให้ test ล้มแล้วตัวรันแจ้งข้อที่ไม่ผ่านและ exit 1 ถูกต้อง
+
+### [2026-10-28] R1 — ใช้เครื่อง server เป็น client ตัวที่ 2 ได้ไหม
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R1
+- **Prompt:**
+  > เรา test R1 ข้ามเครื่องโดยใช้ Client2 เป็นเครื่องเดียวกับ ที่เป็น Server ได้ไหม เปลี่ยนแค่ Terminal
+- **ผลลัพธ์:** ได้ เพราะโจทย์เขียนว่า "The server may run on one of these computers" แนะนำให้ใส่ Server URL เป็น IP จริงแทน localhost เพื่อให้ log แยก IP ของ client ได้ชัด เพิ่มหัวข้อ "Setup ที่ใช้ได้" ใน `docs/R1_TEST.md`
+- **หมายเหตุ:** —

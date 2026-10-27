@@ -2,6 +2,22 @@
 
 เป้าหมาย: Client อย่างน้อย 2 ตัว รันบน**คอมพิวเตอร์คนละเครื่อง** และเชื่อมต่อ Server ได้
 
+## Setup ที่ใช้ได้
+
+โจทย์: "at least two clients, each running on a different physical computer. **The server may run on one of these computers** or on a third one."
+
+ถ้ามีคอมแค่ 2 เครื่อง ให้ server อยู่ร่วมเครื่องกับ client ตัวหนึ่ง:
+
+```
+เครื่อง A (เช่น 192.168.1.56)              เครื่อง B (เช่น 192.168.1.36)
+├─ Terminal 1: cd server && npm start      └─ browser: Client C1
+└─ browser: Client C2                         Server URL = http://192.168.1.56:3000
+   Server URL = http://192.168.1.56:3000  ← ใช้ IP จริง ไม่ใช้ localhost
+```
+
+- "client" คือ **browser** ที่เปิดแอป เครื่อง A จะรัน `cd client && npm run dev` เองใน terminal อีกอัน หรือเปิดหน้าเว็บจากเครื่อง B (`http://192.168.1.36:5173`) ก็ได้
+- ที่เครื่อง A ใช้ IP จริงแทน `localhost` เพื่อให้ log ของ server ขึ้น IP ของ C2 ต่างจาก C1 ชัดเจน
+
 ## เตรียม
 
 - [ ] ทุกเครื่องต่อ Wi-Fi / LAN / Hotspot **วงเดียวกัน**
