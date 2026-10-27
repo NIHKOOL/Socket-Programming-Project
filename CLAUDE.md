@@ -20,6 +20,10 @@ Term project วิชา Computer Network: แอปแชท Client–Server �
 
 - Server: Node.js + Socket.IO 4.8 (ESM) — `server/index.js` เป็นไฟล์เดียว เก็บ state ใน memory
 - Client: React 18 + Vite 5 + socket.io-client 4.8 — `client/src/`
+  - `rooms.js`: id ห้อง (`dm:<name>`, `group:<name>`) และการแยกข้อความลงห้อง
+  - `ChatRoom.jsx`: UI ห้องแชท ใช้ร่วมกันทั้ง private และ group
+  - `App.jsx`: state ทั้งหมด (users, groups, messages ต่อห้อง, unread) + socket handlers
+  - ข้อความที่ส่งไม่แสดงบนจอเอง ต้องรอ server echo กลับมา (server เป็นแหล่งข้อมูลจริง)
 - ทั้งสองฝั่งเป็น npm project แยกกัน ต้องรัน `npm install` ในแต่ละโฟลเดอร์
 
 ```bash

@@ -50,6 +50,14 @@
 | [R4-server-down.png](R4/R4-server-down.png) | 2026-10-27 | เหมือนด้านบน | หยุด server → C1, C2 กลับหน้า login พร้อม "หลุดการเชื่อมต่อจาก server กรุณาเข้าสู่ระบบใหม่" |
 | [R1-C1.png](R1/R1-C1.png), [R1-C2.png](R1/R1-C2.png) | 2026-10-27 | เครื่องเดียว | (จาก R1) C1 และ C2 เห็นรายชื่อตรงกันและเห็นชื่อตัวเอง |
 
+## R5 + R6 — Chat rooms
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| _(ยังไม่มี)_ | | | |
+
+> รูปที่ต้องเก็บใน `R5_R6/` (วิธีอยู่ใน [R5_R6_TEST.md](../R5_R6_TEST.md)): `R5-separate-rooms.png`, `R5-unread-badge.png`, `R6-private-room.png`, `R6-group-room.png`
+
 ---
 
 > R2 แนะนำเพิ่ม (ไม่บังคับ): `R2-ws-frames.png` แท็บ **Messages** ที่เห็น frame `42["private_msg",...]` ใช้ประกอบสไลด์อธิบาย packet format
