@@ -96,7 +96,7 @@ npm run dev
 | ข้อ | รายละเอียด | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
 | R3 | ชื่อ Client ไม่ซ้ำกัน (ไม่สนตัวพิมพ์, 1–20 ตัวอักษร) · ทดสอบตาม [docs/R3_TEST.md](docs/R3_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r3--unique-name)) | ✅ | |
-| R4 | เห็นรายชื่อ Client ที่ออนไลน์ทั้งหมด (รวมตัวเอง) อัปเดต real-time · ทดสอบตาม [docs/R4_TEST.md](docs/R4_TEST.md) | 🟨 | |
+| R4 | เห็นรายชื่อ Client ที่ออนไลน์ทั้งหมด (รวมตัวเอง) อัปเดต real-time · ทดสอบตาม [docs/R4_TEST.md](docs/R4_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r4--online-user-list)) | ✅ | |
 | R5 | แชทแต่ละห้อง (Private/Group) แยกห้องกัน | ⬜ | |
 | R6 | ทุกห้องมีช่องพิมพ์ + หน้าต่างแสดงข้อความ | ⬜ | |
 | R7 | Private message — เห็นแค่ผู้ส่งกับผู้รับ | ⬜ | |

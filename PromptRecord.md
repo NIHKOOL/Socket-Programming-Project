@@ -127,3 +127,12 @@
   > ต่อ R4 เลย
 - **ผลลัพธ์:** แก้บั๊ก: auto-reconnect อาจได้ NAME_TAKEN จนรายชื่อค้าง → ปิด `reconnection` (`client/src/socket.js`) และให้กลับหน้า login เมื่อหลุด (`client/src/App.jsx`) / ชื่อตัวเองอยู่บนสุด ที่เหลือเรียงตามตัวอักษร / อัปเดต ARCHITECTURE.md (หัวข้อการหลุดการเชื่อมต่อ), PROTOCOL.md, สร้าง `docs/R4_TEST.md`
 - **หมายเหตุ:** test อัตโนมัติ R4 9/9, R3 12/12, smoke 7/7 ผ่าน, build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R4/`
+
+### [2026-10-27] ตรวจ R4
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R4
+- **Prompt:**
+  > Test R4 เสร็จแล้วครบทุกอัน
+- **ผลลัพธ์:** ตรวจรูปหลักฐาน: `R4-three-clients.png` ผ่าน, `R4-server-down.png` ผ่าน (ยืนยันการแก้บั๊ก reconnect), `R4-after-leave.png` เหมือน three-clients ทุกพิกเซลจึงต้องถ่ายใหม่ เปลี่ยน R4 ใน README เป็น ✅ และอัปเดตตารางหลักฐาน + checklist
+- **หมายเหตุ:** รอรูป `R4-after-leave.png` ใหม่
