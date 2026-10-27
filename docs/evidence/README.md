@@ -73,9 +73,19 @@
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
+| [R8-create-group.png](R8/R8-create-group.png) | 2026-10-27 | client `localhost:5173` | C1 สร้าง g1 → ห้องเปิดอัตโนมัติ "สมาชิก 1 คน: C1" |
+| [R8-other-client-view.png](R8/R8-other-client-view.png) | 2026-10-27 | เหมือนด้านบน | C2 เห็น g1 สมาชิก C1 คนเดียว + "ยังไม่ได้เป็นสมาชิก" (ไม่ถูกเพิ่มเข้าไปเอง) |
+| [R8-multiple-groups.png](R8/R8-multiple-groups.png) | 2026-10-27 | เหมือนด้านบน | ⚠️ C1 เป็น**สมาชิก** g1, g2, g3 แต่ g2/g3 สร้างโดย C2/C3 จึงไม่ได้แสดงว่า C1 **สร้าง**หลายกลุ่ม (ยืนยันด้วย test อัตโนมัติแล้ว แนะนำถ่ายใหม่โดยให้ C1 สร้างเองทั้ง 3 กลุ่ม) |
+| [R8-empty-group-kept.png](R8/R8-empty-group-kept.png) | 2026-10-27 | เหมือนด้านบน | หลัง C1 ออก: g1 ยังอยู่ "ไม่มีสมาชิก" และ g2 เหลือแค่ C2 |
+
+## R9 — Group list with members
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
 | _(ยังไม่มี)_ | | | |
 
-> รูปที่ต้องเก็บใน `R8/` (วิธีอยู่ใน [R8_TEST.md](../R8_TEST.md)): `R8-create-group.png`, `R8-other-client-view.png`, `R8-multiple-groups.png`, `R8-empty-group-kept.png`
+> รูปที่ต้องเก็บใน `R9/` (วิธีอยู่ใน [R9_TEST.md](../R9_TEST.md)): `R9-all-groups.png`, `R9-new-client.png`, `R9-member-update.png`
+> (รูปของ R8 แสดงบางส่วนของ R9 อยู่แล้ว เช่น `R8-other-client-view.png` ที่ C2 เห็นกลุ่มของ C1 พร้อมสมาชิก)
 
 ---
 

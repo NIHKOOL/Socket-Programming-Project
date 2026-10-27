@@ -61,9 +61,11 @@ function broadcastUserList() {
   io.to(REGISTERED).emit("user_list", { users: [...clients.keys()] }); // R4
 }
 
+// R9: ส่งกลุ่ม "ทั้งหมด" ทุกกลุ่ม ไม่ว่าใครสร้าง หรือผู้รับจะเป็นสมาชิกหรือไม่ พร้อมรายชื่อสมาชิก
+// เรียกทุกครั้งที่ข้อมูลกลุ่มเปลี่ยน: register (คนใหม่ได้รายการครบ), create_group, join_group, disconnect
 function broadcastGroupList() {
   const list = [...groups].map(([name, members]) => ({ name, members: [...members] }));
-  io.to(REGISTERED).emit("group_list", { groups: list }); // R9
+  io.to(REGISTERED).emit("group_list", { groups: list });
 }
 
 io.on("connection", (socket) => {

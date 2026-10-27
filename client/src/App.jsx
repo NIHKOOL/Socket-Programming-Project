@@ -166,7 +166,7 @@ export default function App() {
           </button>
         </form>
         <ul className="room-list">
-          {/* R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง group (ปุ่มสร้าง/เข้ากลุ่มจะทำใน R8, R10) */}
+          {/* R9: แสดงทุกกลุ่มพร้อมสมาชิก / R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง group (ปุ่มเข้ากลุ่มจะทำใน R10) */}
           {groups.map((g) => {
             const isMember = g.members.includes(me);
             const roomId = groupRoomId(g.name);
@@ -180,7 +180,9 @@ export default function App() {
                   <span>
                     {g.name}
                     <small>
-                      {g.members.length > 0 ? g.members.join(", ") : "ไม่มีสมาชิก"}
+                      {g.members.length > 0
+                        ? `${g.members.length} คน: ${g.members.map((m) => (m === me ? `${m} (คุณ)` : m)).join(", ")}`
+                        : "ไม่มีสมาชิก"}
                       {!isMember && " · ยังไม่ได้เป็นสมาชิก"}
                     </small>
                   </span>
