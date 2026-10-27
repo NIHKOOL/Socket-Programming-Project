@@ -56,9 +56,9 @@ socket.emit("group_msg", { group: "net-project", text: "hello all" })
 
 | code | เกิดเมื่อ |
 |---|---|
-| `INVALID_NAME` | register ด้วยชื่อว่าง |
+| `INVALID_NAME` | register ด้วยชื่อว่าง (หลัง trim) หรือยาวเกิน 20 ตัวอักษร |
 | `ALREADY_REGISTERED` | register ซ้ำบน connection เดิม |
-| `NAME_TAKEN` | ชื่อที่ register ซ้ำกับคนที่ออนไลน์อยู่ (R3) |
+| `NAME_TAKEN` | ชื่อที่ register ซ้ำกับคนที่ออนไลน์อยู่ โดย**ไม่สนตัวพิมพ์เล็ก/ใหญ่** (`C1` = `c1`) (R3) |
 | `NOT_REGISTERED` | ส่งคำสั่งอื่นก่อน register |
 | `USER_NOT_FOUND` | ส่ง private message ถึงคนที่ไม่ได้ออนไลน์ |
 | `INVALID_GROUP` | สร้างกลุ่มด้วยชื่อว่าง |
@@ -87,6 +87,9 @@ Client(alice)                Server                  Client(bob)
 ## กฎฝั่ง Server
 
 - Server เป็นผู้กำหนด `from` และ `timestamp` เอง ห้ามเชื่อค่าที่ client ส่งมา
+- ชื่อผู้ใช้ (R3): trim ช่องว่างหัวท้าย, ยาว 1–20 ตัวอักษร, ห้ามซ้ำแบบไม่สนตัวพิมพ์ ชื่อจะว่างให้คนอื่นใช้อีกครั้งเมื่อเจ้าของ disconnect
+- `user_list` / `group_list` broadcast ไปเฉพาะ socket ที่ register สำเร็จแล้ว (room `registered`)
+- Client: ถ้าได้ `error_msg` ก่อน `register_ok` ให้ disconnect แล้วให้ผู้ใช้กรอกชื่อใหม่
 - ตรวจสิทธิ์ก่อนส่งต่อข้อความทุกครั้ง (private → เฉพาะ 2 คน, group → เฉพาะสมาชิก)
 - Group message ส่งผ่าน Socket.IO room ชื่อ `group:<ชื่อกลุ่ม>` socket จะถูก join เข้า room ตอน `create_group` / `join_group` เท่านั้น
 - เมื่อ client หลุดการเชื่อมต่อ ให้ลบออกจากรายชื่อออนไลน์และจากทุกกลุ่ม แล้ว broadcast `user_list` กับ `group_list` ใหม่
@@ -97,3 +100,4 @@ Client(alice)                Server                  Client(bob)
 |---|---|---|
 | 2026-10-27 | — | ร่างแรก |
 | 2026-10-27 | — | เปลี่ยนเป็น Socket.IO events, `error` → `error_msg`, เพิ่ม error code `INVALID_NAME`, `ALREADY_REGISTERED`, `INVALID_GROUP` |
+| 2026-10-27 | — | R3: ชื่อห้ามซ้ำแบบไม่สนตัวพิมพ์, จำกัด 20 ตัวอักษร, broadcast เฉพาะคนที่ register แล้ว |

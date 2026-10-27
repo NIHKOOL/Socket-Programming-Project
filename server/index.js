@@ -23,19 +23,29 @@ const io = new Server(httpServer, {
 const clients = new Map(); // name -> socket
 const groups = new Map(); // groupName -> Set(memberNames)
 
+const MAX_NAME_LENGTH = 20;
+// socket ที่ register สำเร็จแล้วจะถูก join เข้า room นี้ broadcast จะส่งเฉพาะ room นี้
+const REGISTERED = "registered";
+
 const now = () => new Date().toISOString();
+
+// R3: เทียบชื่อแบบไม่สนตัวพิมพ์เล็ก/ใหญ่ ("Alice" กับ "alice" ถือเป็นชื่อเดียวกัน)
+function isNameTaken(name) {
+  const lower = name.toLowerCase();
+  return [...clients.keys()].some((n) => n.toLowerCase() === lower);
+}
 
 function sendError(socket, code, message) {
   socket.emit("error_msg", { code, message });
 }
 
 function broadcastUserList() {
-  io.emit("user_list", { users: [...clients.keys()] }); // R4
+  io.to(REGISTERED).emit("user_list", { users: [...clients.keys()] }); // R4
 }
 
 function broadcastGroupList() {
   const list = [...groups].map(([name, members]) => ({ name, members: [...members] }));
-  io.emit("group_list", { groups: list }); // R9
+  io.to(REGISTERED).emit("group_list", { groups: list }); // R9
 }
 
 io.on("connection", (socket) => {
@@ -48,12 +58,16 @@ io.on("connection", (socket) => {
 
   socket.on("register", ({ name } = {}) => {
     name = String(name ?? "").trim();
-    if (!name) return sendError(socket, "INVALID_NAME", "กรุณาใส่ชื่อ");
+    if (!name || name.length > MAX_NAME_LENGTH) {
+      return sendError(socket, "INVALID_NAME", `ชื่อต้องยาว 1–${MAX_NAME_LENGTH} ตัวอักษร`);
+    }
     if (socket.data.name) return sendError(socket, "ALREADY_REGISTERED", "ลงทะเบียนไปแล้ว");
-    if (clients.has(name)) return sendError(socket, "NAME_TAKEN", "ชื่อนี้ถูกใช้แล้ว"); // R3
+    if (isNameTaken(name)) return sendError(socket, "NAME_TAKEN", `ชื่อ "${name}" ถูกใช้แล้ว`); // R3
 
+    // R3: จองชื่อ → ผูกชื่อกับ socket นี้ → ชื่อนี้จะว่างอีกครั้งตอน disconnect
     socket.data.name = name;
     clients.set(name, socket);
+    socket.join(REGISTERED);
     socket.emit("register_ok", { name });
     broadcastUserList();
     broadcastGroupList();

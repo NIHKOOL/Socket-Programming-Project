@@ -24,6 +24,21 @@
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
+| [R2-server-log.png](R2/R2-server-log.png) | 2026-10-27 | server `192.168.1.56`, client `192.168.1.36` | ทดสอบ 1: server แสดง IP ของตัวเอง, C1/C2 connect จาก `192.168.1.36` และ log `[recv] ... register` |
+| [R2-console-emit.png](R2/R2-console-emit.png) | 2026-10-27 | เหมือนด้านบน | ทดสอบ 2: C1 ส่ง `socket.emit("private_msg", { to: "C2", ... })` จาก DevTools Console |
+| [R2-server-recv-private-msg.png](R2/R2-server-recv-private-msg.png) | 2026-10-27 | เหมือนด้านบน | ทดสอบ 2: server log `[recv] C1 -> private_msg {"to":"C2","text":"hi from console"}` |
+| [R2-ws-upgrade.png](R2/R2-ws-upgrade.png) | 2026-10-27 | เหมือนด้านบน | ทดสอบ 2: `ws://192.168.1.56:3000/socket.io/?EIO=4&transport=websocket` ได้ `101 Switching Protocols`, `Upgrade: websocket` |
+| [R2-no-fetch-xhr.png](R2/R2-no-fetch-xhr.png) | 2026-10-27 | เหมือนด้านบน | ทดสอบ 2: ตัวกรอง Fetch/XHR ว่าง แปลว่าไม่มี REST call |
+| [R2-no-rest.png](R2/R2-no-rest.png) | 2026-10-27 | เหมือนด้านบน | ทดสอบ 3: `http://192.168.1.56:3000/messages` ได้ "This server only accepts Socket.IO connections." |
+
+## R3 — Unique name
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
 | _(ยังไม่มี)_ | | | |
 
-> รูปที่ต้องเก็บ (วิธีอยู่ใน [R2_TEST.md](../R2_TEST.md)): `R2-server-log.png`, `R2-ws-frames.png`, `R2-ws-upgrade.png`, `R2-no-rest.png`
+> รูปที่ต้องเก็บ (วิธีอยู่ใน [R3_TEST.md](../R3_TEST.md)): `R3-name-taken.png`, `R3-case-insensitive.png`, `R3-server-log.png`
+
+---
+
+> R2 แนะนำเพิ่ม (ไม่บังคับ): `R2-ws-frames.png` แท็บ **Messages** ที่เห็น frame `42["private_msg",...]` ใช้ประกอบสไลด์อธิบาย packet format

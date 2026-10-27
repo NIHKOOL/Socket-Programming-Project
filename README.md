@@ -27,6 +27,7 @@
 │   ├── ARCHITECTURE.md  # แผนภาพระบบ + เหตุผลการเลือกโปรโตคอล (ใช้ทำสไลด์ R1)
 │   ├── R1_TEST.md       # checklist ทดสอบข้ามเครื่อง
 │   ├── R2_TEST.md       # checklist พิสูจน์ว่าข้อความวิ่งผ่าน socket เท่านั้น
+│   ├── R3_TEST.md       # checklist ชื่อไม่ซ้ำ
 │   └── evidence/        # รูปหลักฐานการทดสอบ แยกโฟลเดอร์ตาม R (ดู evidence/README.md)
 ├── CLAUDE.md            # บริบทโปรเจกต์สำหรับ Claude Code
 ├── PromptRecord.md      # บันทึก prompt ที่ทีมใช้กับ AI
@@ -86,14 +87,14 @@ npm run dev
 
 | ข้อ | รายละเอียด | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| R1 | Client ≥ 2 ตัวบนคอมคนละเครื่อง + อธิบายโปรโตคอล (what/why/how) — ทดสอบตาม [docs/R1_TEST.md](docs/R1_TEST.md) · ผ่านบนเครื่องเดียวแล้ว ([หลักฐาน](docs/evidence/README.md#r1--system-architecture)) **ยังไม่ได้ทดสอบข้ามเครื่อง** | 🟨 | |
-| R2 | ข้อความแชทส่งผ่าน Socket เท่านั้น — ไม่มี REST (404), log ทุก event · ทดสอบตาม [docs/R2_TEST.md](docs/R2_TEST.md) | 🟨 | |
+| R1 | Client ≥ 2 ตัวบนคอมคนละเครื่อง + อธิบายโปรโตคอล (what/why/how) — ทดสอบตาม [docs/R1_TEST.md](docs/R1_TEST.md) · client ต่อ server ข้ามเครื่องได้แล้ว ([หลักฐาน](docs/evidence/README.md#r2--socket-programming-only)) **เหลือทดสอบ client 2 ตัวบนคอมคนละเครื่อง** | 🟨 | |
+| R2 | ข้อความแชทส่งผ่าน Socket เท่านั้น — ไม่มี REST (404), log ทุก event · ทดสอบตาม [docs/R2_TEST.md](docs/R2_TEST.md) ผ่านครบ, server กับ client อยู่คนละเครื่อง ([หลักฐาน](docs/evidence/README.md#r2--socket-programming-only)) | ✅ | |
 
 ### Part 2 — Fundamental (7) ⚠️ ต้องครบก่อน Part 3 จะถูกตรวจ
 
 | ข้อ | รายละเอียด | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| R3 | ชื่อ Client ไม่ซ้ำกัน | 🟨 | |
+| R3 | ชื่อ Client ไม่ซ้ำกัน (ไม่สนตัวพิมพ์, 1–20 ตัวอักษร) · ทดสอบตาม [docs/R3_TEST.md](docs/R3_TEST.md) | 🟨 | |
 | R4 | เห็นรายชื่อ Client ที่ออนไลน์ทั้งหมด (รวมตัวเอง) | 🟨 | |
 | R5 | แชทแต่ละห้อง (Private/Group) แยกห้องกัน | ⬜ | |
 | R6 | ทุกห้องมีช่องพิมพ์ + หน้าต่างแสดงข้อความ | ⬜ | |

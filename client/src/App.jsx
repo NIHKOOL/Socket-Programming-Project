@@ -23,10 +23,18 @@ export default function App() {
     // socket.emit("private_msg", { to: "C2", text: "hi" })
     if (import.meta.env.DEV) window.socket = socket;
 
+    let registered = false;
     socket.on("connect", () => socket.emit("register", { name: nameInput }));
     socket.on("connect_error", () => setError(`เชื่อมต่อ ${serverUrl} ไม่ได้`));
-    socket.on("register_ok", ({ name }) => setMe(name));
-    socket.on("error_msg", ({ message }) => setError(message));
+    socket.on("register_ok", ({ name }) => {
+      registered = true;
+      setMe(name);
+    });
+    socket.on("error_msg", ({ message }) => {
+      setError(message);
+      // R3: register ไม่ผ่าน (เช่น ชื่อซ้ำ) → ตัดการเชื่อมต่อ ให้ผู้ใช้เปลี่ยนชื่อแล้วกดเข้าใหม่
+      if (!registered) socket.disconnect();
+    });
     socket.on("user_list", ({ users }) => setUsers(users));
     socket.on("group_list", ({ groups }) => setGroups(groups));
     // TODO: private_msg / group_msg → เก็บข้อความแยกตามห้อง (R5–R7, R11)
@@ -42,7 +50,13 @@ export default function App() {
         </label>
         <label>
           ชื่อของคุณ
-          <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} style={{ width: "100%" }} required />
+          <input
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            maxLength={20}
+            style={{ width: "100%" }}
+            required
+          />
         </label>
         <button type="submit">เข้าสู่ระบบ</button>
         {error && <p style={{ color: "crimson" }}>{error}</p>}

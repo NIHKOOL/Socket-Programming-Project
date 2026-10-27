@@ -91,3 +91,21 @@
   > ทดสอบ 2 ของ R2_TEST.md ไม่ได้เพราะส่ง private_msg หากันไม่ได้
 - **ผลลัพธ์:** สาเหตุคือยังไม่มี UI ของ R7 แก้โดยเปิด `window.socket` ใน dev mode (`client/src/App.jsx`) เพื่อส่ง event จาก DevTools Console และแก้ `docs/R2_TEST.md` ให้ตรงกับสิ่งที่ทดสอบได้จริง
 - **หมายเหตุ:** `window.socket` ไม่ติดไปใน production build
+
+### [2026-10-27] R2 ทดสอบผ่าน + จัดเก็บหลักฐาน
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R2
+- **Prompt:**
+  > R2 test หมดแล้วผ่าน
+- **ผลลัพธ์:** เปลี่ยนชื่อรูปใน `docs/evidence/R2/` ให้เป็นรูปแบบเดียวกัน (แก้ไฟล์ที่ชื่อมี `/` และช่องว่าง) เพิ่มตารางหลักฐาน R2 ใน `docs/evidence/README.md` และเปลี่ยน R2 ใน README เป็น ✅
+- **หมายเหตุ:** ทดสอบโดยให้ server อยู่ที่ 192.168.1.56 และ client ทั้ง 2 ตัวอยู่ที่ 192.168.1.36 (client ทั้งสองอยู่เครื่องเดียวกัน จึงยังปิด R1 ไม่ได้)
+
+### [2026-10-27] R3 — ชื่อ client ไม่ซ้ำกัน
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R3
+- **Prompt:**
+  > ทำ R3 ก่อนเลย
+- **ผลลัพธ์:** `server/index.js`: เช็กชื่อซ้ำแบบไม่สนตัวพิมพ์ (`isNameTaken`), จำกัด 1–20 ตัวอักษร, broadcast `user_list`/`group_list` เฉพาะ room `registered` / `client/src/App.jsx`: register ไม่ผ่าน → disconnect ให้กรอกใหม่ได้ทันที, input `maxLength=20` / อัปเดต `docs/PROTOCOL.md`, สร้าง `docs/R3_TEST.md`
+- **หมายเหตุ:** test อัตโนมัติ 12/12 ผ่าน, smoke test เดิม 7/7 ผ่าน, client build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R3/`
