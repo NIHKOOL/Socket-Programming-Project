@@ -64,3 +64,21 @@
   > ทำ R1 ก่อนพร้อมบอกว่าทำงานยังไงใช้ code ส่วนไหนบ้าง
 - **ผลลัพธ์:** ให้ `server/index.js` พิมพ์ IP ของเครื่องตอน start, สร้าง `docs/R1_TEST.md` (checklist ทดสอบข้ามเครื่อง + คำสั่งเปิด firewall + วิธีแก้ปัญหา), อธิบาย flow การเชื่อมต่อและโค้ดที่เกี่ยวข้องในแชท
 - **หมายเหตุ:** ยังไม่ได้ทดสอบข้ามเครื่องจริง ต้องทำตาม R1_TEST.md
+
+### [2026-10-27] จัดเก็บหลักฐาน R1
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R1, R4
+- **Prompt:**
+  > ทำได้แล้วแต่ยังไม่ได้ check แบบ client คนละเครื่องเพราะเครื่องไม่พอไว้ check ทีหลังอันนี้คือรูป R1-C1 R1-C2 ช่วยเก็บให้เป็นระเบียบด้วย
+- **ผลลัพธ์:** ย้ายรูปไป `docs/evidence/R1/`, สร้าง `docs/evidence/README.md` (กติกาตั้งชื่อ + ตารางหลักฐาน), อัปเดต README และ R1_TEST.md
+- **หมายเหตุ:** ทดสอบผ่านบนเครื่องเดียว (C1, C2 เห็นรายชื่อกันและกัน) ยังต้องทดสอบข้ามเครื่องเพื่อปิด R1
+
+### [2026-10-27] R2 — Socket Programming only
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R2
+- **Prompt:**
+  > ทำ R2 ต่อเลยพร้อมบอกด้วยว่าทำงานยังไงและบอกว่า code ส่วนไหนทำอะไรบ้าง
+- **ผลลัพธ์:** `server/index.js`: HTTP request ที่ไม่ใช่ Socket.IO ตอบ 404 (ไม่มี REST) และ log ทุก event ที่รับผ่าน socket ด้วย `socket.onAny` สร้าง `docs/R2_TEST.md` (วิธีดู WebSocket frame ใน DevTools, ความหมาย packet `42[...]`, Wireshark)
+- **หมายเหตุ:** smoke test 7 ข้อผ่าน, `GET /messages` → 404, handshake `/socket.io/` ยังทำงาน ยังต้องเก็บ screenshot หลักฐานใน `docs/evidence/R2/`

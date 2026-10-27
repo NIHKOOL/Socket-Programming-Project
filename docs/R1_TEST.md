@@ -43,5 +43,8 @@
 
 ## หลักฐานสำหรับ demo
 
-- [ ] screenshot terminal ของ server ที่เห็น IP ของ client หลายเครื่อง
-- [ ] รูปถ่ายคอมแต่ละเครื่องที่เห็นรายชื่อออนไลน์ตรงกัน
+เก็บไว้ที่ `docs/evidence/R1/` และเพิ่มแถวใน [evidence/README.md](evidence/README.md)
+
+- [x] หน้าจอ client 2 ตัวเห็นรายชื่อตรงกัน (ทดสอบบนเครื่องเดียว): `R1-C1.png`, `R1-C2.png`
+- [ ] screenshot terminal ของ server ที่เห็น IP ของ client หลายเครื่อง: `R1-server-log.png`
+- [ ] รูปถ่ายคอมแต่ละเครื่องที่เห็นรายชื่อออนไลน์ตรงกัน: `R1-machines.jpg`

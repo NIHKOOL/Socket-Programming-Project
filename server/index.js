@@ -9,7 +9,12 @@ const PORT = Number(process.env.PORT) || 3000;
 
 // Socket.IO ทำงานบน HTTP server: ครั้งแรก client ส่ง HTTP request มาเพื่อ handshake
 // แล้ว upgrade เป็น WebSocket (TCP connection ที่เปิดค้างไว้ส่งข้อมูลได้สองทาง)
-const httpServer = createServer();
+// R2: request ที่ path /socket.io/ จะถูก Socket.IO ดักไปจัดการก่อน handler นี้จะทำงาน
+// ส่วน HTTP request อื่นทั้งหมดตอบ 404 เพราะไม่มี REST API สำหรับส่งหรือดึงข้อความ
+const httpServer = createServer((req, res) => {
+  res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+  res.end("This server only accepts Socket.IO connections.\n");
+});
 const io = new Server(httpServer, {
   cors: { origin: "*" }, // client (React) รันคนละ origin/คนละเครื่อง
 });
@@ -35,6 +40,11 @@ function broadcastGroupList() {
 
 io.on("connection", (socket) => {
   console.log(`[connect] ${socket.id} from ${socket.handshake.address}`);
+
+  // R2: log ทุก event ที่รับเข้ามาผ่าน socket นี้ ใช้แสดงตอน demo ว่าข้อความทุกอย่างวิ่งผ่าน socket
+  socket.onAny((event, payload) => {
+    console.log(`[recv] ${socket.data.name ?? socket.id} -> ${event} ${JSON.stringify(payload)}`);
+  });
 
   socket.on("register", ({ name } = {}) => {
     name = String(name ?? "").trim();

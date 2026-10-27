@@ -25,7 +25,9 @@
 ├── docs/
 │   ├── PROTOCOL.md      # รูปแบบข้อความที่ client/server ส่งหากัน (อ่านก่อนเขียนโค้ด!)
 │   ├── ARCHITECTURE.md  # แผนภาพระบบ + เหตุผลการเลือกโปรโตคอล (ใช้ทำสไลด์ R1)
-│   └── R1_TEST.md       # checklist ทดสอบข้ามเครื่อง
+│   ├── R1_TEST.md       # checklist ทดสอบข้ามเครื่อง
+│   ├── R2_TEST.md       # checklist พิสูจน์ว่าข้อความวิ่งผ่าน socket เท่านั้น
+│   └── evidence/        # รูปหลักฐานการทดสอบ แยกโฟลเดอร์ตาม R (ดู evidence/README.md)
 ├── CLAUDE.md            # บริบทโปรเจกต์สำหรับ Claude Code
 ├── PromptRecord.md      # บันทึก prompt ที่ทีมใช้กับ AI
 └── README.md
@@ -84,8 +86,8 @@ npm run dev
 
 | ข้อ | รายละเอียด | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| R1 | Client ≥ 2 ตัวบนคอมคนละเครื่อง + อธิบายโปรโตคอล (what/why/how) — ทดสอบตาม [docs/R1_TEST.md](docs/R1_TEST.md) | 🟨 | |
-| R2 | ข้อความแชทส่งผ่าน Socket เท่านั้น | ⬜ | |
+| R1 | Client ≥ 2 ตัวบนคอมคนละเครื่อง + อธิบายโปรโตคอล (what/why/how) — ทดสอบตาม [docs/R1_TEST.md](docs/R1_TEST.md) · ผ่านบนเครื่องเดียวแล้ว ([หลักฐาน](docs/evidence/README.md#r1--system-architecture)) **ยังไม่ได้ทดสอบข้ามเครื่อง** | 🟨 | |
+| R2 | ข้อความแชทส่งผ่าน Socket เท่านั้น — ไม่มี REST (404), log ทุก event · ทดสอบตาม [docs/R2_TEST.md](docs/R2_TEST.md) | 🟨 | |
 
 ### Part 2 — Fundamental (7) ⚠️ ต้องครบก่อน Part 3 จะถูกตรวจ
 
