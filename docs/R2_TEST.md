@@ -14,7 +14,7 @@
 
 ## ทดสอบ 1: Server log
 
-1. `cd server && npm start` แล้วเปิด client 2 ตัว login
+1. `cd server && npm start` แล้วเปิด client 2 ตัว login (บรรทัด `private_msg` จะขึ้นหลังจากส่งผ่าน Console ตามทดสอบ 2)
 2. ดู terminal ของ server ต้องเห็นบรรทัดลักษณะนี้
 
 ```
@@ -27,8 +27,8 @@
 
 ## ทดสอบ 2: ดู WebSocket frame ใน browser (หลักฐานที่ชัดที่สุด)
 
-1. เปิด client ใน Chrome/Edge → กด `F12` → แท็บ **Network** → กดตัวกรอง **WS** (หรือ Socket ใน Edge)
-2. Refresh หน้าแล้ว login
+1. เปิด client 2 ตัว (C1, C2) ใน Chrome/Edge ที่หน้าของ C1 กด `F12` → แท็บ **Network** → กดตัวกรอง **WS** (หรือ Socket ใน Edge)
+2. Refresh หน้าแล้ว login เป็น C1 จากนั้น login C2 ในอีก tab หรืออีกเครื่อง
 3. คลิก request `?EIO=4&transport=websocket` → แท็บ **Messages**
 4. จะเห็น frame ที่ส่ง (↑ สีเขียว) และรับ (↓ สีแดง) เช่น
 
@@ -37,6 +37,23 @@
 ↓ 42["register_ok",{"name":"C1"}]
 ↓ 42["user_list",{"users":["C1","C2"]}]
 ```
+
+### ส่ง private message ก่อนมี UI (R7 ยังไม่ได้ทำ)
+
+ตอนนี้ UI ส่งได้แค่ `register` ส่วน event อื่นให้ส่งเองผ่าน DevTools **Console** ได้
+(ใช้ได้เฉพาะ `npm run dev` เพราะ `window.socket` เปิดไว้ใน dev mode เท่านั้น)
+
+```js
+// พิมพ์ใน Console ของ C1
+socket.emit("private_msg", { to: "C2", text: "hi from console" })
+```
+
+ผลที่ต้องเห็น:
+- แท็บ Messages ของ C1: `↑ 42["private_msg",{"to":"C2","text":"hi from console"}]` และ `↓ 42["private_msg",{"from":"C1",...}]` (server echo กลับมาให้ผู้ส่ง)
+- แท็บ Messages ของ C2: `↓ 42["private_msg",{"from":"C1","to":"C2",...}]`
+- terminal ของ server: `[recv] C1 -> private_msg {"to":"C2","text":"hi from console"}`
+
+หน้าจอยังไม่แสดงข้อความ เพราะ UI ห้องแชทจะทำใน R5–R7 แต่ R2 ดูแค่ว่าข้อความวิ่งผ่าน socket ซึ่งพิสูจน์ได้จาก frame แล้ว
 
 ความหมายของตัวเลขนำหน้า (Socket.IO packet format):
 - `4` = Engine.IO packet type **MESSAGE**

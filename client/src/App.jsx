@@ -19,6 +19,9 @@ export default function App() {
 
     const socket = connect(serverUrl);
     socketRef.current = socket;
+    // dev mode เท่านั้น: เปิดให้ทดสอบส่ง event จาก DevTools Console ได้ เช่น
+    // socket.emit("private_msg", { to: "C2", text: "hi" })
+    if (import.meta.env.DEV) window.socket = socket;
 
     socket.on("connect", () => socket.emit("register", { name: nameInput }));
     socket.on("connect_error", () => setError(`เชื่อมต่อ ${serverUrl} ไม่ได้`));

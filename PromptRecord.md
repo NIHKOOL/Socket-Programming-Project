@@ -82,3 +82,12 @@
   > ทำ R2 ต่อเลยพร้อมบอกด้วยว่าทำงานยังไงและบอกว่า code ส่วนไหนทำอะไรบ้าง
 - **ผลลัพธ์:** `server/index.js`: HTTP request ที่ไม่ใช่ Socket.IO ตอบ 404 (ไม่มี REST) และ log ทุก event ที่รับผ่าน socket ด้วย `socket.onAny` สร้าง `docs/R2_TEST.md` (วิธีดู WebSocket frame ใน DevTools, ความหมาย packet `42[...]`, Wireshark)
 - **หมายเหตุ:** smoke test 7 ข้อผ่าน, `GET /messages` → 404, handshake `/socket.io/` ยังทำงาน ยังต้องเก็บ screenshot หลักฐานใน `docs/evidence/R2/`
+
+### [2026-10-27] แก้ทดสอบ 2 ของ R2 (ส่ง private_msg ไม่ได้)
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R2
+- **Prompt:**
+  > ทดสอบ 2 ของ R2_TEST.md ไม่ได้เพราะส่ง private_msg หากันไม่ได้
+- **ผลลัพธ์:** สาเหตุคือยังไม่มี UI ของ R7 แก้โดยเปิด `window.socket` ใน dev mode (`client/src/App.jsx`) เพื่อส่ง event จาก DevTools Console และแก้ `docs/R2_TEST.md` ให้ตรงกับสิ่งที่ทดสอบได้จริง
+- **หมายเหตุ:** `window.socket` ไม่ติดไปใน production build
