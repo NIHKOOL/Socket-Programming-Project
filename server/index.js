@@ -138,11 +138,15 @@ io.on("connection", (socket) => {
     if (!name) return;
     const members = groups.get(group);
     if (!members) return sendError(socket, "GROUP_NOT_FOUND", "ไม่พบกลุ่ม");
+    if (members.has(name)) return sendError(socket, "ALREADY_MEMBER", `เป็นสมาชิกกลุ่ม "${group}" อยู่แล้ว`);
 
-    // R10: เข้ากลุ่มได้เฉพาะตัวเองเท่านั้น (ใช้ชื่อจาก socket ไม่รับชื่อจาก client)
+    // R10: เข้ากลุ่มได้เฉพาะ "ตัวเอง" เท่านั้น
+    // ใช้ชื่อที่ผูกกับ socket นี้ตอน register ไม่รับชื่อจาก payload จึงไม่มีทางเพิ่มคนอื่นเข้ากลุ่ม
+    // และไม่มี event ให้ผู้สร้างกลุ่มดึงคนอื่นเข้ามา
     members.add(name);
-    socket.join(`group:${group}`);
-    broadcastGroupList();
+    socket.join(`group:${group}`); // เข้า Socket.IO room ของกลุ่ม เริ่มรับ group_msg ตั้งแต่ตอนนี้ (R11)
+    broadcastGroupList(); // R9: ทุกคนเห็นสมาชิกใหม่
+    socket.emit("join_group_ok", { group }); // บอกผู้ join ให้ client เปิดห้องกลุ่มได้ทันที
   });
 
   socket.on("group_msg", ({ group, text } = {}) => {

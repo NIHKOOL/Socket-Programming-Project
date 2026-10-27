@@ -36,6 +36,7 @@
 │   ├── R7_TEST.md       # checklist private message
 │   ├── R8_TEST.md       # checklist สร้างกลุ่ม
 │   ├── R9_TEST.md       # checklist รายชื่อกลุ่ม + สมาชิก
+│   ├── R10_TEST.md      # checklist เข้ากลุ่มด้วยตัวเอง
 │   └── evidence/        # รูปหลักฐานการทดสอบ แยกโฟลเดอร์ตาม R (ดู evidence/README.md)
 ├── CLAUDE.md            # บริบทโปรเจกต์สำหรับ Claude Code
 ├── PromptRecord.md      # บันทึก prompt ที่ทีมใช้กับ AI
@@ -108,8 +109,8 @@ npm run dev
 | R6 | ทุกห้องมีช่องพิมพ์ + หน้าต่างแสดงข้อความ · ทดสอบตาม [docs/R5_R6_TEST.md](docs/R5_R6_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r5--r6--chat-rooms)) | ✅ | |
 | R7 | Private message — เห็นแค่ผู้ส่งกับผู้รับ · ทดสอบตาม [docs/R7_TEST.md](docs/R7_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r7--private-message)) | ✅ | |
 | R8 | สร้างกลุ่มได้ (เริ่มต้นมีแค่ผู้สร้าง) กลุ่มที่ไม่มีสมาชิกยังอยู่ · ทดสอบตาม [docs/R8_TEST.md](docs/R8_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r8--create-group)) | ✅ | |
-| R9 | เห็นรายชื่อกลุ่มทั้งหมด + สมาชิก อัปเดต real-time · ทดสอบตาม [docs/R9_TEST.md](docs/R9_TEST.md) | 🟨 | |
-| R10 | เข้ากลุ่มด้วยตัวเองเท่านั้น | ⬜ | |
+| R9 | เห็นรายชื่อกลุ่มทั้งหมด + สมาชิก อัปเดต real-time · ทดสอบตาม [docs/R9_TEST.md](docs/R9_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r9--group-list-with-members)) | ✅ | |
+| R10 | เข้ากลุ่มด้วยตัวเองเท่านั้น (ปุ่ม "เข้าร่วม") · ทดสอบตาม [docs/R10_TEST.md](docs/R10_TEST.md) | 🟨 | |
 | R11 | ส่งข้อความในกลุ่ม — เห็นแค่สมาชิก | ⬜ | |
 
 ### Part 3 — Special Features (4, ข้อละ 1)

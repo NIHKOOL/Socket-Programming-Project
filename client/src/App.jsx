@@ -81,6 +81,8 @@ export default function App() {
     socket.on("group_list", ({ groups }) => setGroups(groups));
     // R8: สร้างกลุ่มสำเร็จ → เปิดห้องกลุ่มให้ทันที
     socket.on("create_group_ok", ({ group }) => openRoom(groupRoomId(group)));
+    // R10: เข้ากลุ่มสำเร็จ → เปิดห้องกลุ่มให้ทันที
+    socket.on("join_group_ok", ({ group }) => openRoom(groupRoomId(group)));
 
     // R5: ข้อความที่เข้ามาถูกแยกลงห้องของตัวเอง
     socket.on("private_msg", (msg) => addMessage(roomOfPrivateMsg(msg, myName), msg));
@@ -104,6 +106,12 @@ export default function App() {
     setError("");
     socketRef.current.emit("create_group", { group });
     setGroupInput("");
+  }
+
+  // R10: ผู้ใช้กดเข้ากลุ่มเอง ส่งแค่ชื่อกลุ่ม server ใช้ชื่อของเราจาก socket
+  function handleJoinGroup(group) {
+    setError("");
+    socketRef.current.emit("join_group", { group });
   }
 
   if (!me) {
@@ -166,12 +174,12 @@ export default function App() {
           </button>
         </form>
         <ul className="room-list">
-          {/* R9: แสดงทุกกลุ่มพร้อมสมาชิก / R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง group (ปุ่มเข้ากลุ่มจะทำใน R10) */}
+          {/* R9: แสดงทุกกลุ่มพร้อมสมาชิก / R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง / R10: ยังไม่เป็นสมาชิก → ปุ่ม "เข้าร่วม" */}
           {groups.map((g) => {
             const isMember = g.members.includes(me);
             const roomId = groupRoomId(g.name);
             return (
-              <li key={g.name}>
+              <li key={g.name} className="group-row">
                 <button
                   className={`room-item ${activeRoom === roomId ? "active" : ""}`}
                   onClick={() => openRoom(roomId)}
@@ -188,6 +196,11 @@ export default function App() {
                   </span>
                   {badge(roomId)}
                 </button>
+                {!isMember && (
+                  <button className="join-btn" onClick={() => handleJoinGroup(g.name)}>
+                    เข้าร่วม
+                  </button>
+                )}
               </li>
             );
           })}

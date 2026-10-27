@@ -82,10 +82,19 @@
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
+| [R9-new-client.png](R9/R9-new-client.png) | 2026-10-27 | client `localhost:5173` | C3 เพิ่ง login เห็น g1 (สร้างโดย C1) และ g2 (สร้างโดย C2) ครบทันที |
+| [R9-new-client-join.png](R9/R9-new-client-join.png) | 2026-10-27 | เหมือนด้านบน | C3 join g1 ผ่าน Console → g1 เป็น `2 คน: C1, C3 (คุณ)` |
+| [R9-all-groups-c1.png](R9/R9-all-groups-c1.png) | 2026-10-27 | เหมือนด้านบน | C1 เห็นกลุ่มทั้งหมด: g1 ของตัวเอง + g2 ของ C2 ("ยังไม่ได้เป็นสมาชิก") พร้อมรายชื่อสมาชิก |
+| [R9-all-groups-c2.png](R9/R9-all-groups-c2.png) | 2026-10-27 | เหมือนด้านบน | C2 เห็นกลุ่มทั้งหมด: g1 ของ C1 (`2 คน: C1, C3`) + g2 ของตัวเอง |
+| [R9-member-update.png](R9/R9-member-update.png) | 2026-10-27 | เหมือนด้านบน | C2 หลัง C3 join: g1 อัปเดตเป็น `2 คน: C1, C3` (หน้าจอเดียวกับ all-groups-c2) |
+
+## R10 — Join group by self
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
 | _(ยังไม่มี)_ | | | |
 
-> รูปที่ต้องเก็บใน `R9/` (วิธีอยู่ใน [R9_TEST.md](../R9_TEST.md)): `R9-all-groups.png`, `R9-new-client.png`, `R9-member-update.png`
-> (รูปของ R8 แสดงบางส่วนของ R9 อยู่แล้ว เช่น `R8-other-client-view.png` ที่ C2 เห็นกลุ่มของ C1 พร้อมสมาชิก)
+> รูปที่ต้องเก็บใน `R10/` (วิธีอยู่ใน [R10_TEST.md](../R10_TEST.md)): `R10-join-button.png`, `R10-after-join.png`, `R10-others-not-added.png`, `R10-cannot-add-others.png`
 
 ---
 

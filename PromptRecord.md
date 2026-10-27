@@ -210,3 +210,21 @@
   > ทำ R9 ต่อเลย
 - **ผลลัพธ์:** ตรวจโค้ดแล้ว server ส่ง `group_list` ครบทุกจังหวะ (register, create, join, disconnect) ไม่มีช่องโหว่ เพิ่ม comment อธิบาย R9 ใน `server/index.js` / `client/src/App.jsx`: แสดงจำนวนสมาชิก + "(คุณ)" ในรายชื่อสมาชิกกลุ่ม / สร้าง `docs/R9_TEST.md`
 - **หมายเหตุ:** test อัตโนมัติ R9 10/10, smoke 7/7, R3 12/12, R4 9/9, R5 9/9, R7 13/13, R8 15/15, build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R9/`
+
+### [2026-10-27] ตรวจ R9
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R9
+- **Prompt:**
+  > ทำ R10 เลยตอนนี้ R9 เรียบร้อย
+- **ผลลัพธ์:** ตรวจรูป 5 รูปแล้วผ่าน เปลี่ยนชื่อ `R9-all-groups1/2.png` → `R9-all-groups-c1/c2.png` เปลี่ยน R9 ใน README เป็น ✅
+- **หมายเหตุ:** —
+
+### [2026-10-27] R10 — เข้ากลุ่มด้วยตัวเอง
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R10
+- **Prompt:**
+  > ทำ R10 เลยตอนนี้ R9 เรียบร้อย
+- **ผลลัพธ์:** `server/index.js`: `join_group` ตอบ `ALREADY_MEMBER` ถ้าเป็นสมาชิกอยู่แล้ว (ไม่ broadcast ซ้ำ), เพิ่ม event `join_group_ok`, เพิ่ม comment อธิบายว่าทำไมเพิ่มคนอื่นไม่ได้ / `client/src/App.jsx` + `App.css`: ปุ่ม "เข้าร่วม" ข้างกลุ่มที่ยังไม่เป็นสมาชิก, เปิดห้องอัตโนมัติเมื่อ join สำเร็จ / อัปเดต PROTOCOL.md, สร้าง `docs/R10_TEST.md`
+- **หมายเหตุ:** test อัตโนมัติ R10 15/15 (รวม "ผู้สร้างใส่ชื่อคนอื่นใน payload แล้วเพิ่มคนอื่นไม่ได้"), smoke 7/7, R3 12/12, R4 9/9, R5 9/9, R7 13/13, R8 15/15, R9 10/10, build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R10/`
