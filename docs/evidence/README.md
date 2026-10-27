@@ -35,9 +35,19 @@
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
-| _(ยังไม่มี)_ | | | |
+| [R3-name-taken.png](R3/R3-name-taken.png) | 2026-10-27 | server `192.168.1.56`, client `192.168.1.36` | login เป็น `C1` ซ้ำ → `ชื่อ "C1" ถูกใช้แล้ว` และยังอยู่หน้า login |
+| [R3-case-insensitive.png](R3/R3-case-insensitive.png) | 2026-10-27 | เหมือนด้านบน | login เป็น `c1` → `ชื่อ "c1" ถูกใช้แล้ว` (ไม่สนตัวพิมพ์) |
+| [R3-server-log.png](R3/R3-server-log.png) | 2026-10-27 | เหมือนด้านบน | การ register ซ้ำทุกครั้งตามด้วย `[disconnect] (unregistered)`, เปลี่ยนเป็น `C2` แล้วเข้าได้, `C1` disconnect |
 
-> รูปที่ต้องเก็บ (วิธีอยู่ใน [R3_TEST.md](../R3_TEST.md)): `R3-name-taken.png`, `R3-case-insensitive.png`, `R3-server-log.png`
+> ขั้น "ชื่อว่างอีกครั้งหลังเจ้าของ disconnect" ยืนยันด้วย test อัตโนมัติ ยังไม่มี screenshot
+
+## R4 — Online user list
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| [R1-C1.png](R1/R1-C1.png), [R1-C2.png](R1/R1-C2.png) | 2026-10-27 | เครื่องเดียว | (จาก R1) C1 และ C2 เห็นรายชื่อตรงกันและเห็นชื่อตัวเอง |
+
+> รูปที่ต้องเก็บ (วิธีอยู่ใน [R4_TEST.md](../R4_TEST.md)): `R4-three-clients.png`, `R4-after-leave.png`, `R4-server-down.png`
 
 ---
 

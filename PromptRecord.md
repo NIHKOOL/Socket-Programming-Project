@@ -109,3 +109,21 @@
   > ทำ R3 ก่อนเลย
 - **ผลลัพธ์:** `server/index.js`: เช็กชื่อซ้ำแบบไม่สนตัวพิมพ์ (`isNameTaken`), จำกัด 1–20 ตัวอักษร, broadcast `user_list`/`group_list` เฉพาะ room `registered` / `client/src/App.jsx`: register ไม่ผ่าน → disconnect ให้กรอกใหม่ได้ทันที, input `maxLength=20` / อัปเดต `docs/PROTOCOL.md`, สร้าง `docs/R3_TEST.md`
 - **หมายเหตุ:** test อัตโนมัติ 12/12 ผ่าน, smoke test เดิม 7/7 ผ่าน, client build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R3/`
+
+### [2026-10-27] ตรวจ R3
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R3
+- **Prompt:**
+  > ตอนนี้ R3 เสร็จแล้ว ตรวจหน่อย
+- **ผลลัพธ์:** ตรวจรูปหลักฐาน 3 รูปแล้วผ่าน (ชื่อซ้ำ, ไม่สนตัวพิมพ์, server log ที่เห็นการปฏิเสธ + เปลี่ยนชื่อแล้วเข้าได้โดยไม่ต้อง refresh) เปลี่ยนชื่อไฟล์ใน `docs/evidence/R3/` และเปลี่ยน R3 ใน README เป็น ✅
+- **หมายเหตุ:** screenshot ไม่เห็นขั้น "ชื่อว่างหลัง disconnect" แต่ test อัตโนมัติยืนยันแล้ว
+
+### [2026-10-27] R4 — รายชื่อ client ที่ออนไลน์
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R4
+- **Prompt:**
+  > ต่อ R4 เลย
+- **ผลลัพธ์:** แก้บั๊ก: auto-reconnect อาจได้ NAME_TAKEN จนรายชื่อค้าง → ปิด `reconnection` (`client/src/socket.js`) และให้กลับหน้า login เมื่อหลุด (`client/src/App.jsx`) / ชื่อตัวเองอยู่บนสุด ที่เหลือเรียงตามตัวอักษร / อัปเดต ARCHITECTURE.md (หัวข้อการหลุดการเชื่อมต่อ), PROTOCOL.md, สร้าง `docs/R4_TEST.md`
+- **หมายเหตุ:** test อัตโนมัติ R4 9/9, R3 12/12, smoke 7/7 ผ่าน, build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R4/`

@@ -16,12 +16,12 @@
 
 เปิด server และ client (เปิดหลาย tab ได้)
 
-- [ ] Tab 1: login เป็น `C1` → เข้าได้
-- [ ] Tab 2: login เป็น `C1` → ขึ้น `ชื่อ "C1" ถูกใช้แล้ว` และยังอยู่หน้า login
-- [ ] Tab 2: login เป็น `c1` → ขึ้นข้อความเดิม (ไม่สนตัวพิมพ์)
-- [ ] Tab 2: login เป็น `C2` → เข้าได้ **โดยไม่ต้อง refresh** เพราะ client ตัด connection เก่าทิ้งแล้วต่อใหม่
-- [ ] ปิด Tab 1 → Tab 3: login เป็น `C1` → เข้าได้ (ชื่อว่างแล้ว)
-- [ ] terminal ของ server เห็น `[recv] ... -> register {"name":"C1"}` ของครั้งที่ถูกปฏิเสธด้วย
+- [x] Tab 1: login เป็น `C1` → เข้าได้
+- [x] Tab 2: login เป็น `C1` → ขึ้น `ชื่อ "C1" ถูกใช้แล้ว` และยังอยู่หน้า login
+- [x] Tab 2: login เป็น `c1` → ขึ้นข้อความเดิม (ไม่สนตัวพิมพ์)
+- [x] Tab 2: login เป็น `C2` → เข้าได้ **โดยไม่ต้อง refresh** เพราะ client ตัด connection เก่าทิ้งแล้วต่อใหม่
+- [ ] ปิด Tab 1 → Tab 3: login เป็น `C1` → เข้าได้ (ชื่อว่างแล้ว) _(ยืนยันด้วย test อัตโนมัติแล้ว ยังไม่มี screenshot)_
+- [x] terminal ของ server เห็น `[recv] ... -> register {"name":"C1"}` ของครั้งที่ถูกปฏิเสธด้วย
 
 เก็บ screenshot ไว้ที่ `docs/evidence/R3/`:
 - `R3-name-taken.png`: หน้า login ที่ขึ้นข้อความชื่อซ้ำ

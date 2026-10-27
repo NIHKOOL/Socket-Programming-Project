@@ -90,6 +90,8 @@ Client(alice)                Server                  Client(bob)
 - ชื่อผู้ใช้ (R3): trim ช่องว่างหัวท้าย, ยาว 1–20 ตัวอักษร, ห้ามซ้ำแบบไม่สนตัวพิมพ์ ชื่อจะว่างให้คนอื่นใช้อีกครั้งเมื่อเจ้าของ disconnect
 - `user_list` / `group_list` broadcast ไปเฉพาะ socket ที่ register สำเร็จแล้ว (room `registered`)
 - Client: ถ้าได้ `error_msg` ก่อน `register_ok` ให้ disconnect แล้วให้ผู้ใช้กรอกชื่อใหม่
+- `user_list` (R4) ส่งรายชื่อ**ทั้งหมด**ทุกครั้ง ไม่ส่งแค่ส่วนที่เปลี่ยน client จึงแทนที่ state เดิมได้เลย คนที่เพิ่งเข้าก็ได้รายชื่อครบตั้งแต่ครั้งแรก
+- Client ปิด auto-reconnect เมื่อ `disconnect` หลัง register แล้ว ให้ล้างรายชื่อและกลับหน้า login (ดู ARCHITECTURE.md)
 - ตรวจสิทธิ์ก่อนส่งต่อข้อความทุกครั้ง (private → เฉพาะ 2 คน, group → เฉพาะสมาชิก)
 - Group message ส่งผ่าน Socket.IO room ชื่อ `group:<ชื่อกลุ่ม>` socket จะถูก join เข้า room ตอน `create_group` / `join_group` เท่านั้น
 - เมื่อ client หลุดการเชื่อมต่อ ให้ลบออกจากรายชื่อออนไลน์และจากทุกกลุ่ม แล้ว broadcast `user_list` กับ `group_list` ใหม่

@@ -28,6 +28,7 @@
 │   ├── R1_TEST.md       # checklist ทดสอบข้ามเครื่อง
 │   ├── R2_TEST.md       # checklist พิสูจน์ว่าข้อความวิ่งผ่าน socket เท่านั้น
 │   ├── R3_TEST.md       # checklist ชื่อไม่ซ้ำ
+│   ├── R4_TEST.md       # checklist รายชื่อออนไลน์
 │   └── evidence/        # รูปหลักฐานการทดสอบ แยกโฟลเดอร์ตาม R (ดู evidence/README.md)
 ├── CLAUDE.md            # บริบทโปรเจกต์สำหรับ Claude Code
 ├── PromptRecord.md      # บันทึก prompt ที่ทีมใช้กับ AI
@@ -94,8 +95,8 @@ npm run dev
 
 | ข้อ | รายละเอียด | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| R3 | ชื่อ Client ไม่ซ้ำกัน (ไม่สนตัวพิมพ์, 1–20 ตัวอักษร) · ทดสอบตาม [docs/R3_TEST.md](docs/R3_TEST.md) | 🟨 | |
-| R4 | เห็นรายชื่อ Client ที่ออนไลน์ทั้งหมด (รวมตัวเอง) | 🟨 | |
+| R3 | ชื่อ Client ไม่ซ้ำกัน (ไม่สนตัวพิมพ์, 1–20 ตัวอักษร) · ทดสอบตาม [docs/R3_TEST.md](docs/R3_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r3--unique-name)) | ✅ | |
+| R4 | เห็นรายชื่อ Client ที่ออนไลน์ทั้งหมด (รวมตัวเอง) อัปเดต real-time · ทดสอบตาม [docs/R4_TEST.md](docs/R4_TEST.md) | 🟨 | |
 | R5 | แชทแต่ละห้อง (Private/Group) แยกห้องกัน | ⬜ | |
 | R6 | ทุกห้องมีช่องพิมพ์ + หน้าต่างแสดงข้อความ | ⬜ | |
 | R7 | Private message — เห็นแค่ผู้ส่งกับผู้รับ | ⬜ | |

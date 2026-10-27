@@ -35,6 +35,14 @@ export default function App() {
       // R3: register ไม่ผ่าน (เช่น ชื่อซ้ำ) → ตัดการเชื่อมต่อ ให้ผู้ใช้เปลี่ยนชื่อแล้วกดเข้าใหม่
       if (!registered) socket.disconnect();
     });
+    socket.on("disconnect", () => {
+      if (!registered) return;
+      // R4: หลุดจาก server → ล้างรายชื่อที่ค้างอยู่ แล้วกลับไปหน้า login
+      setMe(null);
+      setUsers([]);
+      setGroups([]);
+      setError("หลุดการเชื่อมต่อจาก server กรุณาเข้าสู่ระบบใหม่");
+    });
     socket.on("user_list", ({ users }) => setUsers(users));
     socket.on("group_list", ({ groups }) => setGroups(groups));
     // TODO: private_msg / group_msg → เก็บข้อความแยกตามห้อง (R5–R7, R11)
@@ -72,7 +80,8 @@ export default function App() {
         </p>
         <h3>ออนไลน์ ({users.length})</h3>
         <ul>
-          {users.map((u) => (
+          {/* R4: ชื่อตัวเองอยู่บนสุด ที่เหลือเรียงตามตัวอักษร */}
+          {[...users].sort((a, b) => (a === me ? -1 : b === me ? 1 : a.localeCompare(b))).map((u) => (
             <li key={u}>{u === me ? `${u} (คุณ)` : u}</li>
           ))}
         </ul>

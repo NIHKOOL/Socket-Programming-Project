@@ -26,7 +26,7 @@
 
 | Layer | Protocol | ทำไมถึงเลือก | ใช้อย่างไรในโปรเจกต์ |
 |---|---|---|---|
-| Application | **Socket.IO** + event ที่เรากำหนดเอง (ดู [PROTOCOL.md](PROTOCOL.md)) | มีระบบ event, room และ broadcast ในตัว จึงทำแชทส่วนตัว/กลุ่มได้ตรงไปตรงมา และ reconnect อัตโนมัติเมื่อเน็ตหลุด | แต่ละ action เป็น event เช่น `private_msg`, `join_group` ส่วน group ใช้ room `group:<name>` |
+| Application | **Socket.IO** + event ที่เรากำหนดเอง (ดู [PROTOCOL.md](PROTOCOL.md)) | มีระบบ event, room และ broadcast ในตัว จึงทำแชทส่วนตัว/กลุ่มได้ตรงไปตรงมา มี heartbeat (ping/pong) ไว้ตรวจว่า connection หลุด (ปิด auto-reconnect ไว้ เหตุผลอยู่ในหัวข้อ "การหลุดการเชื่อมต่อ") | แต่ละ action เป็น event เช่น `private_msg`, `join_group` ส่วน group ใช้ room `group:<name>` |
 | Application | **WebSocket** (RFC 6455) | full-duplex ผ่าน connection เดียวที่เปิดค้างไว้ server จึง push ข้อความใหม่หา client ได้ทันทีโดยไม่ต้อง polling | Socket.IO ส่งข้อมูลทุกอย่างผ่าน WebSocket (client ตั้ง `transports: ["websocket"]`) |
 | Application | **HTTP/1.1** | ใช้เปิด connection ครั้งแรก WebSocket เริ่มด้วย HTTP request แบบ `Upgrade: websocket` | handshake ครั้งเดียวตอนเชื่อมต่อ จากนั้นสลับไปใช้ WebSocket ตลอด |
 | Transport | **TCP** | ข้อความแชทต้องมาครบและเรียงลำดับถูกต้อง TCP รับประกันทั้งสองอย่าง ส่วน UDP ไม่รับประกัน | WebSocket ทำงานบน TCP connection เดียวต่อ client 1 ตัว |
@@ -46,6 +46,12 @@ groups:  Map<groupName, Set<name>> // R8–R11
 ```
 
 ข้อมูลอยู่ในหน่วยความจำอย่างเดียว ถ้า restart server ข้อมูลจะหายทั้งหมด
+
+## การหลุดการเชื่อมต่อ
+
+- **ปิด tab / ปิด browser:** TCP connection ปิดทันที server ได้ `disconnect` แล้วลบชื่อและ broadcast `user_list` ใหม่ภายในเสี้ยววินาที
+- **เน็ตหลุดหรือสาย LAN หลุด:** ไม่มีใครส่ง TCP FIN ทั้งสองฝั่งจึงรู้ได้จาก heartbeat เท่านั้น ค่า default ของ Socket.IO คือ `pingInterval` 25 วินาที + `pingTimeout` 20 วินาที อาจใช้เวลาถึงประมาณ 45 วินาที
+- **ทำไมปิด auto-reconnect:** ถ้า client reconnect ก่อนที่ server จะรู้ว่า connection เก่าหลุด การ register ชื่อเดิมจะได้ `NAME_TAKEN` แล้ว UI จะค้างอยู่ในสถานะที่รายชื่อผิด (R4) จึงเลือกให้กลับไปหน้า login พร้อมแจ้งผู้ใช้แทน ถ้าเข้าใหม่ทันทีแล้วชื่อยังไม่ว่าง ให้รอไม่เกินประมาณ 45 วินาที
 
 ## Deployment
 

@@ -7,5 +7,7 @@ export const DEFAULT_SERVER_URL =
 
 export function connect(url) {
   // transports: ["websocket"] = ข้ามการทำ HTTP long-polling ไปใช้ WebSocket ตรง ๆ
-  return io(url, { transports: ["websocket"] });
+  // reconnection: false = ถ้าหลุดให้ผู้ใช้ login ใหม่เอง เพราะถ้า reconnect อัตโนมัติ
+  // server อาจยังไม่ลบชื่อเดิม แล้วตอบ NAME_TAKEN จนรายชื่อออนไลน์ค้าง (R4)
+  return io(url, { transports: ["websocket"], reconnection: false });
 }
