@@ -40,6 +40,7 @@
 │   ├── R10_TEST.md      # checklist เข้ากลุ่มด้วยตัวเอง
 │   ├── R11_TEST.md      # checklist group message
 │   └── evidence/        # รูปหลักฐานการทดสอบ แยกโฟลเดอร์ตาม R (ดู evidence/README.md)
+├── Handbook.md          # แต่ละ requirement ทำงานอย่างไร + map ไปหาโค้ดทีละขั้น (อ่านก่อนแก้โค้ด!)
 ├── CLAUDE.md            # บริบทโปรเจกต์สำหรับ Claude Code
 ├── PromptRecord.md      # บันทึก prompt ที่ทีมใช้กับ AI
 └── README.md
@@ -148,6 +149,7 @@ ok    r03-unique-name.test.mjs  (12 passed, 0 failed)
 
 ## แนวทางการทำงานร่วมกัน
 
+- **คนที่เพิ่งเข้ามา:** อ่าน [Handbook.md](Handbook.md) ก่อน มีลำดับการทำงานของทุก requirement พร้อมลิงก์ไปที่บรรทัดของโค้ด
 - **อ่าน [docs/PROTOCOL.md](docs/PROTOCOL.md) ก่อนเขียนโค้ด** ถ้าจะเพิ่มหรือแก้ประเภทข้อความ ให้แก้เอกสารนี้ก่อนแล้วแจ้งทีม
 - แยก branch ตามฟีเจอร์ เช่น `feature/private-message`, `feature/group-chat`
 - ถ้าใช้ AI ช่วยเขียนโค้ด ให้บันทึก prompt ไว้ใน [PromptRecord.md](PromptRecord.md)

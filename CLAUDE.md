@@ -46,6 +46,11 @@ Test อยู่ใน `server/tests/*.test.mjs` (1 ไฟล์ต่อ requi
 - ห้ามตั้งชื่อ event ซ้ำกับชื่อที่ Socket.IO สงวนไว้ (`connect`, `disconnect`, `connect_error` ฯลฯ) ให้ใช้ `error_msg` แทน `error`
 - API key อ่านจาก `.env` เท่านั้น ห้าม hardcode
 
+## Handbook
+
+`Handbook.md` map ทุก requirement ไปที่บรรทัดของโค้ดตามลำดับการทำงาน ถ้าแก้ `server/index.js` หรือ `client/src/*` จนบรรทัดเลื่อน
+หรือเพิ่มฟีเจอร์ใหม่ ต้องอัปเดต Handbook ด้วย (เลขบรรทัด + หัวข้อของฟีเจอร์ใหม่) และแก้วันที่ในหมายเหตุด้านบนของไฟล์
+
 ## บันทึก Prompt
 
 หลังทำงานที่ผู้ใช้สั่งเสร็จแต่ละครั้ง ให้เพิ่ม entry ใหม่ไว้ท้าย `PromptRecord.md` ตาม template ในไฟล์นั้น
