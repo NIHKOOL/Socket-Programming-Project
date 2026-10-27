@@ -88,6 +88,7 @@ export default function App() {
   // ไม่เพิ่มข้อความลงจอเอง รอ server ส่งกลับมา (echo) เพื่อให้ทุกเครื่องเห็นข้อมูลเดียวกับ server
   function sendToActiveRoom(text) {
     const { type, name } = parseRoomId(activeRoom);
+    setError(""); // ล้าง error เก่า ถ้าส่งไม่ผ่าน server จะส่ง error_msg ใหม่มา
     if (type === "dm") socketRef.current.emit("private_msg", { to: name, text });
     else socketRef.current.emit("group_msg", { group: name, text });
   }

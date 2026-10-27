@@ -54,9 +54,21 @@
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
-| _(ยังไม่มี)_ | | | |
+| [R5-separate-rooms.png](R5_R6/R5-separate-rooms.png) | 2026-10-27 | client `localhost:5173` | C1 มีห้อง C2 / C3 / g1 แยกกันใน sidebar ห้อง C2 เห็นเฉพาะบทสนทนา C1↔C2 + สร้าง g1 ผ่าน Console |
+| [R5-unread-badge.png](R5_R6/R5-unread-badge.png) | 2026-10-27 | เหมือนด้านบน | C2 เปิดห้อง C1 อยู่ ส่วน g1 ขึ้น unread `10` ข้อความกลุ่มไม่ปนในห้อง private |
+| [R6-private-room.png](R5_R6/R6-private-room.png) | 2026-10-27 | เหมือนด้านบน | C1 กับ C2 เทียบกัน: บทสนทนาเดียวกัน ข้อความตัวเองขวา อีกฝ่ายซ้ายพร้อมชื่อ + เวลา + ช่องพิมพ์ |
+| [R6-group-room.png](R5_R6/R6-group-room.png) | 2026-10-27 | เหมือนด้านบน | C3 ในห้อง `# g1` หัวห้องแสดงสมาชิก 3 คน มีข้อความจาก C1, C2, C3 พร้อมชื่อผู้ส่ง |
 
-> รูปที่ต้องเก็บใน `R5_R6/` (วิธีอยู่ใน [R5_R6_TEST.md](../R5_R6_TEST.md)): `R5-separate-rooms.png`, `R5-unread-badge.png`, `R6-private-room.png`, `R6-group-room.png`
+## R7 — Private message
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| [R6-private-room.png](R5_R6/R6-private-room.png) | 2026-10-27 | (ใช้ซ้ำจาก R6) | C1 ส่งหา C2 และ C2 ตอบกลับ ทั้งสองฝั่งเห็นบทสนทนาเดียวกัน (ส่วน "send a direct message") |
+| [R2-server-recv-private-msg.png](R2/R2-server-recv-private-msg.png) | 2026-10-27 | (ใช้ซ้ำจาก R2) | server log `[recv] C1 -> private_msg {"to":"C2",...}` |
+
+> ⚠️ ยังขาดหลักฐานส่วน "**Only the sender and receiver can see**" ต้องเก็บใน `R7/` (วิธีอยู่ใน [R7_TEST.md](../R7_TEST.md)):
+> - `R7-outsider-c3.png`: หน้าจอ C3 ที่ไม่มีข้อความ C1↔C2
+> - `R7-outsider-ws-frames.png`: แท็บ Messages ของ C3 ที่ไม่มี frame `private_msg` ของ C1↔C2
 
 ---
 

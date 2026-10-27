@@ -24,6 +24,7 @@ const clients = new Map(); // name -> socket
 const groups = new Map(); // groupName -> Set(memberNames)
 
 const MAX_NAME_LENGTH = 20;
+const MAX_TEXT_LENGTH = 1000;
 // socket ที่ register สำเร็จแล้วจะถูก join เข้า room นี้ broadcast จะส่งเฉพาะ room นี้
 const REGISTERED = "registered";
 
@@ -37,6 +38,16 @@ function isNameTaken(name) {
 
 function sendError(socket, code, message) {
   socket.emit("error_msg", { code, message });
+}
+
+// ข้อความแชท (R7, R11): ห้ามว่าง ห้ามยาวเกิน ตรวจที่ server เพราะ client ข้ามการตรวจฝั่งตัวเองได้
+function cleanText(socket, text) {
+  text = String(text ?? "").trim();
+  if (!text || text.length > MAX_TEXT_LENGTH) {
+    sendError(socket, "INVALID_TEXT", `ข้อความต้องยาว 1–${MAX_TEXT_LENGTH} ตัวอักษร`);
+    return null;
+  }
+  return text;
 }
 
 function broadcastUserList() {
@@ -87,11 +98,14 @@ io.on("connection", (socket) => {
     if (!from) return;
     const target = clients.get(to);
     if (!target) return sendError(socket, "USER_NOT_FOUND", `ไม่พบผู้ใช้ ${to}`);
+    text = cleanText(socket, text);
+    if (!text) return;
 
-    // R7: ส่งให้ผู้รับและผู้ส่งเท่านั้น (server กำหนด from/timestamp เอง)
-    const msg = { from, to, text: String(text ?? ""), timestamp: now() };
-    target.emit("private_msg", msg);
-    if (target !== socket) socket.emit("private_msg", msg);
+    // R7: ส่งให้ผู้รับและผู้ส่งเท่านั้น ใช้ socket.emit ตรงถึง 2 คนนี้ ไม่ใช่ io.emit (broadcast)
+    // from และ timestamp กำหนดที่ server เสมอ client ปลอมเป็นคนอื่นไม่ได้
+    const msg = { from, to, text, timestamp: now() };
+    target.emit("private_msg", msg); // ถึงผู้รับ
+    if (target !== socket) socket.emit("private_msg", msg); // echo กลับให้ผู้ส่ง แสดงในห้องของตัวเอง
   });
 
   socket.on("create_group", ({ group } = {}) => {
@@ -124,9 +138,11 @@ io.on("connection", (socket) => {
     const members = groups.get(group);
     if (!members) return sendError(socket, "GROUP_NOT_FOUND", "ไม่พบกลุ่ม");
     if (!members.has(from)) return sendError(socket, "NOT_A_MEMBER", "ยังไม่ได้เข้ากลุ่มนี้");
+    text = cleanText(socket, text);
+    if (!text) return;
 
     // R11: ส่งเฉพาะสมาชิกกลุ่ม (Socket.IO room)
-    io.to(`group:${group}`).emit("group_msg", { group, from, text: String(text ?? ""), timestamp: now() });
+    io.to(`group:${group}`).emit("group_msg", { group, from, text, timestamp: now() });
   });
 
   socket.on("disconnect", () => {

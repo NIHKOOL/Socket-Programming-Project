@@ -147,3 +147,30 @@
   > (ต่อจาก "ต่อไปคือ R5 + R6 (ห้องแชทและ UI แชท) ... จะเริ่มเลยไหมครับ")
 - **ผลลัพธ์:** สร้าง `client/src/rooms.js` (id ห้อง + แยกข้อความลงห้อง), `client/src/ChatRoom.jsx` (หน้าต่างข้อความ + ช่องพิมพ์ + auto-scroll), `client/src/App.css` / เขียน `App.jsx` ใหม่: sidebar คลิกเปิดห้อง, เก็บข้อความแยกตามห้อง, unread badge, ห้อง private ปิดช่องพิมพ์เมื่ออีกฝ่ายออฟไลน์ / สร้าง `docs/R5_R6_TEST.md`
 - **หมายเหตุ:** test อัตโนมัติ R5 9/9, R4 9/9, R3 12/12, smoke 7/7 (บน server ใหม่) ผ่าน, build ผ่าน ยังไม่มีปุ่มสร้าง/เข้ากลุ่ม (R8, R10) ให้ใช้ Console ไปก่อน ข้อที่พบ: กลุ่มที่ไม่มีสมาชิกเหลือจะค้างใน server ตลอด ต้องตัดสินใจตอนทำ R8
+
+### [2026-10-27] ตรวจ R5 + R6
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R5, R6
+- **Prompt:**
+  > เช็ก R5 R6 เรียบร้อยใช้ได้
+- **ผลลัพธ์:** ตรวจรูปหลักฐาน 4 รูปผ่านทั้งหมด ย้ายโฟลเดอร์ `evidence/R5` → `evidence/R5_R6`, แก้ชื่อไฟล์ `sperate` → `separate`, เปลี่ยน R5/R6 ใน README เป็น ✅
+- **หมายเหตุ:** —
+
+### [2026-10-27] R7 — Private message
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R7 (และ R11 บางส่วน)
+- **Prompt:**
+  > เริ่ม R7 เลย
+- **ผลลัพธ์:** `server/index.js`: เพิ่ม `cleanText()` (trim, 1–1000 ตัวอักษร, error `INVALID_TEXT`) ใช้ทั้ง `private_msg` และ `group_msg` + comment อธิบายเรื่องความเป็นส่วนตัว / `client/src/App.jsx`: ล้าง error เก่าเมื่อส่งข้อความใหม่ / อัปเดต PROTOCOL.md, สร้าง `docs/R7_TEST.md`
+- **หมายเหตุ:** test อัตโนมัติ R7 13/13 (รวม "คนนอกไม่ได้รับ frame ใดเลย" และ "ปลอม from ไม่ได้"), smoke 7/7, R3 12/12, R4 9/9, R5 9/9, build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R7/`
+
+### [2026-10-27] R7 — ใช้หลักฐานจาก R5_R6 ซ้ำ
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R7
+- **Prompt:**
+  > คิดว่า R7 test แล้วเอาจาก folder R5_R6 มาใส่เลยได้ไหม
+- **ผลลัพธ์:** ใช้ได้บางส่วน: `R6-private-room.png` ใช้แทน sender-receiver และ `R2-server-recv-private-msg.png` ใช้แทน server log (ใส่ลิงก์ ไม่ copy ไฟล์) แต่ส่วน "only sender and receiver can see" ยังไม่มีหลักฐานมุมมองของ C3 อัปเดต evidence/README.md และ R7_TEST.md
+- **หมายเหตุ:** ยังต้องถ่าย `R7-outsider-c3.png` และ `R7-outsider-ws-frames.png`

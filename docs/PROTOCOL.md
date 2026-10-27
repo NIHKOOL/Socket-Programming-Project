@@ -61,6 +61,7 @@ socket.emit("group_msg", { group: "net-project", text: "hello all" })
 | `NAME_TAKEN` | ชื่อที่ register ซ้ำกับคนที่ออนไลน์อยู่ โดย**ไม่สนตัวพิมพ์เล็ก/ใหญ่** (`C1` = `c1`) (R3) |
 | `NOT_REGISTERED` | ส่งคำสั่งอื่นก่อน register |
 | `USER_NOT_FOUND` | ส่ง private message ถึงคนที่ไม่ได้ออนไลน์ |
+| `INVALID_TEXT` | ข้อความ (private/group) ว่างหลัง trim หรือยาวเกิน 1000 ตัวอักษร |
 | `INVALID_GROUP` | สร้างกลุ่มด้วยชื่อว่าง |
 | `GROUP_EXISTS` | สร้างกลุ่มด้วยชื่อที่มีอยู่แล้ว |
 | `GROUP_NOT_FOUND` | join หรือส่งข้อความถึงกลุ่มที่ไม่มีอยู่ |
@@ -103,3 +104,4 @@ Client(alice)                Server                  Client(bob)
 | 2026-10-27 | — | ร่างแรก |
 | 2026-10-27 | — | เปลี่ยนเป็น Socket.IO events, `error` → `error_msg`, เพิ่ม error code `INVALID_NAME`, `ALREADY_REGISTERED`, `INVALID_GROUP` |
 | 2026-10-27 | — | R3: ชื่อห้ามซ้ำแบบไม่สนตัวพิมพ์, จำกัด 20 ตัวอักษร, broadcast เฉพาะคนที่ register แล้ว |
+| 2026-10-27 | — | R7: ข้อความ trim + จำกัด 1–1000 ตัวอักษร เพิ่ม error `INVALID_TEXT` (ใช้กับ `group_msg` ด้วย) |
