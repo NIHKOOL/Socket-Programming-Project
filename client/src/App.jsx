@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { connect, DEFAULT_SERVER_URL } from "./socket.js";
 import { dmRoomId, groupRoomId, parseRoomId, roomOfPrivateMsg } from "./rooms.js";
 import ChatRoom from "./ChatRoom.jsx";
+import { isTouchDevice } from "./device.js";
 import "./App.css";
 
 export default function App() {
@@ -27,6 +28,12 @@ export default function App() {
     activeRoomRef.current = roomId;
     setActiveRoom(roomId);
     setUnread((prev) => ({ ...prev, [roomId]: 0 }));
+  }
+
+  // มือถือ: ปุ่ม [< back] ปิดห้อง → กลับไปหน้ารายชื่อ (ข้อความที่เข้ามาหลังจากนี้จะนับ unread)
+  function closeRoom() {
+    activeRoomRef.current = null;
+    setActiveRoom(null);
   }
 
   function addMessage(roomId, msg) {
@@ -60,7 +67,7 @@ export default function App() {
     let registered = false;
     let myName = null;
     socket.on("connect", () => socket.emit("register", { name: nameInput }));
-    socket.on("connect_error", () => setError(`เชื่อมต่อ ${serverUrl} ไม่ได้`));
+    socket.on("connect_error", () => setError(`Cannot connect to ${serverUrl}`));
     socket.on("register_ok", ({ name }) => {
       registered = true;
       myName = name;
@@ -75,7 +82,7 @@ export default function App() {
       if (!registered) return;
       // R4: หลุดจาก server → ล้างข้อมูลที่ค้างอยู่ แล้วกลับไปหน้า login
       resetSession();
-      setError("หลุดการเชื่อมต่อจาก server กรุณาเข้าสู่ระบบใหม่");
+      setError("Disconnected from server. Please log in again.");
     });
     socket.on("user_list", ({ users }) => setUsers(users));
     socket.on("group_list", ({ groups }) => setGroups(groups));
@@ -116,100 +123,158 @@ export default function App() {
 
   if (!me) {
     return (
-      <form className="login" onSubmit={handleLogin}>
-        <h2>Simple Chat</h2>
-        <label>
-          Server URL
-          <input value={serverUrl} onChange={(e) => setServerUrl(e.target.value)} />
-        </label>
-        <label>
-          ชื่อของคุณ
-          <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} maxLength={20} required />
-        </label>
-        <button type="submit">เข้าสู่ระบบ</button>
-        {error && <p className="error">{error}</p>}
-      </form>
+      <div className="login-screen">
+        <form className="terminal" onSubmit={handleLogin}>
+          <div className="terminal-bar">
+            <span className="dot dot-red" />
+            <span className="dot dot-yellow" />
+            <span className="dot dot-green" />
+            <span className="terminal-title">simple-chat — login</span>
+          </div>
+          <div className="terminal-body">
+            <p className="term-muted"># Simple Chat · Socket.IO client</p>
+            <p>
+              <span className="term-prompt">$</span> ./simple-chat --connect
+            </p>
+            <label className="term-line">
+              <span className="term-prompt">server&gt;</span>
+              <input value={serverUrl} onChange={(e) => setServerUrl(e.target.value)} spellCheck={false} />
+            </label>
+            <label className="term-line">
+              <span className="term-prompt">name&gt;</span>
+              <input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                maxLength={20}
+                placeholder="your name (1–20 chars)"
+                spellCheck={false}
+                autoFocus={!isTouchDevice}
+                required
+              />
+            </label>
+            <button type="submit" className="term-button">
+              &gt; login<span className="term-cursor">_</span>
+            </button>
+            {error && <p className="term-error">error: {error}</p>}
+          </div>
+        </form>
+      </div>
     );
   }
 
   const myGroups = groups.filter((g) => g.members.includes(me));
-  const badge = (roomId) => (unread[roomId] > 0 ? <span className="badge">{unread[roomId]}</span> : null);
+  const memberCount = (n) => `${n} ${n === 1 ? "member" : "members"}`;
+  const withYou = (name) => (name === me ? `${name} (you)` : name);
+  const badge = (roomId) => (unread[roomId] > 0 ? <span className="badge">[{unread[roomId]}]</span> : null);
+  // unread รวมของห้องอื่น แสดงที่ปุ่ม [< back] บนมือถือ
+  const otherUnread = Object.entries(unread).reduce((sum, [id, n]) => (id === activeRoom ? sum : sum + n), 0);
+  let serverHost = serverUrl;
+  try {
+    serverHost = new URL(serverUrl).host;
+  } catch {
+    // URL ไม่ถูกรูปแบบ แสดงตามที่ผู้ใช้กรอก
+  }
 
   return (
-    <div className="app">
-      <aside className="sidebar">
-        <div>
-          เข้าสู่ระบบเป็น <b>{me}</b>
+    <div className="app-screen">
+      <div className="terminal app-window">
+        <div className="terminal-bar">
+          <span className="dot dot-red" />
+          <span className="dot dot-yellow" />
+          <span className="dot dot-green" />
+          <span className="terminal-title">
+            simple-chat — {me}@{serverHost}
+          </span>
         </div>
 
-        <h3>ออนไลน์ ({users.length})</h3>
-        <ul className="room-list">
-          {/* R4: ชื่อตัวเองอยู่บนสุด ที่เหลือเรียงตามตัวอักษร / R5: คลิกชื่อคนอื่น → เปิดห้อง private */}
-          {[...users]
-            .sort((a, b) => (a === me ? -1 : b === me ? 1 : a.localeCompare(b)))
-            .map((u) => (
-              <li key={u}>
-                <button
-                  className={`room-item ${activeRoom === dmRoomId(u) ? "active" : ""}`}
-                  onClick={() => openRoom(dmRoomId(u))}
-                  disabled={u === me}
-                >
-                  <span>{u === me ? `${u} (คุณ)` : u}</span>
-                  {badge(dmRoomId(u))}
-                </button>
-              </li>
-            ))}
-        </ul>
+        {/* room-open: มือถือแสดงทีละหน้า มีห้องเปิดอยู่ → ซ่อนรายชื่อ แสดงห้องเต็มจอ (ดู App.css) */}
+        <div className={`app ${activeRoom ? "room-open" : ""}`}>
+          <aside className="sidebar">
+            <p>
+              <span className="term-prompt">$</span> whoami
+            </p>
+            <p className="whoami">{me}</p>
 
-        <h3>กลุ่ม ({groups.length})</h3>
-        <form className="create-group" onSubmit={handleCreateGroup}>
-          <input
-            value={groupInput}
-            onChange={(e) => setGroupInput(e.target.value)}
-            placeholder="ชื่อกลุ่มใหม่"
-            maxLength={30}
-          />
-          <button type="submit" disabled={!groupInput.trim()}>
-            สร้าง
-          </button>
-        </form>
-        <ul className="room-list">
-          {/* R9: แสดงทุกกลุ่มพร้อมสมาชิก / R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง / R10: ยังไม่เป็นสมาชิก → ปุ่ม "เข้าร่วม" */}
-          {groups.map((g) => {
-            const isMember = g.members.includes(me);
-            const roomId = groupRoomId(g.name);
-            return (
-              <li key={g.name} className="group-row">
-                <button
-                  className={`room-item ${activeRoom === roomId ? "active" : ""}`}
-                  onClick={() => openRoom(roomId)}
-                  disabled={!isMember}
-                >
-                  <span>
-                    {g.name}
-                    <small>
-                      {g.members.length > 0
-                        ? `${g.members.length} คน: ${g.members.map((m) => (m === me ? `${m} (คุณ)` : m)).join(", ")}`
-                        : "ไม่มีสมาชิก"}
-                      {!isMember && " · ยังไม่ได้เป็นสมาชิก"}
-                    </small>
-                  </span>
-                  {badge(roomId)}
-                </button>
-                {!isMember && (
-                  <button className="join-btn" onClick={() => handleJoinGroup(g.name)}>
-                    เข้าร่วม
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+            <h3># online ({users.length})</h3>
+            <ul className="room-list">
+              {/* R4: ชื่อตัวเองอยู่บนสุด ที่เหลือเรียงตามตัวอักษร / R5: คลิกชื่อคนอื่น → เปิดห้อง private */}
+              {[...users]
+                .sort((a, b) => (a === me ? -1 : b === me ? 1 : a.localeCompare(b)))
+                .map((u) => (
+                  <li key={u}>
+                    <button
+                      className={`room-item ${activeRoom === dmRoomId(u) ? "active" : ""}`}
+                      onClick={() => openRoom(dmRoomId(u))}
+                      disabled={u === me}
+                    >
+                      <span>@{withYou(u)}</span>
+                      {badge(dmRoomId(u))}
+                    </button>
+                  </li>
+                ))}
+            </ul>
 
-        {error && <p className="error">{error}</p>}
-      </aside>
+            <h3># groups ({groups.length})</h3>
+            <form className="create-group" onSubmit={handleCreateGroup}>
+              <span className="term-prompt">new&gt;</span>
+              <input
+                value={groupInput}
+                onChange={(e) => setGroupInput(e.target.value)}
+                placeholder="group name"
+                maxLength={30}
+                spellCheck={false}
+              />
+              <button type="submit" disabled={!groupInput.trim()}>
+                [+ create]
+              </button>
+            </form>
+            <ul className="room-list">
+              {/* R9: แสดงทุกกลุ่มพร้อมสมาชิก / R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง / R10: ยังไม่เป็นสมาชิก → ปุ่ม [join] */}
+              {groups.map((g) => {
+                const isMember = g.members.includes(me);
+                const roomId = groupRoomId(g.name);
+                return (
+                  <li key={g.name} className="group-row">
+                    <button
+                      className={`room-item ${activeRoom === roomId ? "active" : ""}`}
+                      onClick={() => openRoom(roomId)}
+                      disabled={!isMember}
+                    >
+                      <span>
+                        #{g.name}
+                        <small>
+                          {g.members.length > 0
+                            ? `${memberCount(g.members.length)}: ${g.members.map(withYou).join(", ")}`
+                            : "No members"}
+                          {!isMember && " · not a member"}
+                        </small>
+                      </span>
+                      {badge(roomId)}
+                    </button>
+                    {!isMember && (
+                      <button className="join-btn" onClick={() => handleJoinGroup(g.name)}>
+                        [join]
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
 
-      <main className="main">{activeRoom ? renderRoom() : <p className="placeholder muted">เลือกผู้ใช้หรือกลุ่มเพื่อเริ่มแชท</p>}</main>
+            {error && <p className="error">error: {error}</p>}
+          </aside>
+
+          <main className="main">
+            {activeRoom ? (
+              renderRoom()
+            ) : (
+              <p className="placeholder muted">
+                -- select a user or group to start chatting --<span className="term-cursor">_</span>
+              </p>
+            )}
+          </main>
+        </div>
+      </div>
     </div>
   );
 
@@ -222,12 +287,14 @@ export default function App() {
       return (
         <ChatRoom
           key={activeRoom}
-          title={name}
-          subtitle={online ? "Private chat · ออนไลน์" : "Private chat · ออฟไลน์"}
+          title={`@${name}`}
+          subtitle={online ? "private · online" : "private · offline"}
           messages={roomMessages}
           me={me}
           onSend={sendToActiveRoom}
-          disabledReason={online ? null : `${name} ออฟไลน์อยู่`}
+          onBack={closeRoom}
+          backBadge={otherUnread}
+          disabledReason={online ? null : `${name} is offline`}
         />
       );
     }
@@ -236,12 +303,14 @@ export default function App() {
     return (
       <ChatRoom
         key={activeRoom}
-        title={`# ${name}`}
-        subtitle={group ? `Group chat · สมาชิก ${group.members.length} คน: ${group.members.join(", ")}` : "Group chat"}
+        title={`#${name}`}
+        subtitle={group ? `group · ${memberCount(group.members.length)}: ${group.members.join(", ")}` : "group"}
         messages={roomMessages}
         me={me}
         onSend={sendToActiveRoom}
-        disabledReason={group ? null : "คุณไม่ได้เป็นสมาชิกกลุ่มนี้แล้ว"}
+        onBack={closeRoom}
+        backBadge={otherUnread}
+        disabledReason={group ? null : "You are no longer a member of this group"}
       />
     );
   }

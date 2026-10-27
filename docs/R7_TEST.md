@@ -27,8 +27,8 @@ restart server + refresh client แล้ว login `C1`, `C2`, `C3`
 - [ ] **C3:** sidebar ไม่มี unread ที่ไหนเลย และห้อง C1 / C2 ว่าง
 - [ ] **C3 แท็บ Messages:** ไม่มี frame `private_msg` เลย มีแค่ ping/pong (`2`/`3`) หรือ `user_list`
 - [ ] C1 ส่งหา C3 → C3 ได้รับ แต่ไม่เห็นบทสนทนา C1↔C2
-- [ ] C2 ปิด tab → ห้อง C2 ของ C1 ขึ้น "ออฟไลน์" ช่องพิมพ์ถูกปิด
-- [ ] (Console C1) `socket.emit("private_msg", { to: "C2", text: "   " })` → ขึ้น error "ข้อความต้องยาว 1–1000 ตัวอักษร"
+- [ ] C2 ปิด tab → ห้อง C2 ของ C1 ขึ้น "offline" ช่องพิมพ์ถูกปิด
+- [ ] (Console C1) `socket.emit("private_msg", { to: "C2", text: "   " })` → ขึ้น error "Message must be 1–1000 characters"
 
 เก็บ screenshot ไว้ที่ `docs/evidence/R7/`:
 - ~~`R7-sender-receiver.png`~~: ใช้ `evidence/R5_R6/R6-private-room.png` แทน

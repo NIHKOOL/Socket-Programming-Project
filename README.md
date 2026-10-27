@@ -17,15 +17,19 @@
 ```
 .
 ├── server/              # โค้ดฝั่ง Server (ต้องแยกจาก client ตามโจทย์)
-│   ├── index.js         #   Socket.IO server: เก็บรายชื่อ/กลุ่ม และ route ข้อความ
+│   ├── index.js         #   core R1–R11: Socket.IO server เก็บรายชื่อ/กลุ่ม และ route ข้อความ
+│   ├── features/        #   Feature เสริม Part 3 (core เรียกผ่าน features/index.js)
 │   └── tests/           #   test อัตโนมัติ 1 ไฟล์ต่อ requirement (npm test)
+│       └── features/    #     test ของ Feature เสริม
 ├── client/              # โค้ดฝั่ง Client (React)
 │   └── src/
 │       ├── socket.js    #   ฟังก์ชันเชื่อมต่อ Socket.IO
 │       ├── rooms.js     #   id ห้องแชท + แยกข้อความลงห้อง (R5)
 │       ├── ChatRoom.jsx #   UI ห้องแชท: หน้าต่างข้อความ + ช่องพิมพ์ (R6)
 │       ├── App.jsx      #   หน้า login, sidebar รายชื่อ/กลุ่ม, state ข้อความ
-│       └── App.css
+│       ├── App.css      #   style ทั้งแอป (terminal + responsive มือถือ ที่ @media max-width: 720px)
+│       ├── device.js    #   ตรวจจอสัมผัส (ไม่ autofocus บนมือถือ)
+│       └── features/    #   Feature เสริม Part 3 ฝั่ง client (1 โฟลเดอร์ต่อ feature)
 ├── docs/
 │   ├── PROTOCOL.md      # รูปแบบข้อความที่ client/server ส่งหากัน (อ่านก่อนเขียนโค้ด!)
 │   ├── ARCHITECTURE.md  # แผนภาพระบบ + เหตุผลการเลือกโปรโตคอล (ใช้ทำสไลด์ R1)
@@ -39,8 +43,12 @@
 │   ├── R9_TEST.md       # checklist รายชื่อกลุ่ม + สมาชิก
 │   ├── R10_TEST.md      # checklist เข้ากลุ่มด้วยตัวเอง
 │   ├── R11_TEST.md      # checklist group message
+│   ├── features/        # checklist ทดสอบของ Feature เสริม
 │   └── evidence/        # รูปหลักฐานการทดสอบ แยกโฟลเดอร์ตาม R (ดู evidence/README.md)
-├── Handbook.md          # แต่ละ requirement ทำงานอย่างไร + map ไปหาโค้ดทีละขั้น (อ่านก่อนแก้โค้ด!)
+│       └── features/    #   หลักฐานของ Feature เสริม
+├── Handbook.md          # core R1–R11 ทำงานอย่างไร + map ไปหาโค้ดทีละขั้น (อ่านก่อนแก้โค้ด!)
+├── HandbookFeatures.md  # Feature เสริม (Part 3) ทำงานอย่างไร + วิธีเพิ่ม feature ใหม่
+├── package.json         # คำสั่งรวมสำหรับ Cloud: npm run build / npm start
 ├── CLAUDE.md            # บริบทโปรเจกต์สำหรับ Claude Code
 ├── PromptRecord.md      # บันทึก prompt ที่ทีมใช้กับ AI
 └── README.md
@@ -86,6 +94,16 @@ npm run dev
 > ถ้าไม่อยากรัน client ทุกเครื่อง ให้เปิด `http://<IP เครื่องที่รัน client>:5173` จากเครื่องอื่นได้เลย เพราะ `npm run dev` ใช้ `--host` อยู่แล้ว
 > แต่ละ browser tab นับเป็น client 1 ตัว ตอน demo R1 ต้องเปิดจากคอมคนละเครื่องจริง
 
+### รันแบบ Cloud (server ตัวเดียวเสิร์ฟทั้งหน้าเว็บและ socket)
+
+```bash
+# ที่ root ของโปรเจกต์
+npm run build    # ติดตั้ง dependency ของ server + client แล้ว build client → client/dist
+npm start        # เปิด http://localhost:3000 (เครื่องอื่น/มือถือใน Wi-Fi เดียวกัน: http://<IP>:3000)
+```
+
+เป็นคำสั่งเดียวกับที่ Render ใช้ deploy ขั้นตอน deploy ทั้งหมดอยู่ใน [docs/features/cloud_TEST.md](docs/features/cloud_TEST.md)
+
 ### เชื่อมต่อข้ามเครื่อง
 
 1. ทุกเครื่องต้องอยู่ในเครือข่ายเดียวกัน (Wi-Fi / LAN เดียวกัน) หรือ Server อยู่บน Cloud
@@ -99,6 +117,7 @@ npm run dev
 cd server
 npm test            # รันทั้งหมด
 npm test -- r07     # รันเฉพาะ R7
+npm test -- features/   # รันเฉพาะ test ของ Feature เสริม (server/tests/features/)
 ```
 
 แต่ละไฟล์ใน `server/tests/` จะได้ server ตัวใหม่ของตัวเอง (port 4100 ขึ้นไป) **ไม่กระทบ server ที่รันอยู่ที่ port 3000**
@@ -108,7 +127,9 @@ npm test -- r07     # รันเฉพาะ R7
 ok    r00-smoke.test.mjs  (7 passed, 0 failed)
 ok    r03-unique-name.test.mjs  (12 passed, 0 failed)
 ...
-9/9 test files passed
+ok    features/f00-feature-hooks.test.mjs  (3 passed, 0 failed)
+
+10/10 test files passed
 ```
 
 ควรรันทุกครั้งก่อน commit ถ้าแก้ `server/index.js` หรือ `client/src/rooms.js`
@@ -133,17 +154,19 @@ ok    r03-unique-name.test.mjs  (12 passed, 0 failed)
 | R7 | Private message — เห็นแค่ผู้ส่งกับผู้รับ · ทดสอบตาม [docs/R7_TEST.md](docs/R7_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r7--private-message)) | ✅ | |
 | R8 | สร้างกลุ่มได้ (เริ่มต้นมีแค่ผู้สร้าง) กลุ่มที่ไม่มีสมาชิกยังอยู่ · ทดสอบตาม [docs/R8_TEST.md](docs/R8_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r8--create-group)) | ✅ | |
 | R9 | เห็นรายชื่อกลุ่มทั้งหมด + สมาชิก อัปเดต real-time · ทดสอบตาม [docs/R9_TEST.md](docs/R9_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r9--group-list-with-members)) | ✅ | |
-| R10 | เข้ากลุ่มด้วยตัวเองเท่านั้น (ปุ่ม "เข้าร่วม") · ทดสอบตาม [docs/R10_TEST.md](docs/R10_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r10--join-group-by-self)) | ✅ | |
+| R10 | เข้ากลุ่มด้วยตัวเองเท่านั้น (ปุ่ม "[join]") · ทดสอบตาม [docs/R10_TEST.md](docs/R10_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r10--join-group-by-self)) | ✅ | |
 | R11 | ส่งข้อความในกลุ่ม — เห็นแค่สมาชิก · ทดสอบตาม [docs/R11_TEST.md](docs/R11_TEST.md) ผ่าน ([หลักฐาน](docs/evidence/README.md#r11--group-message)) | ✅ | |
 
 ### Part 3 — Special Features (4, ข้อละ 1)
 
+โค้ด, test, เอกสาร และหลักฐานของ Feature เสริมแยกจาก core ทั้งหมด ดู [HandbookFeatures.md](HandbookFeatures.md)
+
 | # | ฟีเจอร์ | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
-| 1 | (AI feature — บังคับอย่างน้อย 1) | ⬜ | |
-| 2 | | ⬜ | |
-| 3 | | ⬜ | |
-| 4 | | ⬜ | |
+| 1 | Deploy บน Cloud (`cloud`) — server เสิร์ฟหน้าเว็บเอง URL เดียว · [checklist + วิธี deploy](docs/features/cloud_TEST.md) · โค้ดเสร็จ ทดสอบบนเครื่องแล้ว **รอ deploy บน Render** | 🟨 | |
+| 2 | AI ผ่าน slash command `/ai`, `/summarize` (`ai`) — **AI บังคับอย่างน้อย 1** | ⬜ | |
+| 3 | ส่งไฟล์/รูปผ่าน socket (`files`) | ⬜ | |
+| 4 | `/ping` วัด latency + typing indicator (`ping`) | ⬜ | |
 
 สัญลักษณ์: ⬜ ยังไม่เริ่ม · 🟨 กำลังทำ · ✅ เสร็จและทดสอบข้ามเครื่องแล้ว
 

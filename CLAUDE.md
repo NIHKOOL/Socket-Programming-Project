@@ -30,6 +30,8 @@ Term project วิชา Computer Network: แอปแชท Client–Server �
 cd server && npm run dev     # server ที่ 0.0.0.0:3000 (restart อัตโนมัติ)
 cd client && npm run dev     # client ที่ http://localhost:5173 (--host เปิดให้เครื่องอื่นเข้าได้)
 cd client && npm run build   # เช็กว่า client build ผ่าน
+npm run build && npm start   # (root) โหมด Cloud: server ตัวเดียวเสิร์ฟ client/dist + socket ที่ port 3000
+                             # build ใช้ npm install (ไม่ใช่ npm ci) เพื่อไม่ลบ node_modules ขณะ dev server เปิดอยู่
 cd server && npm test        # รัน test อัตโนมัติทั้งหมด (แต่ละไฟล์ได้ server ใหม่ที่ port 4100+)
 cd server && npm test -- r07 # รันเฉพาะไฟล์ที่ชื่อมี "r07"
 ```
@@ -45,6 +47,17 @@ Test อยู่ใน `server/tests/*.test.mjs` (1 ไฟล์ต่อ requi
 - ส่งข้อความแชทผ่าน Socket.IO event เท่านั้น ไม่เพิ่ม REST endpoint สำหรับส่งหรือดึงข้อความ
 - ห้ามตั้งชื่อ event ซ้ำกับชื่อที่ Socket.IO สงวนไว้ (`connect`, `disconnect`, `connect_error` ฯลฯ) ให้ใช้ `error_msg` แทน `error`
 - API key อ่านจาก `.env` เท่านั้น ห้าม hardcode
+- **ข้อความที่ผู้ใช้เห็นต้องเป็นภาษาอังกฤษ**: UI ใน `client/` และ `message` ของ `error_msg` จาก server ส่วน comment ในโค้ดเขียนภาษาไทยได้
+
+## Feature เสริม (Part 3)
+
+แยกจาก core (R1–R11) ทั้งหมด รายละเอียดอยู่ใน `HandbookFeatures.md`
+- Server: `server/features/<ชื่อ>.js` แล้วลงทะเบียนใน `server/features/index.js` **ห้ามเพิ่ม `socket.on` ของ feature ใน `server/index.js`**
+  core เรียก feature ผ่าน 2 จุดเชื่อมเท่านั้น คือ `handleHttp` และ `setupSocket`
+- Client: `client/src/features/<ชื่อ>/` ต่อเข้า `App.jsx` / `ChatRoom.jsx` ให้น้อยที่สุด และทุกจุดต้องมี comment `// Feature: <ชื่อ>`
+- Test: `server/tests/features/fXX-<ชื่อ>.test.mjs` (รันด้วย `npm test -- features/`) และ `npm test` ของ core ต้องยังผ่าน
+- Docs: `docs/features/<ชื่อ>_TEST.md`, `docs/evidence/features/<ชื่อ>/`, หัวข้อใน `HandbookFeatures.md`
+- event ใหม่ต้องเพิ่มใน `docs/PROTOCOL.md` หัวข้อ "Feature เสริม"
 
 ## Handbook
 

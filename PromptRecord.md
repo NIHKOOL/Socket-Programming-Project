@@ -285,3 +285,59 @@
   > ก่อนที่จะเริ่มไป Part 3 ช่วยทำ Handbook.md ได้ไหมว่า Requirement แต่ละข้อทำงานยังไง พร้อม map ไปหาส่วนของ code ตามลำดับการทำงานที่เกี่ยวข้องทั้งหมดเพื่อให้คนในทีมมาดูต่อจะได้เข้าใจได้ทันที
 - **ผลลัพธ์:** สร้าง `Handbook.md`: ภาพรวม (แผนภาพ, หน้าที่ของแต่ละไฟล์, state, หลักการ 3 ข้อ, emit 3 แบบ) / R1–R11 ไล่ลำดับการทำงานทีละขั้นพร้อมลิงก์ไปที่บรรทัดของโค้ด / การหลุดการเชื่อมต่อ / คู่มือเพิ่ม event ใหม่ (สำหรับ Part 3) / คำถามที่อาจารย์น่าจะถาม เพิ่มลิงก์ใน README และกฎใน CLAUDE.md ให้อัปเดต Handbook ทุกครั้งที่แก้โค้ด
 - **หมายเหตุ:** เลขบรรทัดตรงกับโค้ด ณ วันที่ 2026-10-28
+
+### [2026-10-28] หน้า login แบบ terminal (white theme) อยู่กึ่งกลางจอ
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** UI (R3 หน้า login)
+- **Prompt:**
+  > ทำให้หน้า login เป็นแนว terminalได้ไหมแต่เป็น white theme นะ แล้วเลื่อนกล่อง login มาอยู่ตรงกึ่งกลางหน้าจอ
+- **ผลลัพธ์:** `client/src/App.jsx`: เปลี่ยนโครง HTML ของหน้า login เป็นหน้าต่าง terminal (title bar 3 จุด, prompt `server>` / `name>`, ปุ่ม `> เข้าสู่ระบบ_` ที่ cursor กะพริบ, error แบบ `error: ...`) logic เดิมไม่เปลี่ยน / `client/src/App.css`: style `.login-screen` (grid place-items center) + `.terminal*` ฟอนต์ monospace พื้นขาว / อัปเดตเลขบรรทัด App.jsx ใน Handbook.md (11 ลิงก์)
+- **หมายเหตุ:** build ผ่าน ยังไม่ได้ดูใน browser จริง
+
+### [2026-10-28] เปลี่ยน UI เป็นภาษาอังกฤษทั้งหมด
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** UI
+- **Prompt:**
+  > ขอเป็น English ทั้งหมดได้ไหมสำหรับ UI
+- **ผลลัพธ์:** `client/src/App.jsx`, `ChatRoom.jsx`, `index.html` (`lang="en"`, เวลาเปลี่ยนจาก `th-TH` เป็น `en-GB`): ข้อความบนจอทั้งหมดเป็นภาษาอังกฤษ + helper `memberCount` (1 member / n members) และ `withYou` / `server/index.js`: `message` ของ error ทุก code เป็นภาษาอังกฤษ (code เหมือนเดิม) / แทนที่ข้อความบนจอที่อ้างถึงใน `docs/R*_TEST.md`, Handbook, README, PROTOCOL 60 จุด (ไม่แตะ `docs/evidence/README.md` เพราะอธิบายรูปเก่าที่ UI ยังเป็นภาษาไทย) / อัปเดตเลขบรรทัดใน Handbook / เพิ่มกฎใน CLAUDE.md
+- **หมายเหตุ:** comment ในโค้ดยังเป็นภาษาไทย test เทียบแค่ error code จึงไม่ต้องแก้ `npm test` ผ่าน 9/9, build ผ่าน
+
+### [2026-10-28] UI ของ client เป็นแนว terminal ทั้งหมด
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** UI (R4–R11 ส่วนแสดงผล)
+- **Prompt:**
+  > ทำให้ UI ของ Client เป็นแนว Terminal ให้หมด
+- **ผลลัพธ์:** `client/src/App.jsx`: ห่อหน้าแชทด้วยหน้าต่าง terminal (title bar `simple-chat — <me>@<host>`), sidebar แบบ `$ whoami`, `# online (n)`, `@user`, `#group`, unread `[n]`, ปุ่ม `[+ create]` / `[join]`, error `error: ...` / `client/src/ChatRoom.jsx`: เขียนใหม่ ข้อความเป็นบรรทัด log `[hh:mm] from: text` (ชื่อตัวเองสีเขียว คนอื่นสีน้ำเงิน) ช่องพิมพ์มี prompt `<me>@<room>:~$` ปุ่ม `[send ⏎]` / `client/src/App.css`: เขียนใหม่ทั้งไฟล์ ฟอนต์ monospace ทั้งแอป สีหลักรวมอยู่ใน `:root` รองรับจอแคบ (sidebar ขึ้นไปอยู่ด้านบน) / logic เดิมไม่เปลี่ยน / อัปเดตข้อความใน docs 36 จุด + remap ลิงก์ App.jsx และ ChatRoom.jsx ใน Handbook
+- **หมายเหตุ:** `npm test` 9/9, build ผ่าน ยังไม่ได้ดูใน browser จริง
+
+### [2026-10-28] แยกโครงสร้าง Feature เสริม (Part 3) ออกจาก core
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 (โครงสร้าง)
+- **Prompt:**
+  > ก่อนทำเราแยกส่วนที่เป็น Feature เสริมได้ไหม อย่าง Server/Client ก็มี folder เพิ่ม handbook.md ก็มีเพิ่ม แล้วก็มีการเก็บ Test เฉพาะ Feature เสริมด้วย
+- **ผลลัพธ์:** `server/features/index.js` (ทะเบียน feature + จุดเชื่อม `handleHttp` / `setupSocket`), `server/index.js` เพิ่มแค่จุดเชื่อม 2 จุด + log รายชื่อ feature / `server/tests/features/` + `run-all.mjs` หาไฟล์ใน features ด้วย (`npm test -- features/`) + test `f00-feature-hooks` / `client/src/features/README.md` (กติกาฝั่ง client) / `HandbookFeatures.md`, `docs/features/README.md`, `docs/evidence/features/README.md` / อัปเดต README (โครงสร้าง + ตาราง Part 3), CLAUDE.md (กฎของ feature), PROTOCOL.md (หัวข้อ Feature เสริม), Handbook.md (ลิงก์ + เลื่อนลิงก์ server 58 ตัว)
+- **หมายเหตุ:** `npm test` 10/10 (core 9 + feature 1), build ผ่าน
+
+### [2026-10-28] Feature 1: Cloud (เตรียมโค้ด + ทดสอบบนเครื่อง)
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Cloud deployment
+- **Prompt:**
+  > เริ่มทำเลย
+  >
+  > (ต่อจาก "พร้อมเริ่ม Feature 1: Cloud")
+- **ผลลัพธ์:** `server/features/cloud.js` (เสิร์ฟ `client/dist` เฉพาะ GET/HEAD, กัน path traversal, cache header, log IP จริงจาก `X-Forwarded-For`) ลงทะเบียนใน `server/features/index.js` / `client/src/socket.js`: build แล้วใช้ `window.location.origin` / `package.json` ที่ root (`npm run build` / `npm start`, engines node >= 20) / test `server/tests/features/f01-cloud.test.mjs` / เอกสาร: `docs/features/cloud_TEST.md` (มีขั้นตอน deploy บน Render), หัวข้อ Cloud ใน HandbookFeatures, Deployment ใน ARCHITECTURE (TLS, reverse proxy, X-Forwarded-For, DNS), README, PROTOCOL, CLAUDE.md, ลิงก์ socket.js ใน Handbook
+- **หมายเหตุ:** **ปัญหาที่เกิด:** คำสั่ง build รุ่นแรกใช้ `npm ci` ซึ่งลบ `client/node_modules` ระหว่างที่ dev server ล็อกไฟล์อยู่ (EPERM) ทำให้ vite/react หายไป → ติดตั้งคืนแล้ว และเปลี่ยน build เป็น `npm install` / ผลทดสอบ: `npm test` 11/11 (cloud 13/13), root build + start: `/` 200, asset 200, `/messages` 404, socket register ได้, log real IP ถูกต้อง / ยังไม่ได้ deploy ขึ้น Render จริง
+
+### [2026-10-28] UI responsive สำหรับมือถือ
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** UI (R5, R6 บนมือถือ)
+- **Prompt:**
+  > UI ฝั่ง Client ทำ Responsive ให้มือถือหน่อยได้ไหม
+- **ผลลัพธ์:** มือถือ (≤ 720px) แสดงทีละหน้า: หน้ารายชื่อ ↔ ห้องแชทเต็มจอ + ปุ่ม `[< back (n)]` (n = unread ของห้องอื่น) / `App.jsx`: `closeRoom()`, class `room-open`, `otherUnread` / `ChatRoom.jsx`: ปุ่ม back, prompt ย่อเหลือ `$` บนมือถือ, `enterKeyHint="send"` / `device.js`: ไม่ autofocus บนจอสัมผัส (คีย์บอร์ดไม่เด้งเอง) / `App.css`: `100dvh`, input 16px (กัน iPhone zoom), ปุ่มสูง ≥ 40–44px, ข้อความตัดบรรทัดเต็มจอ / `index.html`: `interactive-widget=resizes-content`, `theme-color` / เพิ่ม checklist มือถือใน `docs/R5_R6_TEST.md`, remap ลิงก์ใน Handbook 44 ตัว
+- **หมายเหตุ:** build ผ่าน, `npm test` 11/11 ยังไม่ได้ทดสอบบนมือถือจริง

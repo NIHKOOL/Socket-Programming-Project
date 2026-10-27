@@ -1,72 +1,162 @@
+/* ทั้งแอปเป็นหน้าต่าง terminal (white theme) */
 :root {
   --bg: #f5f6f8;
   --panel: #ffffff;
   --border: #dde1e6;
   --text: #1f2328;
   --muted: #6b7280;
-  --accent: #2563eb;
-  --accent-soft: #e8efff;
-  --mine: #2563eb;
-  --mine-text: #ffffff;
-  --theirs: #eef0f3;
+  --faint: #b0b6bf;
+  --prompt: #1a7f37; /* สีเขียวของ prompt + ข้อความของตัวเอง */
+  --prompt-soft: #eaf6ec;
+  --link: #0969da; /* ชื่อคนอื่นในห้องแชท */
   --error: #c62828;
-  font-family: system-ui, "Segoe UI", "Noto Sans Thai", sans-serif;
+  --font: "Cascadia Mono", Consolas, "JetBrains Mono", Menlo, "Noto Sans Thai", monospace;
+  font-family: var(--font);
+  font-size: 15px;
   color: var(--text);
 }
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); }
 button { font: inherit; cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: 0.5; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
 input { font: inherit; }
+p { margin: 0; }
 
 .muted { color: var(--muted); }
-.center { text-align: center; }
 .error { color: var(--error); }
+.term-prompt { color: var(--prompt); font-weight: 600; white-space: nowrap; }
+.term-cursor { animation: term-blink 1s steps(1) infinite; }
+@keyframes term-blink { 50% { opacity: 0; } }
 
-/* ---- Login ---- */
-.login { max-width: 360px; margin: 4rem auto; display: grid; gap: 8px; padding: 24px;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
-.login input { width: 100%; padding: 6px 8px; }
+/* ช่องกรอกแบบ terminal: ไม่มีกรอบ มีเส้นประด้านล่าง */
+.term-line input,
+.create-group input,
+.chat-box input {
+  flex: 1; min-width: 0; padding: 4px 0; border: none; border-bottom: 1px dashed var(--border);
+  background: transparent; color: var(--text); caret-color: var(--prompt); outline: none;
+}
+.term-line input:focus,
+.create-group input:focus,
+.chat-box input:focus { border-bottom: 1px solid var(--prompt); }
+input::placeholder { color: var(--faint); }
 
-/* ---- Layout ---- */
-.app { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
-.sidebar { background: var(--panel); border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; }
-.sidebar h3 { margin: 20px 0 6px; font-size: 0.95rem; }
+/* ปุ่มแบบ terminal: ตัวอักษรสีเขียวในวงเล็บเหลี่ยม */
+.term-button,
+.create-group button,
+.chat-box button,
+.join-btn {
+  flex-shrink: 0; padding: 3px 8px; border: 1px solid transparent; border-radius: 4px;
+  background: transparent; color: var(--prompt); font-weight: 600;
+}
+.term-button:hover:not(:disabled),
+.create-group button:hover:not(:disabled),
+.chat-box button:hover:not(:disabled),
+.join-btn:hover { background: var(--prompt-soft); border-color: var(--prompt); }
+
+/* ---- หน้าต่าง terminal (ใช้ทั้ง login และหน้าแชท) ---- */
+.terminal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+.terminal-bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px;
+  background: var(--bg); border-bottom: 1px solid var(--border); }
+.dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.dot-red { background: #ff5f57; }
+.dot-yellow { background: #febc2e; }
+.dot-green { background: #28c840; }
+.terminal-title { flex: 1; text-align: center; margin-right: 50px; color: var(--muted); font-size: 0.85rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Login: หน้าต่าง terminal อยู่กึ่งกลางจอ ---- */
+.login-screen { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 16px; }
+.login-screen .terminal { width: min(560px, 100%); }
+.terminal-body { display: grid; gap: 10px; padding: 20px 22px 24px; }
+.term-muted { color: var(--muted); }
+.term-line { display: flex; align-items: center; gap: 10px; }
+.term-line .term-prompt { min-width: 7ch; }
+.term-button { justify-self: start; margin-top: 6px; border-color: var(--prompt); padding: 6px 12px; }
+.term-error { color: var(--error); }
+
+/* ---- หน้าแชท: หน้าต่าง terminal เต็มจอ ---- */
+/* 100dvh = ความสูงที่เห็นจริงบนมือถือ (ไม่รวมแถบ browser / หดตามคีย์บอร์ด) 100vh เป็นค่าสำรองของ browser เก่า */
+.app-screen { height: 100vh; height: 100dvh; padding: 16px; }
+.app-window { height: 100%; display: flex; flex-direction: column; }
+.app { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px 1fr; }
+
+/* Sidebar */
+.sidebar { border-right: 1px solid var(--border); padding: 14px 16px; overflow-y: auto; display: flex;
+  flex-direction: column; gap: 4px; }
+.whoami { font-weight: 600; margin-bottom: 8px; }
+.sidebar h3 { margin: 14px 0 4px; font-size: 1em; color: var(--muted); font-weight: 600; }
 .room-list { list-style: none; margin: 0; padding: 0; }
 .room-item { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  padding: 6px 8px; border: none; border-radius: 6px; background: none; text-align: left; color: inherit; }
+  padding: 4px 8px; border: none; border-left: 2px solid transparent; background: none; text-align: left;
+  color: inherit; }
 .room-item:hover:not(:disabled) { background: var(--bg); }
-.room-item.active { background: var(--accent-soft); font-weight: 600; }
+.room-item.active { border-left-color: var(--prompt); background: var(--prompt-soft); font-weight: 600; }
 .room-item:disabled { opacity: 1; cursor: default; }
-.room-item small { display: block; color: var(--muted); font-weight: normal; }
-.create-group { display: flex; gap: 6px; margin-bottom: 8px; }
-.create-group input { flex: 1; min-width: 0; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; }
-.create-group button { padding: 5px 12px; border: none; border-radius: 6px; background: var(--accent); color: #fff; }
-.group-row { display: flex; align-items: center; gap: 6px; }
+.room-item small { display: block; color: var(--muted); font-weight: normal; font-size: 0.85em; }
+.badge { color: var(--prompt); font-weight: 600; }
+.create-group { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.group-row { display: flex; align-items: center; gap: 4px; }
 .group-row .room-item { flex: 1; min-width: 0; }
-.join-btn { flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--accent); border-radius: 6px;
-  background: var(--panel); color: var(--accent); font-size: 0.85rem; }
-.join-btn:hover { background: var(--accent-soft); }
-.badge { background: var(--accent); color: #fff; border-radius: 999px; padding: 0 7px; font-size: 0.75rem; }
+.sidebar .error { margin-top: 10px; }
 
-/* ---- Room (R6) ---- */
-.main { display: flex; min-width: 0; }
+/* ห้องแชท (R6) */
+.main { display: flex; min-width: 0; min-height: 0; }
 .placeholder { margin: auto; }
 .room { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.room-header { padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
-.room-header h2 { margin: 0; font-size: 1.1rem; }
-.room-header p { margin: 2px 0 0; font-size: 0.85rem; }
+.room-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.room-heading { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-title { font-weight: 600; }
+.back-btn { display: none; flex-shrink: 0; padding: 3px 6px; border: 1px solid transparent; border-radius: 4px;
+  background: transparent; color: var(--prompt); font-weight: 600; }
 
-.chat-window { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-.msg { max-width: 70%; align-self: flex-start; }
-.msg.mine { align-self: flex-end; text-align: right; }
-.msg-from { font-size: 0.8rem; color: var(--muted); margin-bottom: 2px; }
-.msg-bubble { display: inline-block; padding: 8px 12px; border-radius: 12px; background: var(--theirs);
-  white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
-.msg.mine .msg-bubble { background: var(--mine); color: var(--mine-text); }
-.msg-time { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+/* ข้อความแบบ log: [เวลา] ผู้ส่ง: ข้อความ (ข้อความยาวจะขึ้นบรรทัดใหม่โดยเยื้องตรงกับคอลัมน์ข้อความ) */
+.chat-window { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+.msg { display: grid; grid-template-columns: auto auto 1fr; gap: 8px; line-height: 1.5; }
+.msg-time { color: var(--faint); }
+.msg-from { color: var(--link); font-weight: 600; }
+.msg.mine .msg-from { color: var(--prompt); }
+.msg-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 
-.chat-box { display: flex; gap: 8px; padding: 12px 16px; background: var(--panel); border-top: 1px solid var(--border); }
-.chat-box input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; }
-.chat-box button { padding: 8px 18px; border: none; border-radius: 6px; background: var(--accent); color: #fff; }
+.chat-box { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--border); }
+
+/* ---- มือถือ / จอแคบ: แสดงทีละหน้า แบบแอปแชทบนมือถือ ----
+   ไม่มีห้องเปิด → หน้ารายชื่อเต็มจอ / มีห้องเปิด (.room-open) → ห้องแชทเต็มจอ + ปุ่ม [< back] */
+@media (max-width: 720px) {
+  .app-screen { padding: 0; }
+  .app-window { border: none; border-radius: 0; box-shadow: none; }
+  .terminal-bar { padding: 8px 12px; }
+  .terminal-title { margin-right: 0; text-align: left; }
+
+  .app { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; padding: 12px 14px; }
+  .app.room-open .sidebar { display: none; }
+  .app:not(.room-open) .main { display: none; }
+
+  /* แตะง่าย: ปุ่มและรายการสูงอย่างน้อย ~44px */
+  .room-item { min-height: 44px; padding: 8px 10px; }
+  .create-group button, .join-btn, .chat-box button, .back-btn { min-height: 40px; }
+  .back-btn { display: inline-block; }
+
+  /* ช่องพิมพ์ 16px ขึ้นไป: กัน iPhone zoom เข้าเองตอนแตะช่องพิมพ์ */
+  input { font-size: 16px; }
+
+  .room-header { padding: 6px 10px; }
+  .room-subtitle { display: block; font-size: 0.8em; }
+  .room-heading { display: flex; flex-direction: column; }
+  .chat-window { padding: 10px 12px; }
+
+  /* ข้อความ: เวลา + ชื่ออยู่บรรทัดเดียวกับข้อความ แล้วตัดบรรทัดเต็มความกว้าง (ไม่เสียพื้นที่ให้คอลัมน์) */
+  .msg { display: block; }
+  .msg-time { font-size: 0.8em; margin-right: 6px; }
+  .msg-from { margin-right: 6px; }
+
+  .chat-box { padding: 8px 10px; gap: 8px; }
+  .prompt-long { display: none; } /* prompt เหลือแค่ "$" ให้ช่องพิมพ์กว้างขึ้น */
+}

@@ -55,4 +55,29 @@ groups:  Map<groupName, Set<name>> // R8–R11
 
 ## Deployment
 
-> TODO: ระบุว่ารันบน LAN หรือ Cloud (ถ้า deploy บน Cloud ได้ special point 1 ข้อ)
+รองรับ 2 แบบ ใช้โค้ดชุดเดียวกัน
+
+| | LAN (Part 1–2) | Cloud (Feature เสริม: `cloud`) |
+|---|---|---|
+| รัน | `server: npm start` + `client: npm run dev` (2 process) | root: `npm run build` → `npm start` (process เดียว) |
+| URL ของหน้าเว็บ | `http://<IP>:5173` (Vite) | `https://<app>.onrender.com` (server เสิร์ฟเอง) |
+| URL ของ socket | `ws://<IP>:3000` | `wss://<app>.onrender.com` (URL เดียวกับหน้าเว็บ) |
+| เข้ารหัส | ไม่มี | **TLS** ระหว่าง browser ↔ Render |
+| ใครต่อได้ | เครื่องใน Wi-Fi/LAN เดียวกัน | ทุกเครื่องที่มี internet (รวมมือถือ 4G/5G) |
+| IP ที่ server เห็น | IP จริงของ client | IP ของ reverse proxy → IP จริงอ่านจาก `X-Forwarded-For` |
+
+```
+Cloud:  browser ──HTTPS/WSS (TLS)──> Render reverse proxy ──HTTP/WS──> node server/index.js
+                                       (ใส่ X-Forwarded-For)            ├ GET /, /assets/* → client/dist
+                                                                         └ /socket.io/      → Socket.IO
+```
+
+**โปรโตคอลที่เพิ่มเข้ามาเมื่อขึ้น Cloud**
+
+| Layer | Protocol | ทำไม / ใช้อย่างไร |
+|---|---|---|
+| Application | **DNS** | แปลงชื่อ `<app>.onrender.com` เป็น IP ของ Render (บน LAN เราพิมพ์ IP ตรง ๆ) |
+| Application/Transport | **TLS** (HTTPS, WSS) | เข้ารหัสข้อมูลระหว่างทาง ข้อความแชทที่วิ่งผ่าน internet ไม่ถูกอ่าน/แก้ระหว่างทาง Render จัดการใบรับรองให้ |
+| Application | **HTTP header `X-Forwarded-For`** | reverse proxy บอก IP จริงของ client ให้ server (ใช้ใน log) |
+
+รายละเอียดการทำงาน + ลิงก์โค้ด: [HandbookFeatures.md → Feature 1 — Cloud](../HandbookFeatures.md#feature-1--cloud) · ขั้นตอน deploy: [features/cloud_TEST.md](features/cloud_TEST.md)

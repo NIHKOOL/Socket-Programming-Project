@@ -4,6 +4,7 @@
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { Server } from "socket.io";
+import { featureNames, handleHttp, setupSocket } from "./features/index.js";
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -11,7 +12,9 @@ const PORT = Number(process.env.PORT) || 3000;
 // แล้ว upgrade เป็น WebSocket (TCP connection ที่เปิดค้างไว้ส่งข้อมูลได้สองทาง)
 // R2: request ที่ path /socket.io/ จะถูก Socket.IO ดักไปจัดการก่อน handler นี้จะทำงาน
 // ส่วน HTTP request อื่นทั้งหมดตอบ 404 เพราะไม่มี REST API สำหรับส่งหรือดึงข้อความ
+// (Feature เสริมรับ request บางอย่างได้ก่อน เช่น เสิร์ฟไฟล์หน้าเว็บ ดู server/features/index.js)
 const httpServer = createServer((req, res) => {
+  if (handleHttp(req, res)) return;
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
   res.end("This server only accepts Socket.IO connections.\n");
 });
@@ -51,7 +54,7 @@ function isGroupTaken(group) {
 function cleanText(socket, text) {
   text = String(text ?? "").trim();
   if (!text || text.length > MAX_TEXT_LENGTH) {
-    sendError(socket, "INVALID_TEXT", `ข้อความต้องยาว 1–${MAX_TEXT_LENGTH} ตัวอักษร`);
+    sendError(socket, "INVALID_TEXT", `Message must be 1–${MAX_TEXT_LENGTH} characters`);
     return null;
   }
   return text;
@@ -79,10 +82,10 @@ io.on("connection", (socket) => {
   socket.on("register", ({ name } = {}) => {
     name = String(name ?? "").trim();
     if (!name || name.length > MAX_NAME_LENGTH) {
-      return sendError(socket, "INVALID_NAME", `ชื่อต้องยาว 1–${MAX_NAME_LENGTH} ตัวอักษร`);
+      return sendError(socket, "INVALID_NAME", `Name must be 1–${MAX_NAME_LENGTH} characters`);
     }
-    if (socket.data.name) return sendError(socket, "ALREADY_REGISTERED", "ลงทะเบียนไปแล้ว");
-    if (isNameTaken(name)) return sendError(socket, "NAME_TAKEN", `ชื่อ "${name}" ถูกใช้แล้ว`); // R3
+    if (socket.data.name) return sendError(socket, "ALREADY_REGISTERED", "Already registered");
+    if (isNameTaken(name)) return sendError(socket, "NAME_TAKEN", `Name "${name}" is already taken`); // R3
 
     // R3: จองชื่อ → ผูกชื่อกับ socket นี้ → ชื่อนี้จะว่างอีกครั้งตอน disconnect
     socket.data.name = name;
@@ -96,17 +99,21 @@ io.on("connection", (socket) => {
   // ทุก event ด้านล่างต้อง register ก่อน
   function requireName() {
     if (!socket.data.name) {
-      sendError(socket, "NOT_REGISTERED", "ต้อง register ก่อน");
+      sendError(socket, "NOT_REGISTERED", "Please register first");
       return null;
     }
     return socket.data.name;
   }
 
+  // จุดเชื่อม Feature เสริม (Part 3): ให้ feature เพิ่ม socket.on(...) ของตัวเองโดยใช้ helper เดียวกับ core
+  const ctx = { io, clients, groups, requireName, sendError: (code, msg) => sendError(socket, code, msg), now };
+  setupSocket(socket, ctx);
+
   socket.on("private_msg", ({ to, text } = {}) => {
     const from = requireName();
     if (!from) return;
     const target = clients.get(to);
-    if (!target) return sendError(socket, "USER_NOT_FOUND", `ไม่พบผู้ใช้ ${to}`);
+    if (!target) return sendError(socket, "USER_NOT_FOUND", `User "${to}" is not online`);
     text = cleanText(socket, text);
     if (!text) return;
 
@@ -122,9 +129,9 @@ io.on("connection", (socket) => {
     if (!name) return;
     group = String(group ?? "").trim();
     if (!group || group.length > MAX_GROUP_NAME_LENGTH) {
-      return sendError(socket, "INVALID_GROUP", `ชื่อกลุ่มต้องยาว 1–${MAX_GROUP_NAME_LENGTH} ตัวอักษร`);
+      return sendError(socket, "INVALID_GROUP", `Group name must be 1–${MAX_GROUP_NAME_LENGTH} characters`);
     }
-    if (isGroupTaken(group)) return sendError(socket, "GROUP_EXISTS", `มีกลุ่มชื่อ "${group}" แล้ว`);
+    if (isGroupTaken(group)) return sendError(socket, "GROUP_EXISTS", `Group "${group}" already exists`);
 
     // R8: กลุ่มใหม่มีสมาชิกแค่ผู้สร้าง ไม่มีการเพิ่มคนอื่นให้อัตโนมัติ
     groups.set(group, new Set([name]));
@@ -137,8 +144,8 @@ io.on("connection", (socket) => {
     const name = requireName();
     if (!name) return;
     const members = groups.get(group);
-    if (!members) return sendError(socket, "GROUP_NOT_FOUND", "ไม่พบกลุ่ม");
-    if (members.has(name)) return sendError(socket, "ALREADY_MEMBER", `เป็นสมาชิกกลุ่ม "${group}" อยู่แล้ว`);
+    if (!members) return sendError(socket, "GROUP_NOT_FOUND", "Group not found");
+    if (members.has(name)) return sendError(socket, "ALREADY_MEMBER", `You are already a member of "${group}"`);
 
     // R10: เข้ากลุ่มได้เฉพาะ "ตัวเอง" เท่านั้น
     // ใช้ชื่อที่ผูกกับ socket นี้ตอน register ไม่รับชื่อจาก payload จึงไม่มีทางเพิ่มคนอื่นเข้ากลุ่ม
@@ -153,8 +160,8 @@ io.on("connection", (socket) => {
     const from = requireName();
     if (!from) return;
     const members = groups.get(group);
-    if (!members) return sendError(socket, "GROUP_NOT_FOUND", "ไม่พบกลุ่ม");
-    if (!members.has(from)) return sendError(socket, "NOT_A_MEMBER", "ยังไม่ได้เข้ากลุ่มนี้");
+    if (!members) return sendError(socket, "GROUP_NOT_FOUND", "Group not found");
+    if (!members.has(from)) return sendError(socket, "NOT_A_MEMBER", "You are not a member of this group");
     text = cleanText(socket, text);
     if (!text) return;
 
@@ -183,6 +190,7 @@ io.on("connection", (socket) => {
 // 0.0.0.0 = รับการเชื่อมต่อจากทุก network interface (เครื่องอื่นใน LAN ต่อเข้ามาได้)
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`Chat server listening on port ${PORT}`);
+  console.log(`Features: ${featureNames().join(", ") || "(none)"}`);
   console.log("Clients on other computers can connect to:");
   // แสดง IPv4 ของทุก network interface (ยกเว้น loopback) เพื่อให้รู้ว่า client ต้องใส่ URL อะไร
   for (const addrs of Object.values(networkInterfaces())) {

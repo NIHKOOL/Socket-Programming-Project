@@ -30,14 +30,14 @@ C (ไม่ใช่สมาชิก)           ✗ ไม่ได้รั�
 restart server + refresh client แล้ว login `C1`, `C2`, `C3`
 ที่ C3 เปิด DevTools → Network → WS → Messages ค้างไว้**ก่อน**เริ่มส่ง
 
-- [ ] C1 สร้าง `g1` → C2 กด "เข้าร่วม" (C3 **ไม่ต้อง**เข้า)
-- [ ] C1 ส่ง `hello g1` → ขึ้นฝั่งขวาในห้อง g1 ของ C1
+- [ ] C1 สร้าง `g1` → C2 กด "[join]" (C3 **ไม่ต้อง**เข้า)
+- [ ] C1 ส่ง `hello g1` → ขึ้นในห้อง `#g1` ของ C1 (ชื่อสีเขียว)
 - [ ] C2 เห็น unread ที่ g1 → เปิดแล้วเห็น `hello g1` พร้อมชื่อ `C1`
 - [ ] C2 ตอบ `hi from C2` → C1 เห็นในห้อง g1
 - [ ] **C3:** g1 ไม่มี unread และคลิกเข้าห้องไม่ได้ (ยังไม่เป็นสมาชิก)
 - [ ] **C3 แท็บ Messages:** ไม่มี frame `group_msg` เลย มีแค่ `group_list` / ping-pong
-- [ ] (Console C3) `socket.emit("group_msg", { group: "g1", text: "intruder" })` → ขึ้น "ยังไม่ได้เข้ากลุ่มนี้" และ C1, C2 ไม่ได้รับ
-- [ ] C3 กด "เข้าร่วม" → C1 ส่งข้อความใหม่ → C3 ได้รับ (แต่ไม่เห็นข้อความเก่า)
+- [ ] (Console C3) `socket.emit("group_msg", { group: "g1", text: "intruder" })` → ขึ้น "You are not a member of this group" และ C1, C2 ไม่ได้รับ
+- [ ] C3 กด "[join]" → C1 ส่งข้อความใหม่ → C3 ได้รับ (แต่ไม่เห็นข้อความเก่า)
 
 เก็บ screenshot ไว้ที่ `docs/evidence/R11/`:
 - `R11-members-chat.png`: C1 กับ C2 เทียบกัน เห็นบทสนทนากลุ่มเดียวกัน

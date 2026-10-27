@@ -49,7 +49,7 @@ socket.emit("group_msg", { group: "net-project", text: "hello all" })
 "register_ok" → {"name": "alice"}
 "create_group_ok" → {"group": "net-project"}
 "join_group_ok"   → {"group": "net-project"}
-"error_msg"   → {"code": "NAME_TAKEN", "message": "ชื่อนี้ถูกใช้แล้ว"}
+"error_msg"   → {"code": "NAME_TAKEN", "message": "Name \"alice\" is already taken"}
 "user_list"   → {"users": ["alice", "bob", "carol"]}
 "group_list"  → {"groups": [{"name": "net-project", "members": ["alice", "bob"]}]}
 "private_msg" → {"from": "alice", "to": "bob", "text": "สวัสดี", "timestamp": "2026-10-27T15:40:00.000Z"}
@@ -106,6 +106,15 @@ Client(alice)                Server                  Client(bob)
 - กลุ่ม (R8): ชื่อ trim, ยาว 1–30 ตัวอักษร, ห้ามซ้ำแบบไม่สนตัวพิมพ์ ผู้สร้างเป็นสมาชิกคนแรกและคนเดียว
 - `join_group` (R10) เพิ่ม**ผู้ส่ง event เท่านั้น** server ใช้ชื่อจาก socket field อื่นใน payload (เช่น `name`, `members`) จะถูกเมิน และไม่มี event สำหรับเชิญหรือเพิ่มคนอื่นเข้ากลุ่ม
 - **กลุ่มไม่ถูกลบ** แม้สมาชิกจะออกหมดแล้วก็ตาม (`members: []`) กลุ่มยังอยู่ใน `group_list` ให้คนอื่น join ได้ และชื่อกลุ่มยังถือว่าถูกใช้อยู่
+
+## Feature เสริม (Part 3)
+
+event ของ Feature เสริมอยู่ในหัวข้อนี้ แยกจาก event ของ core ด้านบน
+โค้ดอยู่ใน `server/features/` และการทำงานอธิบายใน [HandbookFeatures.md](../HandbookFeatures.md)
+
+| Feature | event | ทิศทาง | payload | ความหมาย |
+|---|---|---|---|---|
+| `cloud` | _(ไม่มี event ใหม่)_ | — | — | server เสิร์ฟไฟล์หน้าเว็บผ่าน HTTP `GET` เท่านั้น ข้อความแชทยังใช้ event ของ core ทั้งหมด |
 
 ## Changelog
 

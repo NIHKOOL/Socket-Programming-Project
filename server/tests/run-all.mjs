@@ -1,8 +1,10 @@
-// รัน test ทุกไฟล์ใน tests/ โดยแต่ละไฟล์ได้ server ตัวใหม่ (state ไม่ค้างข้ามไฟล์)
-//   npm test             → รันทุกไฟล์
-//   npm test -- r07      → รันเฉพาะไฟล์ที่ชื่อมี "r07"
+// รัน test ทุกไฟล์ใน tests/ (core R1–R11) และ tests/features/ (Feature เสริม Part 3)
+// แต่ละไฟล์ได้ server ตัวใหม่ (state ไม่ค้างข้ามไฟล์)
+//   npm test               → รันทุกไฟล์
+//   npm test -- r07        → รันเฉพาะไฟล์ที่ path มี "r07"
+//   npm test -- features/  → รันเฉพาะ test ของ Feature เสริม
 import { spawn } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,9 +14,11 @@ const BASE_PORT = 4100;
 const TIMEOUT_MS = 30_000;
 
 const filter = process.argv[2] ?? "";
-const files = readdirSync(here)
-  .filter((f) => f.endsWith(".test.mjs") && f.includes(filter))
-  .sort();
+const listTests = (dir, prefix) =>
+  existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.mjs")).map((f) => prefix + f).sort() : [];
+const files = [...listTests(here, ""), ...listTests(join(here, "features"), "features/")].filter((f) =>
+  f.includes(filter)
+);
 
 // เปิด server ที่ port ที่กำหนด รอจนพิมพ์ "listening" แล้วค่อยเริ่ม test
 function startServer(port) {
