@@ -12,6 +12,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [groupInput, setGroupInput] = useState("");
 
   // R5: ข้อความเก็บแยกตามห้อง { "dm:C2": [...], "group:g1": [...] }
   const [messages, setMessages] = useState({});
@@ -78,6 +79,8 @@ export default function App() {
     });
     socket.on("user_list", ({ users }) => setUsers(users));
     socket.on("group_list", ({ groups }) => setGroups(groups));
+    // R8: สร้างกลุ่มสำเร็จ → เปิดห้องกลุ่มให้ทันที
+    socket.on("create_group_ok", ({ group }) => openRoom(groupRoomId(group)));
 
     // R5: ข้อความที่เข้ามาถูกแยกลงห้องของตัวเอง
     socket.on("private_msg", (msg) => addMessage(roomOfPrivateMsg(msg, myName), msg));
@@ -91,6 +94,16 @@ export default function App() {
     setError(""); // ล้าง error เก่า ถ้าส่งไม่ผ่าน server จะส่ง error_msg ใหม่มา
     if (type === "dm") socketRef.current.emit("private_msg", { to: name, text });
     else socketRef.current.emit("group_msg", { group: name, text });
+  }
+
+  // R8: สร้างกลุ่ม → server เพิ่มเราเป็นสมาชิกคนแรก แล้วส่ง group_list ใหม่ให้ทุกคน
+  function handleCreateGroup(e) {
+    e.preventDefault();
+    const group = groupInput.trim();
+    if (!group) return;
+    setError("");
+    socketRef.current.emit("create_group", { group });
+    setGroupInput("");
   }
 
   if (!me) {
@@ -141,6 +154,17 @@ export default function App() {
         </ul>
 
         <h3>กลุ่ม ({groups.length})</h3>
+        <form className="create-group" onSubmit={handleCreateGroup}>
+          <input
+            value={groupInput}
+            onChange={(e) => setGroupInput(e.target.value)}
+            placeholder="ชื่อกลุ่มใหม่"
+            maxLength={30}
+          />
+          <button type="submit" disabled={!groupInput.trim()}>
+            สร้าง
+          </button>
+        </form>
         <ul className="room-list">
           {/* R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง group (ปุ่มสร้าง/เข้ากลุ่มจะทำใน R8, R10) */}
           {groups.map((g) => {
@@ -156,7 +180,7 @@ export default function App() {
                   <span>
                     {g.name}
                     <small>
-                      {g.members.join(", ")}
+                      {g.members.length > 0 ? g.members.join(", ") : "ไม่มีสมาชิก"}
                       {!isMember && " · ยังไม่ได้เป็นสมาชิก"}
                     </small>
                   </span>

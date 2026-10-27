@@ -64,11 +64,18 @@
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
 | [R6-private-room.png](R5_R6/R6-private-room.png) | 2026-10-27 | (ใช้ซ้ำจาก R6) | C1 ส่งหา C2 และ C2 ตอบกลับ ทั้งสองฝั่งเห็นบทสนทนาเดียวกัน (ส่วน "send a direct message") |
-| [R2-server-recv-private-msg.png](R2/R2-server-recv-private-msg.png) | 2026-10-27 | (ใช้ซ้ำจาก R2) | server log `[recv] C1 -> private_msg {"to":"C2",...}` |
+| [R7-server-log.png](R7/R7-server-log.png) | 2026-10-27 | client `192.168.1.36` | C1, C2, C3 register **ก่อน** จากนั้น C1↔C2 ส่ง `private_msg` หากัน (C3 ออนไลน์อยู่ตลอด) |
+| [R7-outsider-c3.png](R7/R7-outsider-c3.png) | 2026-10-27 | เหมือนด้านบน | **Only sender and receiver:** หน้าจอ C3 หลัง C1↔C2 คุยกัน ไม่มี unread ที่ C1 หรือ C2 |
 
-> ⚠️ ยังขาดหลักฐานส่วน "**Only the sender and receiver can see**" ต้องเก็บใน `R7/` (วิธีอยู่ใน [R7_TEST.md](../R7_TEST.md)):
-> - `R7-outsider-c3.png`: หน้าจอ C3 ที่ไม่มีข้อความ C1↔C2
-> - `R7-outsider-ws-frames.png`: แท็บ Messages ของ C3 ที่ไม่มี frame `private_msg` ของ C1↔C2
+> แนะนำเพิ่ม (ไม่บังคับ): `R7-outsider-ws-frames.png` แท็บ DevTools → WS → Messages ของ C3 ที่ไม่มี frame `private_msg` หรือโชว์สดตอน demo
+
+## R8 — Create group
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| _(ยังไม่มี)_ | | | |
+
+> รูปที่ต้องเก็บใน `R8/` (วิธีอยู่ใน [R8_TEST.md](../R8_TEST.md)): `R8-create-group.png`, `R8-other-client-view.png`, `R8-multiple-groups.png`, `R8-empty-group-kept.png`
 
 ---
 

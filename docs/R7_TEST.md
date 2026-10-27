@@ -33,8 +33,9 @@ restart server + refresh client แล้ว login `C1`, `C2`, `C3`
 เก็บ screenshot ไว้ที่ `docs/evidence/R7/`:
 - ~~`R7-sender-receiver.png`~~: ใช้ `evidence/R5_R6/R6-private-room.png` แทน
 - ~~`R7-server-log.png`~~: ใช้ `evidence/R2/R2-server-recv-private-msg.png` แทน
-- `R7-outsider-c3.png`: หน้าจอ C3 ที่ไม่มีข้อความ C1↔C2 **(ยังต้องถ่าย)**
-- `R7-outsider-ws-frames.png`: แท็บ Messages ของ C3 ไม่มี frame `private_msg` ของ C1↔C2 **(ยังต้องถ่าย หลักฐานที่ชัดที่สุด)**
+- [x] `R7-outsider-c3.png`: หน้าจอ C3 ที่ไม่มีข้อความ C1↔C2
+- [x] `R7-server-log.png`: ยืนยันว่า C3 ออนไลน์อยู่ตอนที่ C1↔C2 คุยกัน
+- [ ] `R7-outsider-ws-frames.png`: แท็บ Messages ของ C3 ไม่มี frame `private_msg` ของ C1↔C2 _(แนะนำ ไม่บังคับ)_
 
 ## ทดสอบอัตโนมัติ (ที่ AI รันแล้ว)
 

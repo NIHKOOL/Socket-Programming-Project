@@ -174,3 +174,21 @@
   > คิดว่า R7 test แล้วเอาจาก folder R5_R6 มาใส่เลยได้ไหม
 - **ผลลัพธ์:** ใช้ได้บางส่วน: `R6-private-room.png` ใช้แทน sender-receiver และ `R2-server-recv-private-msg.png` ใช้แทน server log (ใส่ลิงก์ ไม่ copy ไฟล์) แต่ส่วน "only sender and receiver can see" ยังไม่มีหลักฐานมุมมองของ C3 อัปเดต evidence/README.md และ R7_TEST.md
 - **หมายเหตุ:** ยังต้องถ่าย `R7-outsider-c3.png` และ `R7-outsider-ws-frames.png`
+
+### [2026-10-27] ตรวจ R7
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R7
+- **Prompt:**
+  > R7 เสร็จแล้ว
+- **ผลลัพธ์:** ตรวจรูปแล้วผ่าน: หน้าจอ C3 ไม่มีข้อความ/unread + server log ยืนยันว่า C3 ออนไลน์อยู่ตอน C1↔C2 คุยกัน ไฟล์ `R7-outsider-ws-frams.png` เป็น server log จึงเปลี่ยนชื่อเป็น `R7-server-log.png`, `R7-outsider-C3.png` → `R7-outsider-c3.png` เปลี่ยน R7 ใน README เป็น ✅
+- **หมายเหตุ:** รูป WS frame ของ C3 แนะนำให้มี (ไม่บังคับ) หรือโชว์สดตอน demo
+
+### [2026-10-27] R8 — สร้างกลุ่ม
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R8
+- **Prompt:**
+  > ทำ R8 เลย เมื่อกลุ่มสมาชิกออกไปหมดแล้ว ให้เหลือกลุ่มนั้นไว้เลย
+- **ผลลัพธ์:** `server/index.js`: ชื่อกลุ่ม 1–30 ตัวอักษร, ห้ามซ้ำแบบไม่สนตัวพิมพ์ (`isGroupTaken`), เพิ่ม event `create_group_ok` ส่งให้ผู้สร้าง, กลุ่มที่ไม่มีสมาชิกยังไม่ถูกลบ (ตามที่ทีมตัดสินใจ) / `client/src/App.jsx`: ฟอร์มสร้างกลุ่มใน sidebar, เปิดห้องกลุ่มอัตโนมัติเมื่อสร้างสำเร็จ, แสดง "ไม่มีสมาชิก" / อัปเดต PROTOCOL.md, สร้าง `docs/R8_TEST.md`
+- **หมายเหตุ:** test อัตโนมัติ R8 15/15, smoke 7/7, R3 12/12, R4 9/9, R5 9/9, R7 13/13, build ผ่าน ยังต้องทดสอบด้วยมือและเก็บ screenshot ใน `docs/evidence/R8/`

@@ -25,6 +25,7 @@ const groups = new Map(); // groupName -> Set(memberNames)
 
 const MAX_NAME_LENGTH = 20;
 const MAX_TEXT_LENGTH = 1000;
+const MAX_GROUP_NAME_LENGTH = 30;
 // socket ที่ register สำเร็จแล้วจะถูก join เข้า room นี้ broadcast จะส่งเฉพาะ room นี้
 const REGISTERED = "registered";
 
@@ -38,6 +39,12 @@ function isNameTaken(name) {
 
 function sendError(socket, code, message) {
   socket.emit("error_msg", { code, message });
+}
+
+// R8: ชื่อกลุ่มห้ามซ้ำแบบไม่สนตัวพิมพ์ เหมือนชื่อผู้ใช้ (R3)
+function isGroupTaken(group) {
+  const lower = group.toLowerCase();
+  return [...groups.keys()].some((g) => g.toLowerCase() === lower);
 }
 
 // ข้อความแชท (R7, R11): ห้ามว่าง ห้ามยาวเกิน ตรวจที่ server เพราะ client ข้ามการตรวจฝั่งตัวเองได้
@@ -112,12 +119,16 @@ io.on("connection", (socket) => {
     const name = requireName();
     if (!name) return;
     group = String(group ?? "").trim();
-    if (!group) return sendError(socket, "INVALID_GROUP", "กรุณาใส่ชื่อกลุ่ม");
-    if (groups.has(group)) return sendError(socket, "GROUP_EXISTS", "มีกลุ่มชื่อนี้แล้ว");
+    if (!group || group.length > MAX_GROUP_NAME_LENGTH) {
+      return sendError(socket, "INVALID_GROUP", `ชื่อกลุ่มต้องยาว 1–${MAX_GROUP_NAME_LENGTH} ตัวอักษร`);
+    }
+    if (isGroupTaken(group)) return sendError(socket, "GROUP_EXISTS", `มีกลุ่มชื่อ "${group}" แล้ว`);
 
-    groups.set(group, new Set([name])); // R8: เริ่มต้นมีแค่ผู้สร้าง
-    socket.join(`group:${group}`);
-    broadcastGroupList();
+    // R8: กลุ่มใหม่มีสมาชิกแค่ผู้สร้าง ไม่มีการเพิ่มคนอื่นให้อัตโนมัติ
+    groups.set(group, new Set([name]));
+    socket.join(`group:${group}`); // เข้า Socket.IO room ของกลุ่ม เพื่อรับ group_msg (R11)
+    broadcastGroupList(); // R9: ทุกคนเห็นกลุ่มใหม่
+    socket.emit("create_group_ok", { group }); // บอกผู้สร้าง ให้ client เปิดห้องกลุ่มได้ทันที
   });
 
   socket.on("join_group", ({ group } = {}) => {
@@ -151,6 +162,7 @@ io.on("connection", (socket) => {
     if (!name) return;
     clients.delete(name);
     // ชื่อนี้อาจถูกคนอื่นนำไปใช้ต่อ จึงเอาออกจากทุกกลุ่มด้วย
+    // ตัวกลุ่มไม่ถูกลบ แม้สมาชิกจะออกหมดแล้วก็ตาม (ทีมตัดสินใจให้เก็บไว้ให้คนอื่นเข้ามาใหม่ได้)
     for (const members of groups.values()) members.delete(name);
     broadcastUserList();
     broadcastGroupList();

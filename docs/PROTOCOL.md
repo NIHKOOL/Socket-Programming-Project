@@ -36,6 +36,7 @@ socket.emit("group_msg", { group: "net-project", text: "hello all" })
 | event | payload | ความหมาย | Req |
 |---|---|---|---|
 | `register_ok` | `name` | ลงทะเบียนสำเร็จ | R3 |
+| `create_group_ok` | `group` | สร้างกลุ่มสำเร็จ ส่งให้**ผู้สร้างเท่านั้น** (client ใช้เปิดห้องกลุ่มทันที) | R8 |
 | `error_msg` | `code`, `message` | เกิดข้อผิดพลาด (ดูตาราง error) | — |
 | `user_list` | `users` | รายชื่อ client ที่ออนไลน์ทั้งหมด ส่งให้ทุกคนทุกครั้งที่มีคนเข้า/ออก | R4 |
 | `group_list` | `groups` | รายชื่อกลุ่มทั้งหมด + สมาชิก ส่งให้ทุกคนเมื่อมีการสร้างกลุ่ม คนเข้ากลุ่ม หรือคนออฟไลน์ | R9 |
@@ -45,6 +46,7 @@ socket.emit("group_msg", { group: "net-project", text: "hello all" })
 ```js
 // event name → payload
 "register_ok" → {"name": "alice"}
+"create_group_ok" → {"group": "net-project"}
 "error_msg"   → {"code": "NAME_TAKEN", "message": "ชื่อนี้ถูกใช้แล้ว"}
 "user_list"   → {"users": ["alice", "bob", "carol"]}
 "group_list"  → {"groups": [{"name": "net-project", "members": ["alice", "bob"]}]}
@@ -62,8 +64,8 @@ socket.emit("group_msg", { group: "net-project", text: "hello all" })
 | `NOT_REGISTERED` | ส่งคำสั่งอื่นก่อน register |
 | `USER_NOT_FOUND` | ส่ง private message ถึงคนที่ไม่ได้ออนไลน์ |
 | `INVALID_TEXT` | ข้อความ (private/group) ว่างหลัง trim หรือยาวเกิน 1000 ตัวอักษร |
-| `INVALID_GROUP` | สร้างกลุ่มด้วยชื่อว่าง |
-| `GROUP_EXISTS` | สร้างกลุ่มด้วยชื่อที่มีอยู่แล้ว |
+| `INVALID_GROUP` | สร้างกลุ่มด้วยชื่อว่าง (หลัง trim) หรือยาวเกิน 30 ตัวอักษร |
+| `GROUP_EXISTS` | สร้างกลุ่มด้วยชื่อที่มีอยู่แล้ว โดย**ไม่สนตัวพิมพ์เล็ก/ใหญ่** (รวมกลุ่มที่ไม่มีสมาชิกเหลือแล้ว) |
 | `GROUP_NOT_FOUND` | join หรือส่งข้อความถึงกลุ่มที่ไม่มีอยู่ |
 | `NOT_A_MEMBER` | ส่งข้อความในกลุ่มที่ตัวเองยังไม่ได้เข้า (R11) |
 
@@ -79,6 +81,7 @@ Client(alice)                Server                  Client(bob)
      |<-- private_msg (echo) ---|-- private_msg ---------->|
      |--- create_group g1 ----->|                          |
      |<-- group_list -----------|-- group_list ----------->|
+     |<-- create_group_ok ------|                          |
      |                          |<-- join_group g1 --------|
      |<-- group_list -----------|-- group_list ----------->|
      |--- group_msg g1 -------->|                          |
@@ -96,6 +99,8 @@ Client(alice)                Server                  Client(bob)
 - ตรวจสิทธิ์ก่อนส่งต่อข้อความทุกครั้ง (private → เฉพาะ 2 คน, group → เฉพาะสมาชิก)
 - Group message ส่งผ่าน Socket.IO room ชื่อ `group:<ชื่อกลุ่ม>` socket จะถูก join เข้า room ตอน `create_group` / `join_group` เท่านั้น
 - เมื่อ client หลุดการเชื่อมต่อ ให้ลบออกจากรายชื่อออนไลน์และจากทุกกลุ่ม แล้ว broadcast `user_list` กับ `group_list` ใหม่
+- กลุ่ม (R8): ชื่อ trim, ยาว 1–30 ตัวอักษร, ห้ามซ้ำแบบไม่สนตัวพิมพ์ ผู้สร้างเป็นสมาชิกคนแรกและคนเดียว
+- **กลุ่มไม่ถูกลบ** แม้สมาชิกจะออกหมดแล้วก็ตาม (`members: []`) กลุ่มยังอยู่ใน `group_list` ให้คนอื่น join ได้ และชื่อกลุ่มยังถือว่าถูกใช้อยู่
 
 ## Changelog
 
@@ -105,3 +110,4 @@ Client(alice)                Server                  Client(bob)
 | 2026-10-27 | — | เปลี่ยนเป็น Socket.IO events, `error` → `error_msg`, เพิ่ม error code `INVALID_NAME`, `ALREADY_REGISTERED`, `INVALID_GROUP` |
 | 2026-10-27 | — | R3: ชื่อห้ามซ้ำแบบไม่สนตัวพิมพ์, จำกัด 20 ตัวอักษร, broadcast เฉพาะคนที่ register แล้ว |
 | 2026-10-27 | — | R7: ข้อความ trim + จำกัด 1–1000 ตัวอักษร เพิ่ม error `INVALID_TEXT` (ใช้กับ `group_msg` ด้วย) |
+| 2026-10-27 | — | R8: เพิ่ม event `create_group_ok`, ชื่อกลุ่มจำกัด 30 ตัวอักษร + ห้ามซ้ำแบบไม่สนตัวพิมพ์, กลุ่มที่ไม่มีสมาชิกยังไม่ถูกลบ |
