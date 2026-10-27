@@ -158,7 +158,12 @@ io.on("connection", (socket) => {
     text = cleanText(socket, text);
     if (!text) return;
 
-    // R11: ส่งเฉพาะสมาชิกกลุ่ม (Socket.IO room)
+    // R11: เห็นเฉพาะสมาชิก ตรวจ 2 ชั้น
+    //   ชั้นที่ 1 (ใครส่งได้): members.has(from) ด้านบน คนที่ไม่ใช่สมาชิกได้ NOT_A_MEMBER
+    //   ชั้นที่ 2 (ใครได้รับ): io.to(room) ส่งเฉพาะ socket ที่อยู่ใน room "group:<ชื่อ>"
+    // members กับ room ตรงกันเสมอ: create/join → เพิ่มทั้งสองที่พร้อมกัน
+    // disconnect → ลบออกจาก members และ Socket.IO ถอด socket ออกจากทุก room ให้เอง
+    // ผู้ส่งอยู่ใน room ด้วย จึงได้รับข้อความของตัวเองกลับมา (echo) แสดงในห้องของตัวเอง
     io.to(`group:${group}`).emit("group_msg", { group, from, text, timestamp: now() });
   });
 

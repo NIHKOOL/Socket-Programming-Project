@@ -92,9 +92,18 @@
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|
-| _(ยังไม่มี)_ | | | |
+| [R10-join-button.png](R10/R10-join-button.png) | 2026-10-28 | client `localhost:5173` | C2 เห็น g1 ของ C1 "ยังไม่ได้เป็นสมาชิก" พร้อมปุ่ม "เข้าร่วม" |
+| [R10-after-join.png](R10/R10-after-join.png) | 2026-10-28 | เหมือนด้านบน | C2 กดเข้าร่วม → ห้อง `# g1` เปิดอัตโนมัติ "สมาชิก 2 คน: C1, C2" |
+| [R10-others-not-added.png](R10/R10-others-not-added.png) | 2026-10-28 | เหมือนด้านบน | C3 ไม่ถูกเพิ่มตามไปด้วย ยังมีปุ่ม "เข้าร่วม" |
+| [R10-cannot-add-others.png](R10/R10-cannot-add-others.png) | 2026-10-28 | เหมือนด้านบน | C1 ส่ง `join_group {group:"g1", name:"C3"}` → "เป็นสมาชิกกลุ่ม g1 อยู่แล้ว" และ g1 ยังเป็น `C1, C2` (ผู้สร้างเพิ่มคนอื่นไม่ได้) |
 
-> รูปที่ต้องเก็บใน `R10/` (วิธีอยู่ใน [R10_TEST.md](../R10_TEST.md)): `R10-join-button.png`, `R10-after-join.png`, `R10-others-not-added.png`, `R10-cannot-add-others.png`
+## R11 — Group message
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| [R6-group-room.png](R5_R6/R6-group-room.png) | 2026-10-27 | (ใช้ซ้ำจาก R6) | สมาชิก 3 คนส่งข้อความในห้อง g1 พร้อมชื่อผู้ส่ง (ส่วน "send a text message to the group") |
+
+> รูปที่ต้องเก็บใน `R11/` (วิธีอยู่ใน [R11_TEST.md](../R11_TEST.md)): `R11-members-chat.png`, `R11-outsider-c3.png`, `R11-outsider-ws-frames.png`, `R11-not-a-member.png`, `R11-server-log.png`
 
 ---
 
