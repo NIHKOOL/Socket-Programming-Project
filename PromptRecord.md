@@ -495,3 +495,13 @@
   > เปลี่ยนเป็น ส่งไฟล์ส่งรูป
 - **ผลลัพธ์:** server `server/features/file.js` (`file_offer` ตรวจผู้รับแบบ R7/R11 + ขนาด ≤ 5 MB + ชื่อไฟล์, `file_chunk` binary 64 KB ตรวจเจ้าของ / ลำดับ seq / ขนาด แล้วส่งต่อเฉพาะผู้รับ, `file_end` ตรวจครบทุก byte, `file_cancel` / `file_abort` เมื่อหลุดหรือเงียบ 30 วินาที, ไม่เก็บไฟล์) / core: log ย่อ binary เป็น `<binary N bytes>` / client `client/src/features/file/` (`transfer.js` แบ่งชิ้น + stop-and-wait + ประกอบ Blob, `FileMessage.jsx` progress bar แบบ terminal + รูปตัวอย่าง (ไม่แสดง SVG) + `[download]` + ความเร็ว), `ChatRoom.jsx` ปุ่ม `[+file]` / ลากวาง / Ctrl+V, `App.jsx` `updateFileMessage` + `sendFileToActiveRoom` / test `f06-file` 27 ข้อ / เอกสาร: `docs/features/file_TEST.md`, HandbookFeatures (Feature 6 + ตาราง: ping เป็นตัวสำรอง), PROTOCOL, ARCHITECTURE, README, CLAUDE.md, indexes / shift ลิงก์ Handbook / ping ไม่ลบ เก็บเป็นตัวสำรอง
 - **หมายเหตุ:** `npm test` 16/16, build ผ่าน / รันโค้ด client จริงส่งไฟล์ 300 KB ระหว่าง 2 process ผ่าน server แล้ว sha256 ตรงกัน / **ยังไม่ได้ทดสอบใน browser**
+
+### [2026-10-28] คู่มือรันทั้งระบบ RUN.md
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** เอกสาร (ทุก requirement)
+- **Prompt:**
+  > ตอนนี้มีวิธีการสอน run ทั้งหมดไหมในสัก file
+  > สร้าง RUN.md เลย
+- **ผลลัพธ์:** `RUN.md` ไฟล์เดียว: โปรแกรมในระบบ (server / client / AI bot / Discord), ติดตั้ง, ตาราง `server/.env` + `ai-bot/.env`, รัน 3 แบบ (เขียนโค้ด / demo port เดียว / ข้ามเครื่อง), checklist วัน demo (ลำดับเปิด + log ที่ต้องเห็น + จอที่ควรโชว์), ตารางแก้ปัญหา, test / README: ลิงก์ไป RUN.md, เพิ่มในโครงสร้าง, แก้ผล test ตัวอย่างที่ค้างเป็น 16/16
+- **หมายเหตุ:** ข้อความ log / error ในตารางคัดจากโค้ดจริง

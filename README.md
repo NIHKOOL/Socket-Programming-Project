@@ -50,6 +50,7 @@
 │   ├── features/        # checklist ทดสอบของ Feature เสริม
 │   └── evidence/        # รูปหลักฐานการทดสอบ แยกโฟลเดอร์ตาม R (ดู evidence/README.md)
 │       └── features/    #   หลักฐานของ Feature เสริม
+├── RUN.md               # คู่มือรันทั้งระบบ: ติดตั้ง → .env → รัน → checklist วัน demo → แก้ปัญหา
 ├── Handbook.md          # core R1–R11 ทำงานอย่างไร + map ไปหาโค้ดทีละขั้น (อ่านก่อนแก้โค้ด!)
 ├── HandbookFeatures.md  # Feature เสริม (Part 3) ทำงานอย่างไร + วิธีเพิ่ม feature ใหม่
 ├── package.json         # คำสั่งรวม: npm run build / npm start / npm run bot / npm test
@@ -59,6 +60,8 @@
 ```
 
 ## การติดตั้ง
+
+> **คู่มือรันฉบับเต็มอยู่ที่ [RUN.md](RUN.md)**: ตั้งค่า `.env` ทุกตัว, รัน 3 แบบ (เขียนโค้ด / demo / ข้ามเครื่อง), checklist วัน demo และวิธีแก้ปัญหาที่เจอบ่อย ด้านล่างเป็นสรุปสั้น ๆ
 
 ต้องมี [Node.js](https://nodejs.org/) เวอร์ชัน 20 ขึ้นไป (เช็กด้วย `node -v`)
 
@@ -136,8 +139,10 @@ ok    r00-smoke.test.mjs  (7 passed, 0 failed)
 ok    r03-unique-name.test.mjs  (12 passed, 0 failed)
 ...
 ok    features/f00-feature-hooks.test.mjs  (3 passed, 0 failed)
+...
+ok    features/f06-file.test.mjs  (27 passed, 0 failed)
 
-10/10 test files passed
+16/16 test files passed
 ```
 
 ควรรันทุกครั้งก่อน commit ถ้าแก้ `server/index.js` หรือ `client/src/rooms.js`
