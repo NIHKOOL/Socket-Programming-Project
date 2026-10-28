@@ -1,5 +1,5 @@
 // ทะเบียน Feature เสริม (Part 3)
-// core (server/index.js) เรียก feature ผ่าน 4 ฟังก์ชันในไฟล์นี้เท่านั้น จึงเพิ่มหรือลบ feature ได้โดยไม่แก้ core
+// core (server/index.js) เรียก feature ผ่าน 5 ฟังก์ชันในไฟล์นี้เท่านั้น จึงเพิ่มหรือลบ feature ได้โดยไม่แก้ core
 // วิธีเพิ่ม feature: สร้างไฟล์ใน server/features/ ที่ export object ตามรูปด้านล่าง แล้ว import มาใส่ใน `features`
 //
 //   export default {

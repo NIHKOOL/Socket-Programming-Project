@@ -505,3 +505,40 @@
   > สร้าง RUN.md เลย
 - **ผลลัพธ์:** `RUN.md` ไฟล์เดียว: โปรแกรมในระบบ (server / client / AI bot / Discord), ติดตั้ง, ตาราง `server/.env` + `ai-bot/.env`, รัน 3 แบบ (เขียนโค้ด / demo port เดียว / ข้ามเครื่อง), checklist วัน demo (ลำดับเปิด + log ที่ต้องเห็น + จอที่ควรโชว์), ตารางแก้ปัญหา, test / README: ลิงก์ไป RUN.md, เพิ่มในโครงสร้าง, แก้ผล test ตัวอย่างที่ค้างเป็น 16/16
 - **หมายเหตุ:** ข้อความ log / error ในตารางคัดจากโค้ดจริง
+
+### [2026-10-28] สไลด์ System Architecture (R1)
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R1, R2 (Part 1)
+- **Prompt:**
+  > ต้องทำ System Architecture Design พร้อม explanation ด้วย
+  > (เลือก: สไลด์, ภาษาอังกฤษ)
+- **ผลลัพธ์:** สไลด์ 12 หน้า (Artifact: https://claude.ai/artifact/GRLrx7hNthjirSVmhRnHxn) พร้อม speaker notes: cover, แผนภาพระบบ (server + 2 client คนละเครื่อง + AI bot + Discord), physical setup ตอน demo, protocol stack, ตาราง What/Why/How ของ Socket.IO / WebSocket / HTTP / TCP / IPv4, เหตุผล 3 ข้อ (TCP vs UDP, WebSocket vs polling, Socket.IO vs raw socket), sequence diagram ของ 1 connection (TCP handshake → 101 → register → events → heartbeat), การ route private/group, ภายใน server (event loop / state / disconnect), หลักฐาน R2, โปรโตคอลของ Feature เสริม, สรุป / `docs/ARCHITECTURE.md`: แทน TODO ด้วยลิงก์สไลด์
+- **หมายเหตุ:** มีช่องให้เติม: ชื่อทีม / สมาชิก (cover), IP จริงของ server (หน้า 2–3)
+
+### [2026-10-28] สไลด์ R1: เพิ่ม Diagram System Architecture Design แบบละเอียด
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R1
+- **Prompt:**
+  > อยากได้เป็น Diagram ของ System Architecture Design ด้วย
+- **ผลลัพธ์:** เพิ่มหน้า 3 "System architecture design" ในสไลด์ (https://claude.ai/artifact/GRLrx7hNthjirSVmhRnHxn): client tier (UI / rooms.js / features / Socket.IO client) ↔ network stack (Socket.IO → WebSocket → HTTP Upgrade → TCP :3000 → IPv4) ↔ server tier (HTTP server / core handlers R3–R11 / state / Socket.IO server / feature modules) + AI bot และ Discord พร้อม speaker notes / สไลด์รวมเป็น 13 หน้า
+- **หมายเหตุ:** —
+
+### [2026-10-28] R1: เพิ่มเกม RPS ในหัวข้อ protocol ของ Feature เสริม
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R1, Part 3 (game)
+- **Prompt:**
+  > Explain the computer network protocols used in the project ... / Protocols added by the special features ไม่มี RPS เหรอ
+- **ผลลัพธ์:** อธิบาย protocol (What / Why / How) เป็นภาษาอังกฤษ / สไลด์หน้า "Protocols added by the special features" เพิ่มแถว RPS (application protocol บน Socket.IO: ack, state machine, ซ่อน move จนครบ 2 คน) + speaker notes / `docs/ARCHITECTURE.md`: เพิ่มหัวข้อ Feature game (RPS) พร้อมแผนภาพลำดับ event และย้ายลิงก์ "รายละเอียด" ให้อยู่ใต้หัวข้อของตัวเอง
+- **หมายเหตุ:** RPS ไม่มี transport protocol ใหม่ ใช้ socket เดิม
+
+### [2026-10-28] อ่านทั้งโปรเจกต์ + แก้จุดที่ไม่ตรงกัน
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** เอกสาร / Part 3
+- **Prompt:**
+  > ตอนนี้ Cache ของนายน่าจะโดนรีเซ็ต ช่วยอ่านไฟล์ทั้งหมดก่อนได้ไหม / แก้เลย
+- **ผลลัพธ์:** แก้ 6 จุด: `server/features/index.js` comment "4 ฟังก์ชัน" → 5 / `client/src/App.jsx` ย่อหน้า `onSendFile` / `README.md` ช่อง AI feature ใน Tech Stack (เดิม TODO) / เรียงตาราง Part 3 ใน README + HandbookFeatures เป็น 4 ก่อน 5 / `client/src/features/README.md` เพิ่มแถว `file` และระบุว่า `/ping` เป็นตัวสำรอง / `docs/ARCHITECTURE.md` สไลด์ 12 → 13 หน้า
+- **หมายเหตุ:** client build ผ่าน / ไม่ได้แก้ logic ของ server จึงไม่ต้องรัน test

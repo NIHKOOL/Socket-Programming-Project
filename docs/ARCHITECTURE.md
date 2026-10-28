@@ -20,7 +20,8 @@
           └────────────────┘         └────────────────┘
 ```
 
-> TODO: ระบุว่า Server รันที่ไหน (เครื่องเดียวกับ client / เครื่องที่ 3 / Cloud) พร้อม IP ที่ใช้ตอน demo
+> สไลด์ R1 (ภาษาอังกฤษ 13 หน้า พร้อม speaker notes): https://claude.ai/artifact/GRLrx7hNthjirSVmhRnHxn
+> ตอน demo: Server รันที่คอมเครื่องที่ 1 (เป็น Client A ด้วย) แบบ port เดียว `npm start` · Client B อยู่คอมเครื่องที่ 2 · IP: [ใส่ IP จริงตอน demo]
 
 ## โปรโตคอลที่ใช้ (What / Why / How)
 
@@ -88,6 +89,29 @@ Cloud:  browser ──HTTPS/WSS (TLS)──> Railway edge proxy ──HTTP/WS─
 | **Discord REST API** (HTTPS) | bot ส่งข้อความเข้า channel (`POST /channels/{id}/messages`) |
 | **Bot token** (header `Authorization`) | ยืนยันตัวตนของ bot เก็บใน env ไม่ commit |
 
+รายละเอียด: [HandbookFeatures.md → Feature 2](../HandbookFeatures.md#feature-2--discord-bridge)
+
+**Feature game: เกมเป่ายิ้งฉุบ (RPS) — protocol ระดับ application บน Socket.IO**
+
+ไม่มี transport protocol ใหม่ ใช้ socket เดิมทั้งหมด แต่ออกแบบลำดับข้อความ (protocol) ของเกมเอง
+
+```
+C1 ──game_challenge──> server ──game_update(challenge)──> C2
+C1 <──game_update(accepted)── server <──game_respond(accept)── C2
+C1 ──game_move(rock)──> server ──game_update(moved, by C1)──> C2   (ไม่บอกว่าเลือกอะไร)
+C1 <──game_update(round: move ทั้งคู่)── server <──game_move(paper)── C2
+```
+
+| แนวคิด | ใช้อย่างไร |
+|---|---|
+| **Request / response (ack)** | ทุกคำสั่ง (`game_challenge`, `game_respond`, `game_move`, `game_quit`) ได้ ack `{ ok, code }` กลับ เช่น `BAD_MOVE`, `ALREADY_MOVED`, `NOT_PLAYING` |
+| **State machine ที่ server** | `pending → playing → finished` (หรือ `ended` เมื่อ quit / หลุด) server ตรวจทุก event ว่าถูกสถานะไหม (`NOT_PENDING`, `NOT_PLAYING`) คนนอกเกมส่ง event เข้ามาไม่ได้ (`NO_GAME`) คำท้าที่ไม่ตอบหมดอายุเอง (`expired`) |
+| **ซ่อนคำตอบจนครบ (simultaneous reveal)** | server เก็บ move ไว้เอง อีกฝ่ายได้แค่ `moved` เมื่อครบ 2 คนจึงส่ง `round` / `finished` ที่มี move ทั้งคู่พร้อมกัน จึงโกงด้วยการดู frame ใน DevTools ไม่ได้ |
+| **Unicast ถึงผู้เล่นเท่านั้น** | `game_update` ส่งไปที่ socket ของผู้เล่น 2 คนเท่านั้น (หลักเดียวกับ R7) |
+| **จัดการการหลุด** | ผู้เล่น disconnect → server จบเกม (`abandoned`) และแจ้งอีกฝ่าย |
+
+รายละเอียด: [HandbookFeatures.md → Feature 4](../HandbookFeatures.md#feature-4--เกมเป่ายิ้งฉุบ-rps)
+
 **Feature guess: AI เป็น client อีกตัว (AI bot)**
 
 ```
@@ -101,6 +125,8 @@ browser <══Socket.IO══ server <══Socket.IO══ AI bot   (คำใ
 | **Socket.IO + acknowledgement** (server → bot) | คำสั่ง `/guess` ของผู้ใช้ server ส่งต่อเป็น `bot_request` แล้วรอ ack ของ bot ส่งกลับให้คนสั่ง |
 | **HTTPS** (Claude API / OpenAI Responses API / Gemini API) | bot เรียก AI ที่เลือก: ครั้งเดียวต่อเกม (คำลับ + คำใบ้เป็น JSON, structured output) + ทุกคำทายผิด (มี cooldown) / API key อยู่ที่ bot เท่านั้น server และ browser ไม่เคยเห็น |
 
+รายละเอียด: [HandbookFeatures.md → Feature 5](../HandbookFeatures.md#feature-5--เกมทายคำ-ai-ai-บังคับ)
+
 **Feature file: ส่งไฟล์ / รูป**
 
 | แนวคิด | ใช้อย่างไร |
@@ -110,9 +136,5 @@ browser <══Socket.IO══ server <══Socket.IO══ AI bot   (คำใ
 | **Relay ไม่เก็บไฟล์** | server ตรวจสิทธิ์ (R7 / R11) + ลำดับ + ขนาด แล้วส่งต่อทันที ไม่มี storage กลาง |
 
 รายละเอียด: [HandbookFeatures.md → Feature 6](../HandbookFeatures.md#feature-6--ส่งไฟล์--รูปผ่าน-socket)
-
-รายละเอียด: [HandbookFeatures.md → Feature 5](../HandbookFeatures.md#feature-5--เกมทายคำ-ai-ai-บังคับ)
-
-รายละเอียด: [HandbookFeatures.md → Feature 2](../HandbookFeatures.md#feature-2--discord-bridge)
 
 รายละเอียดการทำงาน + ลิงก์โค้ด: [HandbookFeatures.md → Feature 1 — Cloud](../HandbookFeatures.md#feature-1--cloud) · ขั้นตอน deploy: [features/cloud_TEST.md](features/cloud_TEST.md)

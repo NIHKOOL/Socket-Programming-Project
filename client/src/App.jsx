@@ -354,7 +354,7 @@ export default function App() {
         messages={roomMessages}
         me={me}
         onSend={sendToActiveRoom}
-          onSendFile={sendFileToActiveRoom} // Feature: file
+        onSendFile={sendFileToActiveRoom} // Feature: file
         onBack={closeRoom}
         backBadge={otherUnread}
         disabledReason={group ? null : "You are no longer a member of this group"}

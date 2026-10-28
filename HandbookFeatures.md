@@ -82,8 +82,8 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 | 1 | Deploy บน Cloud | `cloud` | ⏸ พักไว้ (โค้ดยังอยู่ ยังไม่นับคะแนน) | [Feature 1 — Cloud](#feature-1--cloud) |
 | 2 | Discord bridge: กลุ่ม `#discord` ↔ channel ใน Discord จริง | `discord` | ✅ ใช้งานได้บนเครื่อง (รอเก็บหลักฐาน) | [Feature 2 — Discord bridge](#feature-2--discord-bridge) |
 | 3 | **เกมทายคำ AI** (`/guess start`): Claude / ChatGPT / Gemini คิดคำ + ใบ้ทีละข้อ คนในกลุ่มแข่งทาย (ภาษาอังกฤษ) — **AI เป็น client อีกตัว** (`ai-bot/`) **(AI บังคับ)** | `bot` + `ai-bot/` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน (โจทย์ปลอม) + เรียก API จริงทั้ง 3 เจ้าด้วย key ปลอมแล้ว **รอ API key จริง** | [Feature 5 — เกมทายคำ AI](#feature-5--เกมทายคำ-ai-ai-บังคับ) |
-| 5 | เกมผ่าน socket: เป่ายิ้งฉุบ (`/play rps`) | `game` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน รอทดสอบด้วยมือ | [Feature 4 — RPS](#feature-4--เกมเป่ายิ้งฉุบ-rps) |
 | 4 | **ส่งไฟล์ / รูปผ่าน socket** (แบ่งชิ้น 64 KB, stop-and-wait, private + group) | `file` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน + ลองส่งจริงด้วยโค้ด client แล้ว รอทดสอบใน browser | [Feature 6 — ส่งไฟล์](#feature-6--ส่งไฟล์--รูปผ่าน-socket) |
+| 5 | เกมผ่าน socket: เป่ายิ้งฉุบ (`/play rps`) | `game` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน รอทดสอบด้วยมือ | [Feature 4 — RPS](#feature-4--เกมเป่ายิ้งฉุบ-rps) |
 | – | `/ping` / `/ping <ชื่อ>` วัด RTT + ระบบ slash command (`/help`) | `ping` | ⏸ ตัวสำรอง (โค้ด + test ยังอยู่ ไม่นับคะแนน แทนด้วยส่งไฟล์) | [Feature 3 — /ping](#feature-3--ping--ระบบ-slash-command) |
 
 (อัปเดตตารางนี้และเพิ่มหัวข้อของแต่ละ feature เมื่อทำเสร็จ)
