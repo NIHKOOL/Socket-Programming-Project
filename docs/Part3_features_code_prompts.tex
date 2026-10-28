@@ -1,0 +1,652 @@
+% Part 3 – Special features: Code snapshots + Generative AI prompts
+% เฉพาะ 4 feature ที่เลือก: AI word-guessing, RPS, File/picture, Discord bridge (ไม่มี Cloud กับ /ping)
+% สร้างจากโค้ดจริง (เลขบรรทัดตรงกับไฟล์ ณ วันที่ 2026-10-28)
+% Compile ด้วย XeLaTeX (ไม่ใช่ pdfLaTeX) เพราะมีภาษาไทย
+%   Overleaf: Menu -> Compiler -> XeLaTeX
+%   ฟอนต์ Norasi / TlwgMono มากับ TeX Live (แพ็กเกจ fonts-tlwg) ถ้าไม่มีให้เปลี่ยนเป็นฟอนต์ไทยอื่น
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2cm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Norasi}
+\setmonofont{TlwgMono}[Scale=0.95]
+\XeTeXlinebreaklocale "th"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\usepackage{xcolor}
+\usepackage{fvextra}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+
+\definecolor{codebg}{HTML}{F4F6F8}
+\definecolor{accent}{HTML}{2B5F8A}
+\fvset{numbers=left, numbersep=6pt, fontsize=\footnotesize, frame=single,
+  rulecolor=\color{gray!50}, breaklines=true, breakanywhere=true, xleftmargin=18pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\req}[1]{\begin{tcolorbox}[colback=accent!6,colframe=accent!60,boxrule=0.5pt,left=4pt,right=4pt,top=2pt,bottom=2pt]\textbf{What it does:} #1\end{tcolorbox}}
+\newcommand{\snap}[3]{\par\medskip\textbf{\code{#1}}, lines #2 --- #3}
+% \promptbox{date}{prompt (Thai)}{English translation}{what the AI did}
+\newcommand{\promptbox}[4]{%
+\begin{tcolorbox}[colback=codebg,colframe=gray!50,boxrule=0.4pt,left=4pt,right=4pt,top=2pt,bottom=2pt]
+{\small #1 \quad Claude Code (Claude Opus 5.5)}\par
+\textbf{Prompt:} #2\par
+\textit{English:} #3\par
+\textbf{AI output:} #4
+\end{tcolorbox}}
+
+\title{\textbf{Part 3 -- Special Features: Code Snapshots and Generative AI Prompts}\\[2pt]
+\large Simple Chat Application (Socket Programming)}
+\author{{[Team name]} \\ {[Member names]}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{How to read this document}
+We built four special features: an \textbf{AI word-guessing game} (our AI feature), a
+\textbf{rock-paper-scissors game}, \textbf{sending files and pictures}, and a \textbf{Discord bridge}.
+For each feature we give what it does, how it works over the network, \textbf{code snapshots} copied
+from the project (with the real line numbers), and the \textbf{Generative AI prompts} we used, copied
+word for word from our prompt log (\code{PromptRecord.md}) in the original Thai with an English translation.
+
+\subsection*{How the features plug into the core}
+All feature code is kept apart from the core chat (R1--R11). The server core calls the features only
+through five hook functions, so a feature can be added or removed without changing the core. Every
+feature still uses the same Socket.IO connection, and chat-related features reuse the core's permission
+rules (R7, R11).
+
+\snap{server/features/index.js}{29--59}{Feature registry and the five hooks}
+\begin{Verbatim}[firstnumber=29]
+const features = [cloud, discord, ping, game, bot, file];
+
+// เรียกจาก core ครั้งเดียว หลังสร้าง io และ state (clients, groups)
+export function initFeatures(app) {
+  for (const f of features) f.init?.(app);
+}
+
+// เรียกจาก HTTP handler ของ core: feature ตัวแรกที่ return true เป็นผู้ตอบ request นั้น
+// ไม่มีใครรับ → core ตอบ 404 เหมือนเดิม (R2: ไม่มี REST สำหรับข้อความแชท)
+export function handleHttp(req, res) {
+  return features.some((f) => f.handleHttp?.(req, res) === true);
+}
+
+// เรียกจาก io.on("connection") ของ core ทุกครั้งที่มี socket ใหม่
+export function setupSocket(socket, ctx) {
+  for (const f of features) f.setupSocket?.(socket, ctx);
+}
+
+// เรียกจาก core หลังส่ง group_msg ให้สมาชิกแล้ว (msg = { group, from, text, timestamp })
+export function onGroupMessage(msg) {
+  for (const f of features) f.onGroupMessage?.(msg);
+}
+
+// เรียกจาก register ของ core ก่อนจองชื่อ: feature ตัวแรกที่ปฏิเสธชนะ (เช่น bot สงวนชื่อ "AI")
+export function checkRegister(name, payload) {
+  for (const f of features) {
+    const denied = f.checkRegister?.(name, payload);
+    if (denied) return denied;
+  }
+  return null;
+}
+\end{Verbatim}
+
+We asked for this structure before building any feature:
+
+\promptbox{2026-10-28}{ก่อนทำเราแยกส่วนที่เป็น Feature เสริมได้ไหม อย่าง Server/Client ก็มี folder เพิ่ม handbook.md ก็มีเพิ่ม แล้วก็มีการเก็บ Test เฉพาะ Feature เสริมด้วย}{Before we start, can we separate the special features? For example, extra folders in Server/Client, an extra handbook, and separate tests only for the special features.}{Created the feature registry \code{server/features/index.js} with hooks, \code{client/src/features/}, \code{server/tests/features/} and \code{HandbookFeatures.md}.}
+
+Every change was checked by our team: we ran the automated tests (\code{cd server \&\& npm test}),
+tested manually on separate computers, and saved screenshots as evidence.
+
+\clearpage
+\section{Feature 1 -- AI word-guessing game}
+\req{An AI chooses a secret English word (a person, an animal or an object) and posts hints
+in a group, one by one. Group members race to guess it by typing in the group chat; the first correct guess
+wins, and after 5 minutes nobody wins. A wrong guess gets a short AI hint comparing it with the answer.}
+
+The AI is a \textbf{separate client program} (\code{ai-bot/}) that logs in to our server as
+the reserved user \code{AI} with a secret token. A player's \code{/guess start} command goes to the server,
+which checks group membership and forwards it to the bot as \code{bot\_request} (with an ack and a 10-second
+timeout). The bot joins the group itself (R10) and sends every hint and announcement as a normal
+\code{group\_msg} (R11), so all AI messages travel through the socket like a human's. The bot calls
+Claude, ChatGPT or Gemini over HTTPS with a JSON schema (structured output). The API keys and the
+answer stay on the bot only; the server and the clients never see them.
+
+\subsection*{Code snapshots}
+\snap{server/features/bot.js}{29--36}{Server: the name "AI" is reserved for the bot with the right token}
+\begin{Verbatim}[firstnumber=29]
+  // core เรียกตอน register ก่อนจองชื่อ (R3): ชื่อ "AI" (ตัวพิมพ์ใดก็ได้) ต้องมี token ตรงกับ AI_BOT_TOKEN
+  // server ไม่ได้ตั้ง AI_BOT_TOKEN → ไม่มีใครใช้ชื่อ AI ได้เลย
+  checkRegister(name, payload) {
+    if (!isBotName(name)) return null;
+    const token = process.env.AI_BOT_TOKEN;
+    if (token && payload?.token === token) return null;
+    return { code: "NAME_RESERVED", message: `Name "${name}" is reserved for the AI bot` };
+  },
+\end{Verbatim}
+
+\snap{server/features/bot.js}{38--64}{Server: check membership, forward /guess to the bot, return its ack}
+\begin{Verbatim}[firstnumber=38]
+  setupSocket(socket, { requireName }) {
+    for (const event of RELAYED) {
+      socket.on(event, async (payload = {}, ack) => {
+        const reply = (data) => typeof ack === "function" && ack(data);
+        const me = requireName();
+        if (!me) return;
+        const group = payload?.group;
+        // ต้องเป็นสมาชิกกลุ่ม (หลักเดียวกับ R11) คนนอกจึงสั่ง / ดูคำใบ้ของกลุ่มอื่นไม่ได้
+        if (event !== "guess_ai") {
+          const members = groups.get(group);
+          if (event === "guess_start" && !members) return reply({ ok: false, code: "GROUP_NOT_FOUND" });
+          if (event === "guess_start" && !members.has(me)) return reply({ ok: false, code: "NOT_A_MEMBER" });
+          if (!members?.has(me)) return reply({ ok: false, code: "NO_GAME" });
+        }
+
+        const bot = clients.get(BOT_NAME);
+        if (!bot) return reply({ ok: false, code: "BOT_OFFLINE", message: "the AI bot is offline (start it with: npm run bot)" });
+        try {
+          // from มาจาก server เสมอ (ไม่ใช้ค่าจาก payload) bot จึงเชื่อได้ว่าใครสั่ง
+          const req = { event, from: me, group, category: payload?.category, ai: payload?.ai };
+          reply(await bot.timeout(BOT_TIMEOUT_MS).emitWithAck("bot_request", req));
+        } catch {
+          reply({ ok: false, code: "BOT_TIMEOUT", message: "the AI bot did not answer" });
+        }
+      });
+    }
+  },
+\end{Verbatim}
+
+\snap{ai-bot/index.js}{26--34}{Bot: connect as a Socket.IO client; speak with group\_msg}
+\begin{Verbatim}[firstnumber=26]
+// reconnection: true (ต่างจาก client ของผู้ใช้) → server restart แล้ว bot กลับมาเอง
+const socket = io(SERVER_URL, { transports: ["websocket"], reconnection: true });
+let memberOf = new Set(); // กลุ่มที่ bot เป็นสมาชิกอยู่ (อ่านจาก group_list ที่ server broadcast, R9)
+
+// ---- ส่งเข้า server ----
+function say(group, text) {
+  console.log(`[send] group_msg #${group}: ${text}`);
+  socket.emit("group_msg", { group, text });
+}
+\end{Verbatim}
+
+\snap{ai-bot/index.js}{61--65}{Bot: register as "AI" with the token}
+\begin{Verbatim}[firstnumber=61]
+// ---- รับจาก server ----
+socket.on("connect", () => {
+  console.log(`[bot] connected to ${SERVER_URL} — registering as "${BOT_NAME}"`);
+  socket.emit("register", { name: BOT_NAME, token: TOKEN });
+});
+\end{Verbatim}
+
+\snap{ai-bot/index.js}{82--98}{Bot: handle forwarded commands and receive guesses}
+\begin{Verbatim}[firstnumber=82]
+// คำสั่ง /guess ที่ server ส่งต่อมา: { event, from, group, category, ai } → ตอบผ่าน ack (server ส่งต่อให้คนสั่ง)
+socket.on("bot_request", async (req, ack) => {
+  console.log(`[recv] bot_request ${req.event} from ${req.from}${req.group ? ` #${req.group}` : ""}`);
+  let reply;
+  try {
+    reply = await game.handleRequest(req);
+  } catch (err) {
+    reply = { ok: false, code: "BOT_ERROR", message: err.message };
+  }
+  if (typeof ack === "function") ack(reply);
+});
+
+// ข้อความในกลุ่มที่ bot เป็นสมาชิก = คำทาย (ข้ามข้อความของ bot เอง)
+socket.on("group_msg", (msg) => {
+  if (msg.from === BOT_NAME && !msg.source) return;
+  game.onGroupMessage(msg);
+});
+\end{Verbatim}
+
+\snap{ai-bot/guess-ai.js}{20--34}{JSON schema the AI must answer with}
+\begin{Verbatim}[firstnumber=20]
+// รูปแบบ JSON ที่บังคับให้ AI ตอบ (ใช้กับทุกเจ้า)
+const PUZZLE_SCHEMA = {
+  type: "object",
+  properties: {
+    word: { type: "string", description: "the secret answer in English, lowercase" },
+    aliases: {
+      type: "array",
+      items: { type: "string" },
+      description: "other accepted English answers: alternative English names, spellings, plural; lowercase; English only",
+    },
+    hints: { type: "array", items: { type: "string" }, description: `exactly ${HINT_COUNT} hints in English, from vague to very specific` },
+  },
+  required: ["word", "aliases", "hints"],
+  additionalProperties: false,
+};
+\end{Verbatim}
+
+\snap{ai-bot/ai-providers/claude.js}{15--39}{Calling Claude over HTTPS (one file per AI provider)}
+\begin{Verbatim}[firstnumber=15]
+  // คืน object ที่ parse จาก JSON ตาม schema แล้ว (structured output)
+  async generateJson(prompt, schema) {
+    client ??= new Anthropic();
+    let response;
+    try {
+      response = await client.beta.messages.create({
+        model: MODEL,
+        max_tokens: 16000,
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default", // ถ้าโมเดลปฏิเสธ ให้ server ของ Anthropic ลองโมเดลสำรองให้
+        output_config: { effort: "low", format: { type: "json_schema", schema } },
+        messages: [{ role: "user", content: prompt }],
+      });
+    } catch (err) {
+      if (err instanceof Anthropic.AuthenticationError) throw new Error("Claude API key is invalid (check ANTHROPIC_API_KEY)");
+      if (err instanceof Anthropic.RateLimitError) throw new Error("Claude is busy right now, try again in a minute");
+      if (err instanceof Anthropic.APIConnectionError) throw new Error("cannot reach Claude (check internet connection)");
+      if (err instanceof Anthropic.APIError) throw new Error(`Claude error ${err.status}`);
+      throw err;
+    }
+    if (response.stop_reason === "refusal") throw new Error("Claude declined to make a puzzle, try another category");
+    const text = response.content.find((b) => b.type === "text")?.text;
+    if (!text) throw new Error("Claude returned no puzzle");
+    return JSON.parse(text);
+  },
+\end{Verbatim}
+
+\snap{ai-bot/game.js}{178--199}{Check each guess; wrong guess -> AI feedback in the group}
+\begin{Verbatim}[firstnumber=178]
+// ทุกข้อความแชทในกลุ่มที่ bot เป็นสมาชิก (index.js ตัดข้อความของ bot เองออกแล้ว) = คำทาย ถ้ากลุ่มนั้นมีเกมอยู่
+export function onGroupMessage(msg) {
+  const g = games.get(msg.group);
+  if (!g || g.status !== "running") return;
+  if (g.answers.has(normalizeGuess(msg.text))) {
+    announce(msg.group, g.host, `🎉 ${msg.from} got it in ${elapsed(g)}! The answer was ${g.word.toUpperCase()}.`);
+    return end(msg.group);
+  }
+
+  // ทายผิด → ให้ AI ใบ้เทียบคำทายกับคำตอบจริง (ไม่เฉลย) แล้วประกาศในกลุ่ม
+  if (!looksLikeGuess(msg.text) || g.feedbackCount >= MAX_FEEDBACK_PER_GAME) return;
+  const now = Date.now();
+  if (now - (g.lastFeedback.get(msg.from) ?? 0) < FEEDBACK_COOLDOWN_MS) return;
+  g.lastFeedback.set(msg.from, now);
+  g.feedbackCount++;
+
+  const guess = msg.text.trim();
+  generateFeedback(g, guess, g.aiProvider, g.hints.slice(0, g.shown)).then((feedback) => {
+    if (games.get(msg.group) !== g) return; // มีคนถูก / หมดเวลา / หยุดไปแล้วระหว่างรอ AI → ทิ้ง
+    announce(msg.group, g.host, `💬 ${msg.from} guessed "${guess}" — ${feedback ?? "not it, keep trying!"}`);
+  });
+}
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-28}{อีก Feature ทำเป็นเกมให้ AI คิดคำมาหนึ่งคำ หลังจากนั้นให้ AI ใบ้ คน สัตว์ สิ่งของ โดยการ ส่งข้อความ Socket มาเรื่อยๆ 5 นาที ถือว่าไม่มีใครชนะใครทายถูกก่อนหหน้านั้นคนนั้นชนะ แล้วให้ คนในกลุ่มแข่งกันทาย}{Another feature: a game where the AI thinks of one word, then gives hints (person, animal, object) by sending socket messages over and over. After 5 minutes nobody wins; whoever guesses correctly before that wins. Members of the group compete to guess.}{Built the game with the Claude API (structured JSON output: word, aliases, 10 hints), one game per group, hints spread over 5 minutes, slash commands \code{/guess start|hints|stop}, an \code{[ai]} tag in the UI, and 24 automated tests with a fake AI.}
+\promptbox{2026-10-28}{ลืมบอกไปว่าทายโดยใช้อค่ English กับ เพิ่ม API ของ AI ตัวอื่นไปด้วยอย่าง chatGPT gemini}{I forgot to say that guesses are in English only. Also add other AI APIs such as ChatGPT and Gemini.}{Split the AI code into one file per provider (Claude, OpenAI, Gemini), all with \code{generateJson(prompt, schema)}; answers and aliases are English only; \code{/guess start [category] [ai]} chooses the AI.}
+\promptbox{2026-10-28}{อยากให้เวลาทุกครั้งที่ทายผิดให้ AI ช่วยใบ้อ้างอิงจากคำตอบของ client เทียบกับคำตอบจริงแล้วพิมพ์ลงกลุ่ม}{Every time someone guesses wrong, I want the AI to give a hint comparing the client's guess with the real answer, and post it in the group.}{Added \code{generateFeedback} (the AI must not reveal the answer; replies that leak it are dropped), with limits: English guesses of 1--4 words, a 5-second cooldown per player and at most 40 AI replies per game.}
+\promptbox{2026-10-28}{อยากให้เวลา AI ตอบให้ส่ง Socket ให้ Server ด้วย \newline (เลือก: AI เป็น client อีกตัว)}{When the AI answers, I want it to send through the socket to the server too. (Chosen: the AI is another client.)}{Moved the AI into a separate program \code{ai-bot/} that connects with \code{socket.io-client} as user \code{AI}; the server only reserves the name and relays commands (\code{server/features/bot.js}) and no longer holds any API key.}
+
+\clearpage
+\section{Feature 2 -- Rock-paper-scissors game}
+\req{Two online users play rock-paper-scissors (best of 1, 3 or 5) with slash commands
+(\code{/play rps <name>}, \code{/accept}, \code{/move r|p|s}, \code{/quit}). Game messages appear in their
+private room.}
+
+We designed a small \textbf{application-level protocol} on Socket.IO. Every command is an
+event with an ack \code{\{ok, code\}}. The server is authoritative: it keeps the state
+(\code{pending} $\rightarrow$ \code{playing} $\rightarrow$ \code{finished}), checks the rules and decides the
+winner. The first move of a round is kept secret at the server; the opponent only learns that a move was
+made. When both have chosen, the server reveals both moves at once. Updates go only to the two players
+(like R7), and a disconnect ends the game.
+
+\subsection*{Code snapshots}
+\snap{server/features/game.js}{1--10}{Message flow of the game protocol}
+\begin{Verbatim}[firstnumber=1]
+// Feature: game — เกมผลัดกันเล่นผ่าน socket (เริ่มที่ เป่ายิ้งฉุบ: Rock-Paper-Scissors)
+//
+//   C1 ──game_challenge──> server ──game_update (challenge)──> C1, C2
+//   C2 ──game_respond────> server ──game_update (accepted)───> C1, C2
+//   C1 ──game_move rock──> server  (เก็บไว้เป็นความลับ)  ──game_update (moved: แค่บอกว่า C1 เลือกแล้ว)──> C1, C2
+//   C2 ──game_move paper─> server  ตัดสิน ──game_update (round/finished: เปิดคำตอบทั้งคู่ + คะแนน)──> C1, C2
+//
+// Server เป็นคนตัดสินทั้งหมด (server-authoritative): client แค่ส่ง "การกระทำ" server ตรวจว่าถูกกติกาไหม
+// และคำตอบของคนที่เลือกก่อน**ไม่ถูกส่งให้ใคร**จนกว่าจะครบ 2 คน ถ้าส่งตรงหากัน อีกฝ่ายจะเห็นก่อนแล้วโกงได้
+// update ทุกอันส่งให้ผู้เล่น 2 คนเท่านั้น (หลักเดียวกับ R7)
+\end{Verbatim}
+
+\snap{server/features/game.js}{35--53}{Public state (no hidden moves) is sent to the 2 players only}
+\begin{Verbatim}[firstnumber=35]
+// สถานะที่ส่งให้ผู้เล่น: **ไม่มี** คำตอบที่ยังไม่เปิด มีแค่ชื่อคนที่เลือกแล้ว
+function publicState(g) {
+  return {
+    id: g.id,
+    game: g.game,
+    title: GAMES[g.game],
+    players: g.players,
+    bestOf: g.bestOf,
+    status: g.status,
+    round: g.round,
+    score: { ...g.score },
+    moved: g.players.filter((p) => p in g.moves),
+  };
+}
+
+function send(g, event, extra = {}) {
+  const update = { ...publicState(g), event, ...extra };
+  for (const p of g.players) clients.get(p)?.emit("game_update", update);
+}
+\end{Verbatim}
+
+\snap{server/features/game.js}{129--161}{game\_move: keep the move secret until both chose, then decide}
+\begin{Verbatim}[firstnumber=129]
+    socket.on("game_move", ({ id, move } = {}, ack) => {
+      const me = requireName();
+      if (!me) return;
+      const g = myGame(id, me);
+      if (!g) return reply(ack, { ok: false, code: "NO_GAME" });
+      if (g.status !== "playing") return reply(ack, { ok: false, code: "NOT_PLAYING" });
+      const m = normalizeMove(move);
+      if (!m) return reply(ack, { ok: false, code: "BAD_MOVE" });
+      if (me in g.moves) return reply(ack, { ok: false, code: "ALREADY_MOVED" });
+
+      g.moves[me] = m;
+      reply(ack, { ok: true, move: m }); // บอกคนเลือกคนเดียวว่าเลือกอะไร
+
+      if (Object.keys(g.moves).length < 2) return send(g, "moved", { by: me }); // อีกฝ่ายรู้แค่ว่า "เลือกแล้ว"
+
+      // ครบ 2 คน → เปิดคำตอบพร้อมกัน + ตัดสิน
+      const [a, b] = g.players;
+      const w = rpsWinner(g.moves[a], g.moves[b]);
+      const result = { round: g.round, moves: { ...g.moves }, winner: w === 0 ? null : g.players[w - 1] };
+      if (result.winner) g.score[result.winner]++;
+      g.moves = {};
+      g.round++;
+
+      const need = Math.ceil(g.bestOf / 2);
+      const champion = g.players.find((p) => g.score[p] >= need);
+      if (champion) {
+        g.status = "finished";
+        send(g, "finished", { result, winner: champion });
+        end(g);
+      } else {
+        send(g, "round", { result });
+      }
+    });
+\end{Verbatim}
+
+\snap{server/features/game.js}{174--182}{A player disconnects -> the game is abandoned}
+\begin{Verbatim}[firstnumber=174]
+    // ผู้เล่นหลุดการเชื่อมต่อ → จบเกม แจ้งอีกฝ่าย (core ลบชื่อออกจาก clients ไปก่อนแล้ว จึงส่งถึงคนที่เหลือคนเดียว)
+    socket.on("disconnect", () => {
+      const name = socket.data.name;
+      const g = name && games.get(playing.get(name));
+      if (!g) return;
+      g.status = "ended";
+      send(g, "abandoned", { by: name });
+      end(g);
+    });
+\end{Verbatim}
+
+\snap{client/src/features/game/index.js}{9--16}{Client: show game updates in the private room}
+\begin{Verbatim}[firstnumber=9]
+export function setupGame(socket, notify, getMe) {
+  current = null; // login ใหม่ = เริ่มใหม่
+  socket.on("game_update", (u) => {
+    const me = getMe();
+    current = isGameOver(u.event) ? null : u;
+    for (const line of formatUpdate(u, me)) notify(opponentOf(u, me), line);
+  });
+}
+\end{Verbatim}
+
+\snap{client/src/features/game/index.js}{32--37}{Client: send an action and wait for the ack}
+\begin{Verbatim}[firstnumber=32]
+// ส่ง action แบบมี ack แล้วพิมพ์ error ถ้าไม่ผ่าน (คืน reply ถ้าผ่าน)
+async function act(ctx, event, data, subject) {
+  const reply = await ctx.socket.timeout(3000).emitWithAck(event, data);
+  if (!reply.ok) ctx.print(`error: ${ERRORS[reply.code]?.(subject) ?? reply.code}`);
+  return reply.ok ? reply : null;
+}
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-28}{สามารถใช้ Socket ทำเกมที่ใช้ Text ตอบโต้กันสองฝั่งได้ไหม \newline เริ่มที่ RPS ก่อนเลย}{Can we use the socket to make a text game where both sides respond to each other? Start with RPS.}{Built \code{server/features/game.js} (server-authoritative state and rules, hidden moves, updates only to the 2 players, best of 1/3/5, decline / quit / 60-second expiry / abandoned on disconnect) and the client commands; 31 automated tests.}
+
+\clearpage
+\section{Feature 3 -- Sending files and pictures}
+\req{Users send any file (up to 5\,MB) to a private chat or a group with a \code{[+file]}
+button, drag-and-drop or paste. Pictures are previewed in the chat, and every file has a progress bar and a
+download link.}
+
+The file is split into \textbf{64\,KB binary chunks}. Each chunk is one Socket.IO event with
+framing \code{\{id, seq, data\}}; the data is sent as binary, not base64. The sender waits for the ack of a
+chunk before sending the next one (\textbf{stop-and-wait}, flow control at the application level, similar to
+TCP ACKs). The server checks the receiver with the same rules as chat messages (R7: online user, R11: group
+member), checks the owner, order and size of each chunk, and forwards it only to the receivers. It never
+stores the file. The receiver joins the chunks into a file at the end.
+
+\subsection*{Code snapshots}
+\snap{server/features/file.js}{12--16}{Limits: chunk size, file size, idle timeout}
+\begin{Verbatim}[firstnumber=12]
+const CHUNK_SIZE = 64 * 1024; // 64 KB ต่อชิ้น (ต่ำกว่า maxHttpBufferSize 1 MB ของ Socket.IO มาก)
+const MAX_FILE_SIZE = Number(process.env.FILE_MAX_BYTES) || 5 * 1024 * 1024; // 5 MB
+const IDLE_TIMEOUT_MS = Number(process.env.FILE_IDLE_TIMEOUT_MS) || 30_000; // ผู้ส่งเงียบนานเกิน → ยกเลิก
+const MAX_ACTIVE_PER_USER = 3;
+const MAX_NAME_LENGTH = 100;
+\end{Verbatim}
+
+\snap{server/features/file.js}{32--44}{Forward only to the receiver or the group members}
+\begin{Verbatim}[firstnumber=32]
+// ส่งถึง "ผู้รับ" (ไม่รวมผู้ส่ง): private = อีกฝ่าย 1 คน / group = สมาชิกทุกคนใน room ยกเว้นผู้ส่ง
+function toReceivers(t, event, data) {
+  if (t.group) t.socket.to(`group:${t.group}`).emit(event, data);
+  else t.target.emit(event, data);
+}
+// ส่งถึงทุกคนที่เกี่ยวข้อง (ผู้รับ + ผู้ส่ง)
+function toAll(t, event, data) {
+  if (t.group) io.to(`group:${t.group}`).emit(event, data);
+  else {
+    t.target.emit(event, data);
+    t.socket.emit(event, data);
+  }
+}
+\end{Verbatim}
+
+\snap{server/features/file.js}{90--103}{file\_offer: the same permission checks as R7 / R11}
+\begin{Verbatim}[firstnumber=90]
+      // ตรวจผู้รับด้วยกฎเดียวกับข้อความแชท: private (R7) ต้องออนไลน์ / group (R11) ต้องเป็นสมาชิก
+      const t = { socket, from: me, name, size, type: String(type || "application/octet-stream").slice(0, 100) };
+      if (group !== undefined) {
+        const members = groups.get(group);
+        if (!members) return reply(ack, { ok: false, code: "GROUP_NOT_FOUND", message: "Group not found" });
+        if (!members.has(me)) return reply(ack, { ok: false, code: "NOT_A_MEMBER", message: `You are not a member of "${group}"` });
+        t.group = group;
+      } else {
+        const target = clients.get(to);
+        if (!target) return reply(ack, { ok: false, code: "USER_NOT_FOUND", message: `User "${to}" is not online` });
+        if (target === socket) return reply(ack, { ok: false, code: "SELF", message: "Cannot send a file to yourself" });
+        t.to = to;
+        t.target = target;
+      }
+\end{Verbatim}
+
+\snap{server/features/file.js}{119--133}{file\_chunk: check owner, order and size, then forward}
+\begin{Verbatim}[firstnumber=119]
+    socket.on("file_chunk", ({ id, seq, data } = {}, ack) => {
+      if (!requireName()) return;
+      const t = own(id);
+      if (!t) return reply(ack, { ok: false, code: "NO_TRANSFER" });
+      // ชิ้นต้องมาตามลำดับ 0, 1, 2, ... (ผู้รับเอาไปต่อกันตามลำดับที่ได้รับ)
+      if (seq !== t.nextSeq) return reply(ack, { ok: false, code: "BAD_SEQ", expected: t.nextSeq });
+      if (!Buffer.isBuffer(data) || data.length === 0 || data.length > CHUNK_SIZE || t.received + data.length > t.size) {
+        return reply(ack, { ok: false, code: "BAD_CHUNK" });
+      }
+      t.nextSeq++;
+      t.received += data.length;
+      touch(t);
+      toReceivers(t, "file_chunk", { id: t.id, seq, data });
+      reply(ack, { ok: true, received: t.received });
+    });
+\end{Verbatim}
+
+\snap{client/src/features/file/transfer.js}{64--95}{Client: send chunk by chunk, waiting for each ack}
+\begin{Verbatim}[firstnumber=64]
+// target = { to: "C2" } หรือ { group: "g1" } / print = แสดงข้อความ error เฉพาะจอเรา
+export async function sendFile(socket, target, file, print) {
+  const ref = Math.random().toString(36).slice(2);
+  const out = { url: URL.createObjectURL(file), startedAt: performance.now(), cancelled: false };
+  outgoing.set(ref, out);
+  let id = null;
+  try {
+    const offer = await socket
+      .timeout(5000)
+      .emitWithAck("file_offer", { ...target, name: file.name || "file", size: file.size, type: file.type, ref });
+    if (!offer.ok) return print(`error: ${offer.message ?? offer.code}`);
+    id = offer.id;
+
+    // ส่งทีละชิ้น: อ่านเฉพาะส่วนของไฟล์ (slice) → ArrayBuffer → emit แบบ binary → รอ ack ก่อนชิ้นถัดไป
+    for (let seq = 0, pos = 0; pos < file.size; seq++, pos += offer.chunkSize) {
+      if (out.cancelled) return; // server ยกเลิก (เช่น ผู้รับออฟไลน์)
+      const data = await file.slice(pos, pos + offer.chunkSize).arrayBuffer();
+      const r = await socket.timeout(10_000).emitWithAck("file_chunk", { id, seq, data });
+      if (!r.ok) throw new Error(r.code);
+      const t = transfers.get(id);
+      if (t) ui.update(t.room, id, { done: r.received });
+    }
+    if (out.cancelled) return;
+    const end = await socket.timeout(5000).emitWithAck("file_end", { id });
+    if (!end.ok) throw new Error(end.code);
+  } catch (err) {
+    if (id && !out.cancelled) socket.emit("file_cancel", { id }); // บอก server + ผู้รับให้ทิ้งไฟล์นี้
+    print(`error: could not send ${file.name} (${err.message === "operation has timed out" ? "timed out" : err.message})`);
+  } finally {
+    outgoing.delete(ref);
+  }
+}
+\end{Verbatim}
+
+\snap{client/src/features/file/transfer.js}{33--53}{Client: collect chunks and build the file}
+\begin{Verbatim}[firstnumber=33]
+  // ชิ้นไฟล์มาตามลำดับ (server ตรวจ seq แล้ว) เก็บต่อท้ายไว้ก่อน
+  socket.on("file_chunk", ({ id, data }) => {
+    const t = transfers.get(id);
+    if (!t || t.out) return;
+    t.chunks.push(data);
+    t.received += data.byteLength;
+    ui.update(t.room, id, { done: t.received });
+  });
+
+  socket.on("file_end", ({ id }) => {
+    const t = transfers.get(id);
+    if (!t) return;
+    transfers.delete(id);
+    if (t.out) {
+      const sec = (performance.now() - t.out.startedAt) / 1000;
+      return ui.update(t.room, id, { status: "done", done: t.size, seconds: sec });
+    }
+    // ประกอบทุกชิ้นเป็นไฟล์ / ชนิดไฟล์มาจากผู้ส่ง (เชื่อไม่ได้) จึงใช้ตามจริงเฉพาะรูปที่แสดงได้ปลอดภัย
+    const blob = new Blob(t.chunks, { type: canPreview(t.type) ? t.type : "application/octet-stream" });
+    ui.update(t.room, id, { status: "done", done: t.size, url: URL.createObjectURL(blob) });
+  });
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-28}{คิดว่า ping ทำอะไรได้น้อยไปไหม \newline เปลี่ยนเป็น ส่งไฟล์ส่งรูป}{Do you think ping does too little? Change it to sending files and pictures.}{Built \code{server/features/file.js} (offer / chunk / end / cancel, permission checks like R7 / R11, size limits, 30-second idle timeout, no storage) and the client (chunked sending with stop-and-wait, progress bar, image preview, download); 27 automated tests. Tested with a 300\,KB file between 2 processes: the SHA-256 hashes matched.}
+
+\clearpage
+\section{Feature 4 -- Discord bridge}
+\req{The group \code{\#discord} in our app is connected to a channel in a real Discord server.
+Messages typed in either place appear in the other.}
+
+Our server acts as a \textbf{client of Discord}. It logs in through the Discord Gateway
+(WebSocket over TLS) to receive new messages, and posts messages with the Discord REST API (HTTPS).
+Outgoing: after the core has checked membership and delivered a \code{group\_msg} (R11), the
+\code{onGroupMessage} hook posts it to Discord. Incoming: a Discord message is converted to a
+\code{group\_msg} with \code{source: "discord"} and emitted only to the group's room. Messages from bots are
+ignored, so messages never loop. The token is read from \code{server/.env}; without it the feature turns
+itself off and the app still works.
+
+\subsection*{Code snapshots}
+\snap{server/features/discord.js}{24--46}{Convert messages in both directions; ignore bots}
+\begin{Verbatim}[firstnumber=24]
+// ---- แปลงข้อความ (pure function ใช้ใน test ได้โดยไม่ต้องต่อ Discord) ----
+
+// ขาออก: ข้อความกลุ่มในแอป → ข้อความใน Discord เช่น "**C1**: hi"
+export function toDiscordText(msg) {
+  return `**${escapeMarkdown(msg.from)}**: ${msg.text}`;
+}
+
+// ขาเข้า: Discord message → payload group_msg ของแอป (source: "discord" ให้ client แสดงป้ายกำกับ)
+// คืน null ถ้าไม่ควรส่งต่อ (ข้อความจาก bot รวมถึงตัวเอง กันวนลูป / ข้อความว่าง)
+export function fromDiscordMessage(message, group = GROUP) {
+  if (message.author?.bot) return null;
+  const parts = [message.cleanContent, ...[...(message.attachments?.values?.() ?? [])].map((a) => a.url)];
+  let text = parts.filter(Boolean).join("\n").trim();
+  if (!text) return null;
+  if (text.length > MAX_TEXT_LENGTH) text = text.slice(0, MAX_TEXT_LENGTH - 1) + "…";
+  return {
+    group,
+    from: message.member?.displayName ?? message.author?.globalName ?? message.author?.username ?? "unknown",
+    text,
+    timestamp: (message.createdAt ?? new Date()).toISOString(),
+    source: "discord",
+  };
+}
+\end{Verbatim}
+
+\snap{server/features/discord.js}{55--65}{Create the \#discord group and connect to the Gateway}
+\begin{Verbatim}[firstnumber=55]
+  init({ io, groups }) {
+    if (!enabled) return;
+
+    // กลุ่มที่ bridge สร้างไว้ตั้งแต่เริ่ม แบบไม่มีสมาชิก ใครอยากคุยก็ [join] เอง (R10)
+    // (feature แตะ groups ได้ที่นี่ที่เดียว ตอนเริ่ม server ยังไม่มีใครสร้างกลุ่มชื่อนี้)
+    if (!groups.has(GROUP)) groups.set(GROUP, new Set());
+
+    console.log(`[discord] connecting to Discord Gateway... (group #${GROUP}, channel ${CHANNEL_ID})`);
+    const client = new Client({
+      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+    });
+\end{Verbatim}
+
+\snap{server/features/discord.js}{76--87}{Incoming: Discord -> members of the group only}
+\begin{Verbatim}[firstnumber=76]
+    // ขาเข้า: ข้อความใหม่ใน channel → ส่งให้สมาชิกกลุ่มในแอป (เฉพาะ room ของกลุ่ม เหมือน R11)
+    client.on(Events.MessageCreate, (message) => {
+      if (message.channelId !== CHANNEL_ID || message.author?.bot) return;
+      const msg = fromDiscordMessage(message);
+      if (!msg) {
+        // มีคนพิมพ์แต่เนื้อหาว่าง: เกือบทุกครั้งเกิดจากยังไม่ได้เปิด MESSAGE CONTENT INTENT ใน Developer Portal
+        console.warn(`[discord] got an empty message from ${message.author?.username} — enable MESSAGE CONTENT INTENT (Developer Portal → Bot)`);
+        return;
+      }
+      console.log(`[discord] in  <- ${msg.from}: ${msg.text}`);
+      io.to(`group:${GROUP}`).emit("group_msg", msg);
+    });
+\end{Verbatim}
+
+\snap{server/features/discord.js}{120--133}{Outgoing: group message -> Discord REST API}
+\begin{Verbatim}[firstnumber=120]
+  // ขาออก: ข้อความกลุ่ม (ผ่านการตรวจสิทธิ์ของ core แล้ว) → โพสต์ใน Discord
+  // ข้อความที่มาจาก Discord ไม่ผ่าน core จึงไม่ถูกส่งกลับไปซ้ำ (ไม่วนลูป)
+  onGroupMessage(msg) {
+    if (!enabled || msg.group !== GROUP) return;
+    if (!channel) {
+      // bot ยังต่อ Discord ไม่สำเร็จ ไม่ข้ามเงียบ ๆ ให้ดูสาเหตุจาก log ตอนเริ่ม (login failed / cannot open channel)
+      console.warn(`[discord] not connected to Discord — message from ${msg.from} NOT forwarded (see [discord] startup logs)`);
+      return;
+    }
+    console.log(`[discord] out -> ${msg.from}: ${msg.text}`);
+    channel
+      .send({ content: toDiscordText(msg), allowedMentions: { parse: [] } }) // ไม่ ping @everyone / @user
+      .catch((err) => console.error(`[discord] send failed: ${err.message}`));
+  },
+\end{Verbatim}
+
+\snap{server/index.js}{187--189}{Core hook: after the group message is delivered}
+\begin{Verbatim}[firstnumber=187]
+    const msg = { group, from, text, timestamp: now() };
+    io.to(`group:${group}`).emit("group_msg", msg);
+    onGroupMessage(msg); // จุดเชื่อม Feature เสริม: เช่น discord bridge ส่งต่อข้อความออกไป Discord
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-28}{อยากทำให้เกี่ยวข้องกับ Discord \newline (เลือก: เชื่อมกับ Discord จริง --- bridge)}{I want to make something related to Discord. (Chosen: connect to real Discord --- a bridge.)}{Built \code{server/features/discord.js} with discord.js (Gateway in, REST out, loop prevention, turns itself off without a token), the \code{onGroupMessage} hook in the core, the \code{[discord]} tag in the client, a setup guide and 14 automated tests.}
+\promptbox{2026-10-28}{ขั้นตอน 1.4 หาไม่เจอ}{I can't find step 1.4 (the channel ID).}{Explained two ways to get the channel ID (from the browser URL, or with Developer Mode) and updated the guide.}
+\promptbox{2026-10-28}{พิมพ์หา Discord แล้วไม่ขึ้น Discord พิมพ์ก็ไม่ขึ้น Log ใน Render ล่าสุดคือการ Join ห้อง}{Messages typed to Discord don't show up, and messages typed in Discord don't show up either. The latest log on Render is the room join.}{Found the likely cause (the environment variables were not set on the host) and added clearer logs: connecting, \code{NOT forwarded} when the bot is not connected, and a warning to enable MESSAGE CONTENT INTENT.}
+\promptbox{2026-10-28}{(วาง log จาก Render: \code{connecting to Discord Gateway...} แล้วไม่มี \code{logged in} / \code{login failed} ตามมา และส่งข้อความแล้วได้ \code{NOT forwarded})}{(Pasted the host log: \code{connecting to Discord Gateway...} with no \code{logged in} or \code{login failed} after it, and \code{NOT forwarded} when sending.)}{Diagnosed a stuck login (likely Discord rate-limiting the host's shared IP) and added step-by-step debug logs that never print the token. Running the server on our own machine worked, which confirmed the problem was the host.}
+
+\end{document}

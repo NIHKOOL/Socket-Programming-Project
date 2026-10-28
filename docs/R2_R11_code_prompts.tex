@@ -1,0 +1,575 @@
+% R2–R11: Code snapshots + Generative AI prompts
+% สร้างจากโค้ดจริง (เลขบรรทัดตรงกับไฟล์ ณ วันที่ 2026-10-28)
+% Compile ด้วย XeLaTeX (ไม่ใช่ pdfLaTeX) เพราะมีภาษาไทย
+%   Overleaf: Menu -> Compiler -> XeLaTeX
+%   ฟอนต์ Norasi / TlwgMono มากับ TeX Live (แพ็กเกจ fonts-tlwg) ถ้าไม่มีให้เปลี่ยนเป็นฟอนต์ไทยอื่น
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2cm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Norasi}
+\setmonofont{TlwgMono}[Scale=0.95]
+\XeTeXlinebreaklocale "th"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\usepackage{xcolor}
+\usepackage{fvextra}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{hyperref}
+
+\definecolor{codebg}{HTML}{F4F6F8}
+\definecolor{accent}{HTML}{2B5F8A}
+\fvset{numbers=left, numbersep=6pt, fontsize=\footnotesize, frame=single,
+  rulecolor=\color{gray!50}, breaklines=true, breakanywhere=true, xleftmargin=18pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\req}[1]{\begin{tcolorbox}[colback=accent!6,colframe=accent!60,boxrule=0.5pt,left=4pt,right=4pt,top=2pt,bottom=2pt]\textbf{Requirement:} #1\end{tcolorbox}}
+\newcommand{\snap}[3]{\par\medskip\textbf{\code{#1}}, lines #2 --- #3}
+% \promptbox{date}{prompt (Thai)}{English translation}{what the AI did}
+\newcommand{\promptbox}[4]{%
+\begin{tcolorbox}[colback=codebg,colframe=gray!50,boxrule=0.4pt,left=4pt,right=4pt,top=2pt,bottom=2pt]
+{\small #1 \quad Claude Code (Claude Opus 5.5)}\par
+\textbf{Prompt:} #2\par
+\textit{English:} #3\par
+\textbf{AI output:} #4
+\end{tcolorbox}}
+
+\title{\textbf{R2 -- R11: Code Snapshots and Generative AI Prompts}\\[2pt]
+\large Simple Chat Application (Socket Programming)}
+\author{{[Team name]} \\ {[Member names]}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{How to read this document}
+For each requirement we give a short explanation, \textbf{code snapshots} copied from the project
+(the line numbers are the real line numbers in the files), and the \textbf{Generative AI prompts} we
+used. The prompts are copied word for word from our prompt log (\code{PromptRecord.md}), in the
+original Thai with an English translation.
+
+We used \textbf{Claude Code} (model Claude Opus 5.5), an AI coding agent that reads and edits the
+project files itself. That is why most prompts are short: before the work on R2--R11 we gave it the
+assignment and the project rules with these prompts:
+
+\promptbox{2026-10-27}{อ่านไฟล์ Computer\_Network\_Term\_Project\_Socket\_Programming.pdf แล้วสรุปมาว่าต้องทำอะไรบ้าง}
+{Read the file Computer\_Network\_Term\_Project\_Socket\_Programming.pdf and summarise what we need to do.}
+{Summarised R1--R11, Part 3 and a suggested order of work.}
+
+\promptbox{2026-10-27}{ใช้ Techstack ตามเอกสารเลย \newline (เลือก: Socket.IO + React)}
+{Use the tech stack from the document. (Chosen: Socket.IO + React)}
+{Created \code{server/} (Node.js + Socket.IO) and \code{client/} (React + Vite), and documented the
+message protocol in \code{docs/PROTOCOL.md}.}
+
+Every change was checked by our team: we ran the automated tests (\code{cd server \&\& npm test}),
+tested manually on separate computers, and saved screenshots as evidence.
+
+\clearpage
+\section{R2 -- Socket programming only}
+\req{All chat messages between the server and clients must be sent through sockets.}
+
+The HTTP server answers every non-Socket.IO request with \code{404}, so there is
+no REST API for sending or fetching messages. The client forces the WebSocket transport (no HTTP
+polling). The server logs every event it receives on a socket, which shows during the demo that all
+chat traffic goes through the socket.
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{11--23}{HTTP server: only the Socket.IO handshake is accepted, everything else is 404}
+\begin{Verbatim}[firstnumber=11]
+// Socket.IO ทำงานบน HTTP server: ครั้งแรก client ส่ง HTTP request มาเพื่อ handshake
+// แล้ว upgrade เป็น WebSocket (TCP connection ที่เปิดค้างไว้ส่งข้อมูลได้สองทาง)
+// R2: request ที่ path /socket.io/ จะถูก Socket.IO ดักไปจัดการก่อน handler นี้จะทำงาน
+// ส่วน HTTP request อื่นทั้งหมดตอบ 404 เพราะไม่มี REST API สำหรับส่งหรือดึงข้อความ
+// (Feature เสริมรับ request บางอย่างได้ก่อน เช่น เสิร์ฟไฟล์หน้าเว็บ ดู server/features/index.js)
+const httpServer = createServer((req, res) => {
+  if (handleHttp(req, res)) return;
+  res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+  res.end("This server only accepts Socket.IO connections.\n");
+});
+const io = new Server(httpServer, {
+  cors: { origin: "*" }, // client (React) รันคนละ origin/คนละเครื่อง
+});
+\end{Verbatim}
+
+\snap{server/index.js}{80--90}{Log every event received through the socket}
+\begin{Verbatim}[firstnumber=80]
+  // R2: log ทุก event ที่รับเข้ามาผ่าน socket นี้ ใช้แสดงตอน demo ว่าข้อความทุกอย่างวิ่งผ่าน socket
+  socket.onAny((event, payload) => {
+    // ซ่อน token (รหัสลับของ AI bot ตอน register) ไม่ให้หลุดลง log
+    // ข้อมูล binary (ชิ้นไฟล์ของ Feature file) แสดงแค่ขนาด ไม่พิมพ์ทุก byte
+    const shown = JSON.stringify(payload, function (key, value) {
+      if (key === "token") return "***";
+      if (Buffer.isBuffer(this[key])) return `<binary ${this[key].length} bytes>`;
+      return value;
+    });
+    console.log(`[recv] ${socket.data.name ?? socket.id} -> ${event} ${shown}`);
+  });
+\end{Verbatim}
+
+\snap{client/src/socket.js}{11--16}{Client connects with the WebSocket transport only}
+\begin{Verbatim}[firstnumber=11]
+export function connect(url) {
+  // transports: ["websocket"] = ข้ามการทำ HTTP long-polling ไปใช้ WebSocket ตรง ๆ
+  // reconnection: false = ถ้าหลุดให้ผู้ใช้ login ใหม่เอง เพราะถ้า reconnect อัตโนมัติ
+  // server อาจยังไม่ลบชื่อเดิม แล้วตอบ NAME_TAKEN จนรายชื่อออนไลน์ค้าง (R4)
+  return io(url, { transports: ["websocket"], reconnection: false });
+}
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{ทำ R2 ต่อเลยพร้อมบอกด้วยว่าทำงานยังไงและบอกว่า code ส่วนไหนทำอะไรบ้าง}{Do R2 next, and explain how it works and what each part of the code does.}{Made non-Socket.IO HTTP requests return 404, added \code{socket.onAny} logging, wrote \code{docs/R2\_TEST.md} (DevTools WS frames, Wireshark).}
+\promptbox{2026-10-27}{ทดสอบ 2 ของ R2\_TEST.md ไม่ได้เพราะส่ง private\_msg หากันไม่ได้}{Test 2 in R2\_TEST.md fails because the clients can't send private\_msg to each other.}{Found the cause (the R7 UI did not exist yet); exposed \code{window.socket} in dev mode so events can be sent from the DevTools console; fixed the test guide.}
+\promptbox{2026-10-27}{R2 test หมดแล้วผ่าน}{All R2 tests passed.}{Renamed the evidence screenshots and marked R2 as done.}
+
+\clearpage
+\section{R3 -- Unique client names}
+\req{Each client must have a unique name.}
+
+The server checks names case-insensitively (\code{Alice} = \code{alice}) and
+limits them to 1--20 characters. A name is bound to the socket at \code{register} and becomes free
+again on \code{disconnect}. If registration fails, the client disconnects so the user can pick another name.
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{40--44}{Case-insensitive duplicate check}
+\begin{Verbatim}[firstnumber=40]
+// R3: เทียบชื่อแบบไม่สนตัวพิมพ์เล็ก/ใหญ่ ("Alice" กับ "alice" ถือเป็นชื่อเดียวกัน)
+function isNameTaken(name) {
+  const lower = name.toLowerCase();
+  return [...clients.keys()].some((n) => n.toLowerCase() === lower);
+}
+\end{Verbatim}
+
+\snap{server/index.js}{92--110}{register event: validate, reject duplicates, bind the name to the socket}
+\begin{Verbatim}[firstnumber=92]
+  socket.on("register", (payload = {}) => {
+    const name = String(payload?.name ?? "").trim();
+    if (!name || name.length > MAX_NAME_LENGTH) {
+      return sendError(socket, "INVALID_NAME", `Name must be 1–${MAX_NAME_LENGTH} characters`);
+    }
+    if (socket.data.name) return sendError(socket, "ALREADY_REGISTERED", "Already registered");
+    // จุดเชื่อม Feature เสริม: ชื่อที่ feature สงวนไว้ (ชื่อ "AI" ของ AI bot ต้องมีรหัสลับ)
+    const denied = checkRegister(name, payload);
+    if (denied) return sendError(socket, denied.code, denied.message);
+    if (isNameTaken(name)) return sendError(socket, "NAME_TAKEN", `Name "${name}" is already taken`); // R3
+
+    // R3: จองชื่อ → ผูกชื่อกับ socket นี้ → ชื่อนี้จะว่างอีกครั้งตอน disconnect
+    socket.data.name = name;
+    clients.set(name, socket);
+    socket.join(REGISTERED);
+    socket.emit("register_ok", { name });
+    broadcastUserList();
+    broadcastGroupList();
+  });
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{92--96}{Client: registration rejected -> disconnect and let the user retry}
+\begin{Verbatim}[firstnumber=92]
+    socket.on("error_msg", ({ message }) => {
+      setError(message);
+      // R3: register ไม่ผ่าน (เช่น ชื่อซ้ำ) → ตัดการเชื่อมต่อ ให้ผู้ใช้เปลี่ยนชื่อแล้วกดเข้าใหม่
+      if (!registered) socket.disconnect();
+    });
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{ทำ R3 ก่อนเลย}{Do R3 first.}{Added \code{isNameTaken} (case-insensitive), the 1--20 character limit, broadcasts only to the \code{registered} room, client retry on failure; 12 automated tests.}
+\promptbox{2026-10-27}{ตอนนี้ R3 เสร็จแล้ว ตรวจหน่อย}{R3 is done now, please check it.}{Checked the 3 evidence screenshots and marked R3 as done.}
+
+\clearpage
+\section{R4 -- List of online clients}
+\req{Every client can see the names of all clients currently online (including itself).}
+
+Whenever someone registers or disconnects, the server broadcasts \code{user\_list}
+to all registered sockets. The client replaces its list on each update, shows its own name first and
+returns to the login screen if the connection drops (auto-reconnect is disabled to avoid stale names).
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{66--68}{Broadcast the online list to registered clients}
+\begin{Verbatim}[firstnumber=66]
+function broadcastUserList() {
+  io.to(REGISTERED).emit("user_list", { users: [...clients.keys()] }); // R4
+}
+\end{Verbatim}
+
+\snap{server/index.js}{192--202}{On disconnect: free the name and broadcast the new lists}
+\begin{Verbatim}[firstnumber=192]
+  socket.on("disconnect", () => {
+    const name = socket.data.name;
+    console.log(`[disconnect] ${socket.id} (${name ?? "unregistered"})`);
+    if (!name) return;
+    clients.delete(name);
+    // ชื่อนี้อาจถูกคนอื่นนำไปใช้ต่อ จึงเอาออกจากทุกกลุ่มด้วย
+    // ตัวกลุ่มไม่ถูกลบ แม้สมาชิกจะออกหมดแล้วก็ตาม (ทีมตัดสินใจให้เก็บไว้ให้คนอื่นเข้ามาใหม่ได้)
+    for (const members of groups.values()) members.delete(name);
+    broadcastUserList();
+    broadcastGroupList();
+  });
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{97--104}{Client: receive the lists; return to login when disconnected}
+\begin{Verbatim}[firstnumber=97]
+    socket.on("disconnect", () => {
+      if (!registered) return;
+      // R4: หลุดจาก server → ล้างข้อมูลที่ค้างอยู่ แล้วกลับไปหน้า login
+      resetSession();
+      setError("Disconnected from server. Please log in again.");
+    });
+    socket.on("user_list", ({ users }) => setUsers(users));
+    socket.on("group_list", ({ groups }) => setGroups(groups));
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{241--243}{Client: own name first, others sorted alphabetically}
+\begin{Verbatim}[firstnumber=241]
+              {/* R4: ชื่อตัวเองอยู่บนสุด ที่เหลือเรียงตามตัวอักษร / R5: คลิกชื่อคนอื่น → เปิดห้อง private */}
+              {[...users]
+                .sort((a, b) => (a === me ? -1 : b === me ? 1 : a.localeCompare(b)))
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{ต่อ R4 เลย}{Continue with R4.}{Fixed a bug where auto-reconnect got \code{NAME\_TAKEN} and the list froze (disabled \code{reconnection}, go back to login on disconnect); own name first in the list; 9 automated tests.}
+\promptbox{2026-10-27}{Test R4 เสร็จแล้วครบทุกอัน}{Finished all R4 tests.}{Checked the screenshots (one had to be retaken) and marked R4 as done.}
+
+\clearpage
+\section{R5 \& R6 -- Separate chat rooms with a chat window and chat box}
+\req{Each private or group chat is a separate room (R5), and every room has a chat box and a chat window (R6).}
+
+Every room has a unique id: \code{dm:<name>} for private chats and
+\code{group:<name>} for groups. Incoming messages are stored per room id and unread counts are kept
+for rooms that are not open. One \code{ChatRoom} component (message window + input box) is used for
+both room types. Sent messages are not drawn locally; the client waits for the server's echo.
+
+\subsection*{Code snapshots}
+\snap{client/src/rooms.js}{1--17}{Room ids and which room an incoming private message belongs to}
+\begin{Verbatim}[firstnumber=1]
+// R5: ทุกห้องแชทมี id ไม่ซ้ำกัน แยกตามประเภท
+//   ห้อง private  → "dm:<ชื่อคู่สนทนา>"
+//   ห้อง group    → "group:<ชื่อกลุ่ม>"
+export const dmRoomId = (name) => `dm:${name}`;
+export const groupRoomId = (group) => `group:${group}`;
+
+export function parseRoomId(roomId) {
+  const i = roomId.indexOf(":");
+  return { type: roomId.slice(0, i), name: roomId.slice(i + 1) };
+}
+
+// private_msg ที่เข้ามาอยู่ห้องของ "อีกฝ่าย" เสมอ
+// (เราส่งหา C2 → server echo กลับมา from=เรา to=C2 → ห้อง dm:C2)
+// (C2 ส่งหาเรา → from=C2 to=เรา → ห้อง dm:C2 เดียวกัน)
+export function roomOfPrivateMsg(msg, me) {
+  return dmRoomId(msg.from === me ? msg.to : msg.from);
+}
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{46--51}{Store a message in its room; count unread messages}
+\begin{Verbatim}[firstnumber=46]
+  function addMessage(roomId, msg) {
+    setMessages((prev) => ({ ...prev, [roomId]: [...(prev[roomId] ?? []), msg] }));
+    if (roomId !== activeRoomRef.current) {
+      setUnread((prev) => ({ ...prev, [roomId]: (prev[roomId] ?? 0) + 1 }));
+    }
+  }
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{118--120}{Route incoming socket events to rooms}
+\begin{Verbatim}[firstnumber=118]
+    // R5: ข้อความที่เข้ามาถูกแยกลงห้องของตัวเอง
+    socket.on("private_msg", (msg) => addMessage(roomOfPrivateMsg(msg, myName), msg));
+    socket.on("group_msg", (msg) => addMessage(groupRoomId(msg.group), msg));
+\end{Verbatim}
+
+\snap{client/src/ChatRoom.jsx}{10--31}{ChatRoom: chat window auto-scroll + chat box submit}
+\begin{Verbatim}[firstnumber=10]
+// R6: ห้องแชท 1 ห้อง = หน้าต่างแสดงข้อความ (chat window) + ช่องพิมพ์ (chat box)
+// ใช้ component เดียวกันทั้งห้อง private และ group
+// แสดงแบบ terminal log: [เวลา] ผู้ส่ง: ข้อความ / ช่องพิมพ์มี prompt "<me>@<ห้อง>:~$"
+// onBack / backBadge: ปุ่ม [< back] สำหรับมือถือ (บนคอมถูกซ่อนด้วย CSS)
+// onSendFile: Feature file — ส่งไฟล์ด้วยปุ่ม [+file] / ลากมาวาง / วางรูปจาก clipboard
+export default function ChatRoom({ title, subtitle, messages, me, onSend, onSendFile, onBack, backBadge, disabledReason }) {
+  const [text, setText] = useState("");
+  const [dropping, setDropping] = useState(false); // Feature: file
+  const bottomRef = useRef(null);
+
+  // มีข้อความใหม่ (ทั้งที่ส่งเองและที่เข้ามา) → scroll ลงล่างสุด
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    onSend(trimmed);
+    setText("");
+  }
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{123--139}{Send from the open room: private\_msg or group\_msg}
+\begin{Verbatim}[firstnumber=123]
+  // R6: กดส่งในห้องไหน → emit event ตามประเภทห้อง
+  // ไม่เพิ่มข้อความลงจอเอง รอ server ส่งกลับมา (echo) เพื่อให้ทุกเครื่องเห็นข้อมูลเดียวกับ server
+  function sendToActiveRoom(input) {
+    // Feature: ping — ข้อความที่ขึ้นต้นด้วย "/" เป็นคำสั่ง ทำงานที่ client และแสดงผลเฉพาะจอเรา (ไม่ส่งเป็นแชท)
+    const roomId = activeRoom;
+    const text = handleInput(input, {
+      room: roomId,
+      socket: socketRef.current,
+      print: (line) => addMessage(roomId, systemMessage(line)),
+    });
+    if (text === null) return;
+
+    const { type, name } = parseRoomId(activeRoom);
+    setError(""); // ล้าง error เก่า ถ้าส่งไม่ผ่าน server จะส่ง error_msg ใหม่มา
+    if (type === "dm") socketRef.current.emit("private_msg", { to: name, text });
+    else socketRef.current.emit("group_msg", { group: name, text });
+  }
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{เริ่มเลย \newline (ต่อจาก “ต่อไปคือ R5 + R6 (ห้องแชทและ UI แชท) \ldots{} จะเริ่มเลยไหมครับ”)}{Start now. (Reply to the AI's question “Next is R5 + R6 (chat rooms and chat UI) \ldots{} shall I start?”)}{Created \code{rooms.js}, \code{ChatRoom.jsx}, \code{App.css}; rewrote \code{App.jsx} (sidebar opens rooms, messages per room, unread badges, private input disabled when the other user is offline).}
+\promptbox{2026-10-27}{เช็ก R5 R6 เรียบร้อยใช้ได้}{Checked R5 and R6, they work.}{Checked the 4 screenshots and marked R5 and R6 as done.}
+
+\clearpage
+\section{R7 -- Private messages}
+\req{A private message can be seen only by its sender and receiver.}
+
+The server emits the message directly to the receiver's socket and echoes it to the
+sender: two unicast emits, never a broadcast. The sender name and timestamp are set by the server
+from the socket's registered name, so a client cannot impersonate someone else. Text is validated at
+the server (1--1000 characters).
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{56--64}{Validate message text at the server}
+\begin{Verbatim}[firstnumber=56]
+// ข้อความแชท (R7, R11): ห้ามว่าง ห้ามยาวเกิน ตรวจที่ server เพราะ client ข้ามการตรวจฝั่งตัวเองได้
+function cleanText(socket, text) {
+  text = String(text ?? "").trim();
+  if (!text || text.length > MAX_TEXT_LENGTH) {
+    sendError(socket, "INVALID_TEXT", `Message must be 1–${MAX_TEXT_LENGTH} characters`);
+    return null;
+  }
+  return text;
+}
+\end{Verbatim}
+
+\snap{server/index.js}{125--138}{private\_msg: emit only to the receiver and the sender}
+\begin{Verbatim}[firstnumber=125]
+  socket.on("private_msg", ({ to, text } = {}) => {
+    const from = requireName();
+    if (!from) return;
+    const target = clients.get(to);
+    if (!target) return sendError(socket, "USER_NOT_FOUND", `User "${to}" is not online`);
+    text = cleanText(socket, text);
+    if (!text) return;
+
+    // R7: ส่งให้ผู้รับและผู้ส่งเท่านั้น ใช้ socket.emit ตรงถึง 2 คนนี้ ไม่ใช่ io.emit (broadcast)
+    // from และ timestamp กำหนดที่ server เสมอ client ปลอมเป็นคนอื่นไม่ได้
+    const msg = { from, to, text, timestamp: now() };
+    target.emit("private_msg", msg); // ถึงผู้รับ
+    if (target !== socket) socket.emit("private_msg", msg); // echo กลับให้ผู้ส่ง แสดงในห้องของตัวเอง
+  });
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{เริ่ม R7 เลย}{Start R7.}{Added \code{cleanText()} for \code{private\_msg} and \code{group\_msg} with comments on privacy; 13 automated tests, including “an outsider receives no frame” and “\code{from} cannot be forged”.}
+\promptbox{2026-10-27}{คิดว่า R7 test แล้วเอาจาก folder R5\_R6 มาใส่เลยได้ไหม}{For the R7 test, can we just reuse the evidence from the R5\_R6 folder?}{Partly: linked two existing screenshots, but explained that the outsider (C3) view still needed new evidence.}
+\promptbox{2026-10-27}{R7 เสร็จแล้ว}{R7 is done.}{Checked the outsider screenshots and server log, renamed files and marked R7 as done.}
+
+\clearpage
+\section{R8 -- Create a group}
+\req{A client can create a group; at first the creator is its only member.}
+
+Group names are 1--30 characters and unique (case-insensitive). The new group's
+member set contains only the creator, who also joins the Socket.IO room \code{group:<name>}. All
+clients receive the new group list, and the creator's client opens the room on
+\code{create\_group\_ok}. The team decided that a group stays even after all its members leave.
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{50--54}{Case-insensitive duplicate group check}
+\begin{Verbatim}[firstnumber=50]
+// R8: ชื่อกลุ่มห้ามซ้ำแบบไม่สนตัวพิมพ์ เหมือนชื่อผู้ใช้ (R3)
+function isGroupTaken(group) {
+  const lower = group.toLowerCase();
+  return [...groups.keys()].some((g) => g.toLowerCase() === lower);
+}
+\end{Verbatim}
+
+\snap{server/index.js}{140--154}{create\_group: creator is the only member and joins the room}
+\begin{Verbatim}[firstnumber=140]
+  socket.on("create_group", ({ group } = {}) => {
+    const name = requireName();
+    if (!name) return;
+    group = String(group ?? "").trim();
+    if (!group || group.length > MAX_GROUP_NAME_LENGTH) {
+      return sendError(socket, "INVALID_GROUP", `Group name must be 1–${MAX_GROUP_NAME_LENGTH} characters`);
+    }
+    if (isGroupTaken(group)) return sendError(socket, "GROUP_EXISTS", `Group "${group}" already exists`);
+
+    // R8: กลุ่มใหม่มีสมาชิกแค่ผู้สร้าง ไม่มีการเพิ่มคนอื่นให้อัตโนมัติ
+    groups.set(group, new Set([name]));
+    socket.join(`group:${group}`); // เข้า Socket.IO room ของกลุ่ม เพื่อรับ group_msg (R11)
+    broadcastGroupList(); // R9: ทุกคนเห็นกลุ่มใหม่
+    socket.emit("create_group_ok", { group }); // บอกผู้สร้าง ให้ client เปิดห้องกลุ่มได้ทันที
+  });
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{149--157}{Client: create-group form}
+\begin{Verbatim}[firstnumber=149]
+  // R8: สร้างกลุ่ม → server เพิ่มเราเป็นสมาชิกคนแรก แล้วส่ง group_list ใหม่ให้ทุกคน
+  function handleCreateGroup(e) {
+    e.preventDefault();
+    const group = groupInput.trim();
+    if (!group) return;
+    setError("");
+    socketRef.current.emit("create_group", { group });
+    setGroupInput("");
+  }
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{105--106}{Client: open the new group's room}
+\begin{Verbatim}[firstnumber=105]
+    // R8: สร้างกลุ่มสำเร็จ → เปิดห้องกลุ่มให้ทันที
+    socket.on("create_group_ok", ({ group }) => openRoom(groupRoomId(group)));
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{ทำ R8 เลย เมื่อกลุ่มสมาชิกออกไปหมดแล้ว ให้เหลือกลุ่มนั้นไว้เลย}{Do R8. When all members of a group have left, keep the group.}{Added name validation, \code{isGroupTaken}, the \code{create\_group\_ok} event, kept empty groups, and a create-group form in the sidebar; 15 automated tests.}
+\promptbox{2026-10-27}{check R8 แล้วใช่ได้หมด}{Checked R8, everything works.}{Checked the 4 screenshots and marked R8 as done.}
+
+\clearpage
+\section{R9 -- List of all groups and their members}
+\req{Every client can see all groups and the members of each group.}
+
+The server sends every group (not only the ones the client belongs to) with its
+member list, each time the data changes: register, create, join and disconnect. The sidebar shows
+each group with its member count and names, and marks groups the user has not joined.
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{70--75}{Broadcast all groups with their members}
+\begin{Verbatim}[firstnumber=70]
+// R9: ส่งกลุ่ม "ทั้งหมด" ทุกกลุ่ม ไม่ว่าใครสร้าง หรือผู้รับจะเป็นสมาชิกหรือไม่ พร้อมรายชื่อสมาชิก
+// เรียกทุกครั้งที่ข้อมูลกลุ่มเปลี่ยน: register (คนใหม่ได้รายการครบ), create_group, join_group, disconnect
+function broadcastGroupList() {
+  const list = [...groups].map(([name, members]) => ({ name, members: [...members] }));
+  io.to(REGISTERED).emit("group_list", { groups: list });
+}
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{273--293}{Client: show every group, its members and membership}
+\begin{Verbatim}[firstnumber=273]
+              {/* R9: แสดงทุกกลุ่มพร้อมสมาชิก / R5: กลุ่มที่เป็นสมาชิก → คลิกเปิดห้อง / R10: ยังไม่เป็นสมาชิก → ปุ่ม [join] */}
+              {groups.map((g) => {
+                const isMember = g.members.includes(me);
+                const roomId = groupRoomId(g.name);
+                return (
+                  <li key={g.name} className="group-row">
+                    <button
+                      className={`room-item ${activeRoom === roomId ? "active" : ""}`}
+                      onClick={() => openRoom(roomId)}
+                      disabled={!isMember}
+                    >
+                      <span>
+                        #{g.name}
+                        {bridges[g.name] && <BridgeMark /> /* Feature: discord */}
+                        <small>
+                          {g.members.length > 0
+                            ? `${memberCount(g.members.length)}: ${g.members.map(withYou).join(", ")}`
+                            : "No members"}
+                          {!isMember && " · not a member"}
+                        </small>
+                      </span>
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{ทำ R9 ต่อเลย}{Continue with R9.}{Verified that \code{group\_list} is sent at every change, added comments, showed member counts and “(you)”; 10 automated tests.}
+\promptbox{2026-10-27}{ทำ R10 เลยตอนนี้ R9 เรียบร้อย}{Do R10 now, R9 is done.}{Checked the 5 R9 screenshots and marked R9 as done.}
+
+\clearpage
+\section{R10 -- Join a group by oneself}
+\req{A client joins a group by itself; the creator cannot add other people.}
+
+\code{join\_group} carries only the group name. The server adds the name bound to
+the socket at registration, never a name from the payload, and there is no event that adds another
+user. A user who is already a member gets \code{ALREADY\_MEMBER}. The client shows a
+\code{[join]} button only for groups the user is not in.
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{156--170}{join\_group: only the caller's own name is added}
+\begin{Verbatim}[firstnumber=156]
+  socket.on("join_group", ({ group } = {}) => {
+    const name = requireName();
+    if (!name) return;
+    const members = groups.get(group);
+    if (!members) return sendError(socket, "GROUP_NOT_FOUND", "Group not found");
+    if (members.has(name)) return sendError(socket, "ALREADY_MEMBER", `You are already a member of "${group}"`);
+
+    // R10: เข้ากลุ่มได้เฉพาะ "ตัวเอง" เท่านั้น
+    // ใช้ชื่อที่ผูกกับ socket นี้ตอน register ไม่รับชื่อจาก payload จึงไม่มีทางเพิ่มคนอื่นเข้ากลุ่ม
+    // และไม่มี event ให้ผู้สร้างกลุ่มดึงคนอื่นเข้ามา
+    members.add(name);
+    socket.join(`group:${group}`); // เข้า Socket.IO room ของกลุ่ม เริ่มรับ group_msg ตั้งแต่ตอนนี้ (R11)
+    broadcastGroupList(); // R9: ทุกคนเห็นสมาชิกใหม่
+    socket.emit("join_group_ok", { group }); // บอกผู้ join ให้ client เปิดห้องกลุ่มได้ทันที
+  });
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{159--163}{Client: join request sends only the group name}
+\begin{Verbatim}[firstnumber=159]
+  // R10: ผู้ใช้กดเข้ากลุ่มเอง ส่งแค่ชื่อกลุ่ม server ใช้ชื่อของเราจาก socket
+  function handleJoinGroup(group) {
+    setError("");
+    socketRef.current.emit("join_group", { group });
+  }
+\end{Verbatim}
+
+\snap{client/src/App.jsx}{296--300}{Client: [join] button for groups the user is not in}
+\begin{Verbatim}[firstnumber=296]
+                    {!isMember && (
+                      <button className="join-btn" onClick={() => handleJoinGroup(g.name)}>
+                        [join]
+                      </button>
+                    )}
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-27}{ทำ R10 เลยตอนนี้ R9 เรียบร้อย}{Do R10 now, R9 is done.}{Added \code{ALREADY\_MEMBER}, the \code{join\_group\_ok} event, comments on why others cannot be added, and the \code{[join]} button; 15 automated tests, including “the creator puts another name in the payload and it is ignored”.}
+\promptbox{2026-10-28}{check R10 เรียบร้อยแล้ว}{Checked R10, it's done.}{Checked the 4 screenshots and marked R10 as done.}
+
+\clearpage
+\section{R11 -- Group messages}
+\req{A group message can be seen only by the group's members.}
+
+The server checks twice. Who may send: the sender must be in the group's member set,
+otherwise \code{NOT\_A\_MEMBER}. Who receives: the message is emitted only to the Socket.IO room
+\code{group:<name>}, which contains exactly the members' sockets. Members and room are always
+updated together (create/join add to both; disconnect removes from both).
+
+\subsection*{Code snapshots}
+\snap{server/index.js}{172--190}{group\_msg: membership check, then emit to the group room only}
+\begin{Verbatim}[firstnumber=172]
+  socket.on("group_msg", ({ group, text } = {}) => {
+    const from = requireName();
+    if (!from) return;
+    const members = groups.get(group);
+    if (!members) return sendError(socket, "GROUP_NOT_FOUND", "Group not found");
+    if (!members.has(from)) return sendError(socket, "NOT_A_MEMBER", "You are not a member of this group");
+    text = cleanText(socket, text);
+    if (!text) return;
+
+    // R11: เห็นเฉพาะสมาชิก ตรวจ 2 ชั้น
+    //   ชั้นที่ 1 (ใครส่งได้): members.has(from) ด้านบน คนที่ไม่ใช่สมาชิกได้ NOT_A_MEMBER
+    //   ชั้นที่ 2 (ใครได้รับ): io.to(room) ส่งเฉพาะ socket ที่อยู่ใน room "group:<ชื่อ>"
+    // members กับ room ตรงกันเสมอ: create/join → เพิ่มทั้งสองที่พร้อมกัน
+    // disconnect → ลบออกจาก members และ Socket.IO ถอด socket ออกจากทุก room ให้เอง
+    // ผู้ส่งอยู่ใน room ด้วย จึงได้รับข้อความของตัวเองกลับมา (echo) แสดงในห้องของตัวเอง
+    const msg = { group, from, text, timestamp: now() };
+    io.to(`group:${group}`).emit("group_msg", msg);
+    onGroupMessage(msg); // จุดเชื่อม Feature เสริม: เช่น discord bridge ส่งต่อข้อความออกไป Discord
+  });
+\end{Verbatim}
+
+\subsection*{Generative AI prompts used}
+\promptbox{2026-10-28}{ทำ R11 เลย}{Do R11.}{Reviewed the logic (already correct) and added comments explaining the two checks; 17 automated tests, including “an outsider receives no frame” and “a new user reusing a former member's name gets no membership”.}
+\promptbox{2026-10-28}{check R11 แล้ว \newline ได้เลยย้าย test อัตโนมัติทั้งหมดอยู่ในโฟลเดอร์ชั่วคราว เข้ามาในโปรเจกต์เลย}{Checked R11. Go ahead and move all the automated tests from the temporary folder into the project.}{Checked the 8 screenshots; moved the tests into \code{server/tests/} with \code{npm test} (107 checks pass).}
+
+\end{document}

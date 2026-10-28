@@ -1,0 +1,216 @@
+% R1 – System Architecture Design: network protocols used in the project
+% Compile: pdflatex R1_protocols.tex   (or upload to Overleaf)
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\definecolor{codebg}{HTML}{F4F6F8}
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single, rulecolor=\color{gray!40},
+  columns=fullflexible, keepspaces=true,
+  breaklines=true, xleftmargin=4pt, xrightmargin=4pt
+}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\setlist{nosep, leftmargin=*}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\textbf{R1 -- System Architecture Design}\\[2pt]
+\large Computer Network Protocols Used in the Simple Chat Application}
+\author{{[Team name]} \\ {[Member names]}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Overview: the protocol stack}
+
+The system is \textbf{client--server}: two or more browser clients on separate
+computers connect to one Node.js server, and the server decides who receives
+each message. Every chat message travels through the following stack:
+
+\begin{lstlisting}
+Socket.IO events      <- our application protocol (register, private_msg, group_msg, ...)
+WebSocket (RFC 6455)  <- full-duplex frames on one long-lived connection
+HTTP/1.1              <- used once per connection, only to upgrade to WebSocket
+TCP                   <- reliable, ordered byte stream to the server's port 3000
+IPv4                  <- addresses each computer on the LAN / Wi-Fi
+Wi-Fi / Ethernet
+\end{lstlisting}
+
+\section{Core protocols}
+
+\subsection{IPv4 (Network layer)}
+\begin{description}
+  \item[What:] The addressing protocol that identifies each computer on the network.
+  \item[Why:] Our clients run on different physical computers, so they need to
+    find the server machine. IPv4 is used by every LAN, Wi-Fi network and phone hotspot.
+  \item[How:]
+    \begin{itemize}
+      \item The server listens on \code{0.0.0.0} (all network interfaces), not
+        \code{localhost}, so other machines can reach it.
+      \item At startup the server prints its IPv4 addresses.
+      \item Users type \code{http://<server IP>:3000} on the login screen. Nothing is hard-coded.
+    \end{itemize}
+\end{description}
+
+\subsection{TCP (Transport layer)}
+\begin{description}
+  \item[What:] A connection-oriented transport protocol. It uses a 3-way
+    handshake, delivers data reliably and in order, and retransmits lost data.
+  \item[Why:] In a chat, a lost or reordered message is a visible error. TCP
+    guarantees both delivery and order; UDP guarantees neither. Chat traffic is
+    small, so TCP's overhead doesn't matter.
+  \item[How:]
+    \begin{itemize}
+      \item Each client keeps \textbf{one TCP connection} to port 3000 for its whole session.
+      \item The connection's lifetime is the user's online status. When a tab
+        closes, TCP closes and the server receives \code{disconnect}. It then
+        frees the user's name, removes the user from all groups and broadcasts
+        the updated lists.
+    \end{itemize}
+\end{description}
+
+\subsection{HTTP/1.1 (Application layer, used once per connection)}
+\begin{description}
+  \item[What:] The web's request/response protocol.
+  \item[Why:] A WebSocket connection is opened with a standard HTTP request, so
+    it passes through firewalls like normal web traffic.
+  \item[How:]
+    \begin{itemize}
+      \item The browser sends one \code{GET /socket.io/?EIO=4\&transport=websocket}
+        with the header \code{Upgrade: websocket}.
+      \item The server answers \code{101 Switching Protocols}, and the same TCP
+        connection becomes a WebSocket.
+      \item \textbf{Every other HTTP path returns 404.} There is no REST API for
+        sending or fetching messages. This shows that chat uses sockets only (R2).
+    \end{itemize}
+\end{description}
+
+\subsection{WebSocket (RFC 6455)}
+\begin{description}
+  \item[What:] A full-duplex protocol where both sides can send frames at any
+    time over one persistent connection.
+  \item[Why:] With HTTP polling, the client must repeatedly ask ``anything new?''.
+    That adds delay and wastes requests. With WebSocket, the server
+    \textbf{pushes} a message the moment it arrives.
+  \item[How:]
+    \begin{itemize}
+      \item The client forces \code{transports: ["websocket"]}, so no polling is used.
+      \item Every event is one frame, visible in DevTools $\rightarrow$ Network
+        $\rightarrow$ WS, for example:
+\begin{lstlisting}
+42["private_msg",{"to":"C2","text":"hi"}]
+\end{lstlisting}
+        Here \code{4} is the Engine.IO message type and \code{2} is the Socket.IO event type.
+      \item File data is sent as \textbf{binary frames}.
+    \end{itemize}
+\end{description}
+
+\subsection{Socket.IO (our application protocol)}
+\begin{description}
+  \item[What:] A protocol on top of WebSocket that adds named events, rooms,
+    acknowledgements and a heartbeat. The set of events and their payloads is
+    our own message format, documented in \code{docs/PROTOCOL.md}.
+  \item[Why:] Browsers cannot open raw TCP sockets. Socket.IO works in the
+    browser and still gives one long-lived socket per client. Its features match
+    our requirements directly:
+    \begin{itemize}
+      \item \textbf{Named events} give message framing: \code{register},
+        \code{private\_msg}, \code{create\_group}, \code{join\_group}, \code{group\_msg}.
+      \item \textbf{Rooms} implement groups: \code{io.to("group:g1")} reaches
+        only sockets in that room (R11).
+      \item \textbf{Acknowledgements} give request/response over the socket (games, file chunks).
+      \item The \textbf{heartbeat} (a ping every 25\,s, with a 20\,s timeout)
+        detects connections that dropped without closing.
+    \end{itemize}
+  \item[How:]
+    \begin{itemize}
+      \item \textbf{Private message (R7):} the server emits only to the
+        receiver's socket, plus an echo to the sender.
+      \item \textbf{Group message (R11):} the server first checks membership,
+        then emits to the group's room only.
+      \item The \textbf{sender's identity comes from the name bound to the socket
+        at \code{register}}, never from the message, so nobody can impersonate another user.
+      \item The server logs every received event
+        (\code{[recv] C1 -> private\_msg \{...\}}) as live evidence that all chat
+        goes through the socket.
+    \end{itemize}
+\end{description}
+
+\section{Protocols used by the special features}
+
+{\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.3cm} L L >{\raggedright\arraybackslash}p{6.4cm}@{}}
+\toprule
+\textbf{Feature} & \textbf{Protocols} & \textbf{Why} & \textbf{How} \\
+\midrule
+\textbf{AI word-guessing game}
+& Socket.IO (the AI is another client) + \textbf{HTTPS} to the AI APIs
+& Every AI message must go through the socket like a human's. HTTPS encrypts
+  the requests and keeps the API keys secret.
+& The AI bot is a separate program that logs in as user \code{AI} using a
+  secret token. The server forwards \code{/guess} commands to it as
+  \code{bot\_request} (with an ack). The bot joins the group itself and sends
+  hints as normal \code{group\_msg}. It calls Claude / ChatGPT / Gemini over
+  HTTPS. The answer and the keys stay only on the bot. \\
+\midrule
+\textbf{Rock-paper-scissors game}
+& Our own \textbf{application-level protocol} on Socket.IO: request/ack +
+  a server-side state machine
+& Both players must choose ``at the same time'', and neither may see the
+  other's move first.
+& Every command (\code{game\_challenge}, \code{game\_respond}, \code{game\_move},
+  \code{game\_quit}) gets an ack \code{\{ok, code\}}. The server tracks
+  \code{pending} $\rightarrow$ \code{playing} $\rightarrow$ \code{finished}. It
+  keeps each move hidden and tells the opponent only that a move was made
+  (\code{moved}). Once both have chosen, it reveals both moves in one
+  \code{round} update. Updates go only to the 2 players. A disconnect ends the
+  game. Nobody can cheat by reading WebSocket frames. \\
+\midrule
+\textbf{File / picture sending}
+& Binary Socket.IO frames + \textbf{chunking} + \textbf{stop-and-wait ACK}
+& Sending a whole file in one event would exceed Socket.IO's 1\,MB message
+  limit and show no progress.
+& Files ($\le$ 5\,MB) are split into 64\,KB chunks with framing
+  \code{\{id, seq, data\}}. The sender waits for each chunk's ack before
+  sending the next. This is flow control at the application level, like TCP
+  ACKs. The server checks who owns the transfer, the chunk order and the size,
+  then relays each chunk only to the receiver or group members. It never
+  stores the file. \\
+\midrule
+\textbf{Discord bridge}
+& \textbf{Discord Gateway} (WebSocket over TLS) + \textbf{Discord REST API} (HTTPS)
+& The Gateway delivers Discord messages in real time; REST is how Discord
+  accepts new posts.
+& Our server acts as a \emph{client} of Discord. It receives
+  \code{MessageCreate} events through the Gateway and forwards them to the
+  \code{\#discord} group room. When a member posts in that group, it sends the
+  message to Discord with \code{POST /channels/\{id\}/messages}. Inside our app,
+  everything still travels over Socket.IO. \\
+\bottomrule
+\end{tabularx}
+}
+
+\section{Summary}
+
+Our chat uses \textbf{Socket.IO events over WebSocket over TCP over IPv4}. HTTP
+is used only once per connection to upgrade to WebSocket. \textbf{TCP}
+guarantees messages arrive complete and in order, \textbf{WebSocket} lets the
+server push messages instantly, and \textbf{Socket.IO} rooms and events let the
+server alone decide who receives each message. The special features reuse the
+same socket. They add HTTPS for AI calls, an application-level game protocol,
+chunked binary transfer with ACKs, and Discord's Gateway and REST APIs.
+
+\end{document}

@@ -542,3 +542,30 @@
   > ตอนนี้ Cache ของนายน่าจะโดนรีเซ็ต ช่วยอ่านไฟล์ทั้งหมดก่อนได้ไหม / แก้เลย
 - **ผลลัพธ์:** แก้ 6 จุด: `server/features/index.js` comment "4 ฟังก์ชัน" → 5 / `client/src/App.jsx` ย่อหน้า `onSendFile` / `README.md` ช่อง AI feature ใน Tech Stack (เดิม TODO) / เรียงตาราง Part 3 ใน README + HandbookFeatures เป็น 4 ก่อน 5 / `client/src/features/README.md` เพิ่มแถว `file` และระบุว่า `/ping` เป็นตัวสำรอง / `docs/ARCHITECTURE.md` สไลด์ 12 → 13 หน้า
 - **หมายเหตุ:** client build ผ่าน / ไม่ได้แก้ logic ของ server จึงไม่ต้องรัน test
+
+### [2026-10-28] R1: คำตอบเรื่อง protocol (What / Why / How) เป็น LaTeX
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R1
+- **Prompt:**
+  > ตอบคำถาม R1 (Explain the computer network protocols used in the project: what / why / how) เป็น English โดย Feature เสริมมีแค่ 4 อันคือ AI-guess, RPS game, File/picture sent, discord bridge / ขอเป็น Latex ได้ไหม
+- **ผลลัพธ์:** `docs/R1_protocols.tex`: protocol stack, IPv4 / TCP / HTTP / WebSocket / Socket.IO (What / Why / How), ตาราง protocol ของ Feature เสริม 4 ตัว, สรุป
+- **หมายเหตุ:** เครื่องนี้ไม่มี pdflatex ยังไม่ได้ compile จริง (ใช้ Overleaf ได้) / ต้องเติม [Team name] [Member names]
+
+### [2026-10-28] R2–R11: Code Snapshot + Generative AI Prompt เป็น LaTeX
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** R2–R11 (เอกสารส่งอาจารย์)
+- **Prompt:**
+  > R2 ถึง R11 อาจารย์ให้ใส่เป็น Code Snapshot กับ Generative AI Prompt ที่ใช้
+- **ผลลัพธ์:** สร้าง `docs/R2_R11_code_prompts.tex` (ภาษาอังกฤษ, compile ด้วย XeLaTeX) แต่ละ requirement มีคำอธิบายสั้น ๆ, code snapshot ที่ดึงจากไฟล์จริงพร้อมเลขบรรทัดจริง และ prompt จาก PromptRecord.md (ภาษาไทยต้นฉบับ + คำแปลอังกฤษ + สิ่งที่ AI ทำ) R5 กับ R6 รวมเป็นหัวข้อเดียว
+- **หมายเหตุ:** ยังไม่ได้ compile เพราะเครื่องนี้ไม่มี LaTeX ถ้าแก้ `server/index.js` หรือ `client/src/*` จนบรรทัดเลื่อน ต้องอัปเดตเลขบรรทัดใน snapshot ด้วย
+
+### [2026-10-28] Part 3: Code Snapshot + Generative AI Prompt ของ Feature เสริม เป็น LaTeX
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 (เอกสารส่งอาจารย์)
+- **Prompt:**
+  > ทีนี้ก็เป็นพวก Feature เสริมทำเหมือนกัน Code Snapshot กับ Generative AI Prompt ที่ใช้ เอาแค่ Feature ที่เลือกนะ
+- **ผลลัพธ์:** สร้าง `docs/Part3_features_code_prompts.tex` (ภาษาอังกฤษ, XeLaTeX) รูปแบบเดียวกับ R2–R11: ส่วนนำ (จุดเชื่อม 5 จุด + prompt แยกโครงสร้าง feature) และ 4 feature คือ AI word-guessing, RPS, File/picture, Discord bridge แต่ละตัวมี What it does, คำอธิบายการทำงานบน network, code snapshot จากไฟล์จริงพร้อมเลขบรรทัด และ prompt (ไทย + อังกฤษ + สิ่งที่ AI ทำ) ไม่รวม Cloud กับ /ping และไม่รวม prompt ที่เกี่ยวกับ Cloud (Railway)
+- **หมายเหตุ:** ยังไม่ได้ compile เพราะเครื่องนี้ไม่มี LaTeX
