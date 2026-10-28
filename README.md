@@ -196,6 +196,9 @@ ok    features/f06-file.test.mjs  (27 passed, 0 failed)
 
 ## สมาชิกในทีม
 
-| ชื่อ | รหัสนักศึกษา | หน้าที่ |
-|---|---|---|
-| | | |
+| ชื่อ | รหัสนักศึกษา | 
+|---|---|
+| Thanakrit Weeraphatiwat | 6731323721 |
+| Wattikon Nongnamkhao    | 6731349021 |
+| Teerat Suknumkum        | 6731326621 |
+| Thanat Srijaratkul      | 6731324321 |
