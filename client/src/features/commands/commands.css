@@ -1,0 +1,2 @@
+/* Feature: ping — ผลลัพธ์ของ slash command แสดงเป็นบรรทัดสีเทาแบบ output ของ terminal (ไม่มีเวลา/ชื่อผู้ส่ง) */
+.msg.system { display: block; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }

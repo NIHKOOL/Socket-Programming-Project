@@ -4,6 +4,10 @@ import { dmRoomId, groupRoomId, parseRoomId, roomOfPrivateMsg } from "./rooms.js
 import ChatRoom from "./ChatRoom.jsx";
 import { isTouchDevice } from "./device.js";
 import { BridgeMark, bridgeSubtitle } from "./features/discord/index.jsx"; // Feature: discord
+import { handleInput } from "./features/commands/index.js"; // Feature: ping
+import { systemMessage } from "./features/commands/SystemLine.jsx"; // Feature: ping
+import { setupPingProbe } from "./features/ping/ping.js"; // Feature: ping
+import { setupGame } from "./features/game/index.js"; // Feature: game
 import "./App.css";
 
 export default function App() {
@@ -95,6 +99,10 @@ export default function App() {
     socket.on("join_group_ok", ({ group }) => openRoom(groupRoomId(group)));
     // Feature: discord — server บอกว่ากลุ่มไหน bridge กับ Discord
     socket.on("bridge_info", (info) => setBridges((prev) => ({ ...prev, [info.group]: info })));
+    // Feature: ping — มีคน /ping <ชื่อเรา> → ตอบอัตโนมัติ + แจ้งในห้อง private กับคนนั้น
+    setupPingProbe(socket, (from, line) => addMessage(dmRoomId(from), systemMessage(line)));
+    // Feature: game — ข้อความของเกมแสดงในห้อง private กับคู่แข่ง
+    setupGame(socket, (opponent, line) => addMessage(dmRoomId(opponent), systemMessage(line)), () => myName);
 
     // R5: ข้อความที่เข้ามาถูกแยกลงห้องของตัวเอง
     socket.on("private_msg", (msg) => addMessage(roomOfPrivateMsg(msg, myName), msg));
@@ -103,7 +111,16 @@ export default function App() {
 
   // R6: กดส่งในห้องไหน → emit event ตามประเภทห้อง
   // ไม่เพิ่มข้อความลงจอเอง รอ server ส่งกลับมา (echo) เพื่อให้ทุกเครื่องเห็นข้อมูลเดียวกับ server
-  function sendToActiveRoom(text) {
+  function sendToActiveRoom(input) {
+    // Feature: ping — ข้อความที่ขึ้นต้นด้วย "/" เป็นคำสั่ง ทำงานที่ client และแสดงผลเฉพาะจอเรา (ไม่ส่งเป็นแชท)
+    const roomId = activeRoom;
+    const text = handleInput(input, {
+      room: roomId,
+      socket: socketRef.current,
+      print: (line) => addMessage(roomId, systemMessage(line)),
+    });
+    if (text === null) return;
+
     const { type, name } = parseRoomId(activeRoom);
     setError(""); // ล้าง error เก่า ถ้าส่งไม่ผ่าน server จะส่ง error_msg ใหม่มา
     if (type === "dm") socketRef.current.emit("private_msg", { to: name, text });

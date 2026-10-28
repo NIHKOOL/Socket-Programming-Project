@@ -15,5 +15,8 @@
 
 | Feature | โฟลเดอร์ | หมายเหตุ |
 |---|---|---|
+| เกมทายคำ AI (`guess`) | [guess/](guess/commands.js) | `/guess start [หมวด] [claude\|chatgpt\|gemini]` `hints` `stop` `ai` + ป้าย `[ai]` (แตะ `ChatRoom.jsx`: ข้อความที่มี `source` ไม่ใช่ของเรา) |
+| เกม RPS (`game`) | [game/](game/index.js) | คำสั่ง `/play` `/accept` `/decline` `/move` `/quit` (ลงทะเบียนผ่าน `gameCommands`) ข้อความเกมแสดงในห้อง private กับคู่แข่ง |
+| /ping + slash command (`ping`) | [commands/](commands/index.js), [ping/](ping/ping.js) | ระบบคำสั่ง (`/help`) ใช้ต่อกับคำสั่งอื่นได้ เพิ่มคำสั่งใน `COMMANDS` ที่ `commands/index.js` |
 | Discord bridge (`discord`) | [discord/](discord/index.jsx) | ป้าย `⇄ discord` / `[discord]`, แตะ core ที่ `App.jsx` และ `ChatRoom.jsx` (ค้น `Feature: discord`) |
 | Cloud (`cloud`) | — (ไม่มีโฟลเดอร์) | แก้ core จุดเดียว: `client/src/socket.js` ให้ build แล้วใช้ Server URL = URL เดียวกับหน้าเว็บ |

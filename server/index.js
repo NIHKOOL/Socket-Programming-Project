@@ -4,7 +4,7 @@
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { Server } from "socket.io";
-import { featureNames, handleHttp, initFeatures, onGroupMessage, setupSocket } from "./features/index.js";
+import { checkRegister, featureNames, handleHttp, initFeatures, onGroupMessage, setupSocket } from "./features/index.js";
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -79,15 +79,20 @@ io.on("connection", (socket) => {
 
   // R2: log ทุก event ที่รับเข้ามาผ่าน socket นี้ ใช้แสดงตอน demo ว่าข้อความทุกอย่างวิ่งผ่าน socket
   socket.onAny((event, payload) => {
-    console.log(`[recv] ${socket.data.name ?? socket.id} -> ${event} ${JSON.stringify(payload)}`);
+    // ซ่อน token (รหัสลับของ AI bot ตอน register) ไม่ให้หลุดลง log
+    const shown = JSON.stringify(payload, (key, value) => (key === "token" ? "***" : value));
+    console.log(`[recv] ${socket.data.name ?? socket.id} -> ${event} ${shown}`);
   });
 
-  socket.on("register", ({ name } = {}) => {
-    name = String(name ?? "").trim();
+  socket.on("register", (payload = {}) => {
+    const name = String(payload?.name ?? "").trim();
     if (!name || name.length > MAX_NAME_LENGTH) {
       return sendError(socket, "INVALID_NAME", `Name must be 1–${MAX_NAME_LENGTH} characters`);
     }
     if (socket.data.name) return sendError(socket, "ALREADY_REGISTERED", "Already registered");
+    // จุดเชื่อม Feature เสริม: ชื่อที่ feature สงวนไว้ (ชื่อ "AI" ของ AI bot ต้องมีรหัสลับ)
+    const denied = checkRegister(name, payload);
+    if (denied) return sendError(socket, denied.code, denied.message);
     if (isNameTaken(name)) return sendError(socket, "NAME_TAKEN", `Name "${name}" is already taken`); // R3
 
     // R3: จองชื่อ → ผูกชื่อกับ socket นี้ → ชื่อนี้จะว่างอีกครั้งตอน disconnect

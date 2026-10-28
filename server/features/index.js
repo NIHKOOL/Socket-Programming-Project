@@ -12,14 +12,20 @@
 //     setupSocket(socket, ctx) { ... },
 //     // (ไม่บังคับ) core ส่งข้อความกลุ่มให้สมาชิกเสร็จแล้ว (ผ่านการตรวจสิทธิ์ R11 แล้ว) ใช้ส่งต่อออกนอกระบบ
 //     onGroupMessage(msg) { ... },
+//     // (ไม่บังคับ) ตรวจชื่อตอน register ก่อนจองชื่อ (R3) คืน { code, message } เพื่อปฏิเสธ หรือ null ถ้าผ่าน
+//     checkRegister(name, payload) { ... },
 //   };
 //
 // ctx = { io, clients, groups, requireName, sendError, now } เป็นตัวเดียวกับที่ core ใช้ (ดู HandbookFeatures.md)
 
+import "./env.js"; // โหลด server/.env ก่อน feature ใดอ่านค่าลับ
 import cloud from "./cloud.js";
 import discord from "./discord.js";
+import ping from "./ping.js";
+import game from "./game.js";
+import bot from "./bot.js";
 
-const features = [cloud, discord];
+const features = [cloud, discord, ping, game, bot];
 
 // เรียกจาก core ครั้งเดียว หลังสร้าง io และ state (clients, groups)
 export function initFeatures(app) {
@@ -40,6 +46,15 @@ export function setupSocket(socket, ctx) {
 // เรียกจาก core หลังส่ง group_msg ให้สมาชิกแล้ว (msg = { group, from, text, timestamp })
 export function onGroupMessage(msg) {
   for (const f of features) f.onGroupMessage?.(msg);
+}
+
+// เรียกจาก register ของ core ก่อนจองชื่อ: feature ตัวแรกที่ปฏิเสธชนะ (เช่น bot สงวนชื่อ "AI")
+export function checkRegister(name, payload) {
+  for (const f of features) {
+    const denied = f.checkRegister?.(name, payload);
+    if (denied) return denied;
+  }
+  return null;
 }
 
 export const featureNames = () => features.map((f) => f.name);

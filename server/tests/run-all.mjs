@@ -15,7 +15,20 @@ const TIMEOUT_MS = 30_000;
 
 // env ของ server และ test: NODE_ENV=test → ไม่โหลด server/.env และล้าง token
 // test จึงไม่ไปต่อ Discord จริง และไม่มีกลุ่ม #discord โผล่มากวน test ของ core (R8, R9)
-const TEST_ENV = { ...process.env, NODE_ENV: "test", DISCORD_BOT_TOKEN: "", DISCORD_CHANNEL_ID: "" };
+// GAME_INVITE_TIMEOUT_MS: คำท้าเกมหมดอายุเร็ว (ปกติ 60 วินาที) ให้ test รอไม่นาน
+// AI_BOT_TOKEN: รหัสลับของ AI bot (test f05 เปิด bot เองด้วยค่านี้)
+// GUESS_FAKE_AI: เกมทายคำ (ใน AI bot) ใช้โจทย์ปลอม ไม่เรียก AI จริง / GUESS_DURATION_MS: เกมยาว 3 วินาที (ปกติ 5 นาที)
+const TEST_ENV = {
+  ...process.env,
+  NODE_ENV: "test",
+  DISCORD_BOT_TOKEN: "",
+  DISCORD_CHANNEL_ID: "",
+  GAME_INVITE_TIMEOUT_MS: "1500",
+  AI_BOT_TOKEN: "test-bot-token",
+  GUESS_FAKE_AI: "1",
+  GUESS_DURATION_MS: "3000",
+  GUESS_FEEDBACK_COOLDOWN_MS: "500", // ทายผิดถี่ ๆ: AI ตอบคนเดิมได้ 1 ครั้งต่อ 0.5 วินาที (ปกติ 5 วินาที)
+};
 
 const filter = process.argv[2] ?? "";
 const listTests = (dir, prefix) =>

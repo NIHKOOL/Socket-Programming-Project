@@ -30,6 +30,10 @@
 │       ├── App.css      #   style ทั้งแอป (terminal + responsive มือถือ ที่ @media max-width: 720px)
 │       ├── device.js    #   ตรวจจอสัมผัส (ไม่ autofocus บนมือถือ)
 │       └── features/    #   Feature เสริม Part 3 ฝั่ง client (1 โฟลเดอร์ต่อ feature)
+├── ai-bot/              # AI bot (Feature เกมทายคำ): client อีกตัวที่ต่อ server ด้วย Socket.IO เป็นผู้ใช้ชื่อ AI
+│   ├── index.js         #   socket: login, รับ bot_request, join_group / group_msg
+│   ├── game.js          #   กติกาเกมทายคำ (คำตอบอยู่ที่ bot เท่านั้น)
+│   └── ai-providers/    #   Claude / ChatGPT / Gemini (API key ใน ai-bot/.env)
 ├── docs/
 │   ├── PROTOCOL.md      # รูปแบบข้อความที่ client/server ส่งหากัน (อ่านก่อนเขียนโค้ด!)
 │   ├── ARCHITECTURE.md  # แผนภาพระบบ + เหตุผลการเลือกโปรโตคอล (ใช้ทำสไลด์ R1)
@@ -48,7 +52,7 @@
 │       └── features/    #   หลักฐานของ Feature เสริม
 ├── Handbook.md          # core R1–R11 ทำงานอย่างไร + map ไปหาโค้ดทีละขั้น (อ่านก่อนแก้โค้ด!)
 ├── HandbookFeatures.md  # Feature เสริม (Part 3) ทำงานอย่างไร + วิธีเพิ่ม feature ใหม่
-├── package.json         # คำสั่งรวมสำหรับ Cloud: npm run build / npm start
+├── package.json         # คำสั่งรวม: npm run build / npm start / npm run bot / npm test
 ├── CLAUDE.md            # บริบทโปรเจกต์สำหรับ Claude Code
 ├── PromptRecord.md      # บันทึก prompt ที่ทีมใช้กับ AI
 └── README.md
@@ -63,9 +67,11 @@ git clone <repo-url>
 cd Network_Socket_project
 cd server && npm install
 cd ../client && npm install
+cd ../ai-bot && npm install    # AI bot ของเกมทายคำ (Feature เสริม)
 ```
 
 Feature เสริมบางตัวต้องใช้ค่าลับ (token / API key) ให้คัดลอก [server/.env.example](server/.env.example) เป็น `server/.env` แล้วใส่ค่า (**ห้าม commit** `.env`)
+AI bot ใช้ไฟล์ของตัวเอง: [ai-bot/.env.example](ai-bot/.env.example) → `ai-bot/.env` (API key ของ AI + `AI_BOT_TOKEN` ค่าเดียวกับใน `server/.env`)
 ถ้าไม่ใส่ feature นั้นจะปิดตัวเอง แอปยังทำงานปกติ ถ้า deploy บน Cloud ให้ใส่ค่าเดียวกันใน environment variables ของ host
 
 ## วิธีรัน
@@ -78,6 +84,8 @@ npm start          # หรือ npm run dev เพื่อให้ restart �
 ```
 
 Server จะ listen ที่ `0.0.0.0:3000` เพื่อให้เครื่องอื่นในเครือข่ายเชื่อมต่อเข้ามาได้ (เปลี่ยน port ได้ด้วย env `PORT`)
+
+**AI bot (เกมทายคำ `/guess`)**: รันอีก terminal ด้วย `npm run bot` (จาก root) — เป็น client อีกตัวที่ต่อเข้า server เป็นผู้ใช้ชื่อ `AI` ดู [guess_TEST.md](docs/features/guess_TEST.md)
 
 ### 2. รัน Client (แต่ละเครื่อง)
 
@@ -160,13 +168,15 @@ ok    features/f00-feature-hooks.test.mjs  (3 passed, 0 failed)
 ### Part 3 — Special Features (4, ข้อละ 1)
 
 โค้ด, test, เอกสาร และหลักฐานของ Feature เสริมแยกจาก core ทั้งหมด ดู [HandbookFeatures.md](HandbookFeatures.md)
+นับคะแนนได้สูงสุด 4 ฟีเจอร์ (ข้อละ 1) และ**ต้องมี AI อย่างน้อย 1**
 
 | # | ฟีเจอร์ | สถานะ | ผู้รับผิดชอบ |
 |---|---|---|---|
 | 1 | Deploy บน Cloud (`cloud`) — **⏸ พักไว้ ยังไม่นับคะแนน** (Render ใช้ได้แต่ Discord login ไม่ได้ / Railway ใช้ไม่ได้) โค้ดยังอยู่ ใช้รันแบบ port เดียวบนเครื่องได้ · [checklist](docs/features/cloud_TEST.md) | ⏸ | |
 | 2 | Discord bridge (`discord`) — กลุ่ม `#discord` ↔ channel ใน Discord จริง · [checklist + วิธีตั้ง bot](docs/features/discord_TEST.md) · **ใช้งานได้บนเครื่อง** (หลักฐานยังไม่ได้เก็บ) | ✅ | |
-| 3 | AI ผ่าน slash command `/ai`, `/summarize` (`ai`) — **AI บังคับอย่างน้อย 1** | ⬜ | |
-| 4 | (ยังไม่เลือก: ส่งไฟล์ / `/ping` + typing) | ⬜ | |
+| 3 | **เกมทายคำ AI** (`guess`) — **Claude / ChatGPT / Gemini** (เลือกได้) คิดคำ + ใบ้ทุก 30 วินาที คนในกลุ่มแข่งทายเป็นภาษาอังกฤษ 5 นาที — **AI เป็น client อีกตัว** (`ai-bot/`, `npm run bot`) ส่งทุกข้อความผ่าน socket **(AI บังคับ)** · [checklist](docs/features/guess_TEST.md) · โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน **ต้องใส่ API key อย่างน้อย 1 เจ้าแล้วทดสอบกับ AI จริง** | 🟨 | |
+| 5 | เกมเป่ายิ้งฉุบผ่าน socket (`game`) — `/play rps <ชื่อ>`, server ตัดสินและซ่อนคำตอบ · [checklist](docs/features/game_TEST.md) · โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน **รอทดสอบด้วยมือ** | 🟨 | |
+| 4 | `/ping` / `/ping <ชื่อ>` วัด round-trip time + ระบบ slash command (`ping`) · [checklist](docs/features/ping_TEST.md) · โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน **รอทดสอบด้วยมือ** | 🟨 | |
 
 สัญลักษณ์: ⬜ ยังไม่เริ่ม · 🟨 กำลังทำ · ✅ เสร็จและทดสอบข้ามเครื่องแล้ว
 

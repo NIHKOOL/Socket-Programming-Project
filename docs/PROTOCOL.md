@@ -115,10 +115,31 @@ event ของ Feature เสริมอยู่ในหัวข้อน�
 | Feature | event | ทิศทาง | payload | ความหมาย |
 |---|---|---|---|---|
 | `cloud` | _(ไม่มี event ใหม่)_ | — | — | server เสิร์ฟไฟล์หน้าเว็บผ่าน HTTP `GET` เท่านั้น ข้อความแชทยังใช้ event ของ core ทั้งหมด |
+| `ping` | `ping_check` **(มี ack)** | Client → Server → ack | ส่ง: `seq` / ack: `seq`, `serverTime`, `uptimeSec`, `online` | วัด RTT: client จับเวลาตั้งแต่ emit จนได้ ack (ต้อง register ก่อน ไม่งั้นไม่ตอบ ack + `NOT_REGISTERED`) |
+| `ping` | `ping_user` **(มี ack)** | Client → Server → ack | ส่ง: `to`, `seq` / ack: `{ ok: true, seq, to, legMs }` หรือ `{ ok: false, code: USER_NOT_FOUND | SELF | TIMEOUT, seq }` | `/ping <ชื่อ>`: server ส่ง `ping_probe` ต่อให้ปลายทาง แล้วตอบผู้สั่งพร้อม `legMs` = เวลาช่วง server ↔ ปลายทาง |
+| `ping` | `ping_probe` **(มี ack)** | Server → Client (ปลายทาง) → ack | `from` (ชื่อจริงของผู้สั่ง), `seq` | client ต้องตอบ ack ทันที (server รอ 2 วินาที) |
+| `game` | `game_challenge` **(ack)** | Client → Server | `to`, `game` (`rps`), `bestOf` (1/3/5) | ท้าเล่น / ack `{ ok, id }` หรือ `{ ok: false, code }` |
+| `game` | `game_respond` **(ack)** | Client → Server | `id`, `accept` | ตอบรับ/ปฏิเสธ (เฉพาะคนถูกท้า) |
+| `game` | `game_move` **(ack)** | Client → Server | `id`, `move` (`rock`/`paper`/`scissors` หรือ `r`/`p`/`s`) | เลือก (เก็บเป็นความลับจนครบ 2 คน) / ack `{ ok, move }` |
+| `game` | `game_quit` **(ack)** | Client → Server | `id` | ออก / ยกเลิกคำท้า |
+| `game` | `game_update` | Server → ผู้เล่น 2 คนเท่านั้น | สถานะเกม (**ไม่มีคำตอบที่ยังไม่เปิด**) + `event` (`challenge` `accepted` `moved` `round` `finished` `declined` `expired` `quit` `abandoned`) + `by` / `result` / `winner` | ทุกการเปลี่ยนแปลงของเกม |
+| `guess` | `guess_start` **(ack)** | Client → Server → AI bot | `group`, `category` (`person`/`animal`/`object`, ไม่ใส่ = สุ่ม), `ai` (`claude`/`chatgpt`/`gemini`, ไม่ใส่ = ค่าเริ่มต้น) | เริ่มเกม (สมาชิกกลุ่มเท่านั้น) / ack `{ ok, ai }` / error: `GROUP_NOT_FOUND` `NOT_A_MEMBER` (server ตรวจ) `BOT_OFFLINE` `BOT_TIMEOUT` (server) `ALREADY_RUNNING` `BAD_CATEGORY` `AI_UNAVAILABLE` (bot) (+ `message`) |
+| `guess` | `guess_ai` **(ack)** | Client → Server → AI bot | — | ack `{ ok, providers: [{ id, label, envKey, configured }], default }` |
+| `guess` | `guess_hints` **(ack)** | Client → Server → AI bot | `group` | ack: `{ ok, category, hints[], total, elapsed }` คำใบ้ที่ออกไปแล้ว |
+| `guess` | `guess_stop` **(ack)** | Client → Server → AI bot | `group` | หยุดเกม + เฉลย (เฉพาะคนเริ่ม: `ONLY_STARTER`) |
+| `bot` | `register` (field เพิ่ม) | AI bot → Server | `name: "AI"`, `token` (= `AI_BOT_TOKEN`) | ชื่อ `AI` (ตัวพิมพ์ใดก็ได้) สงวนไว้ให้ bot: ไม่มี token / token ผิด → `error_msg` `NAME_RESERVED` / server log แสดง token เป็น `***` |
+| `bot` | `bot_request` **(ack)** | Server → AI bot เท่านั้น | `event` (`guess_start`/`guess_stop`/`guess_hints`/`guess_ai`), `from` (ชื่อจริงของคนสั่ง ที่ server รับรอง), `group`, `category`, `ai` | server ส่งต่อคำสั่ง `/guess` ให้ bot แล้วส่ง ack ของ bot กลับไปให้คนสั่ง (รอ ≤ 10 วินาที) |
+| `guess` | `join_group` / `group_msg` (event ของ core) | AI bot → Server → สมาชิกกลุ่ม | `from: "AI"`, `text: "[Gemini] hint 1/10: …"` | bot เข้ากลุ่มเอง (R10) แล้วส่งคำใบ้ / ประกาศเป็นแชทปกติ (R11) **ไม่มี event ใหม่** · client แสดงป้าย `[ai]` เมื่อ `from === "AI"` และไม่มี `source` / คำทาย = `group_msg` ปกติของผู้ใช้ (bot เป็นสมาชิกจึงได้รับ) |
 | `discord` | `bridge_info` | Server → Client | `group`, `platform`, `channel` | บอกว่ากลุ่มไหน bridge กับ Discord (ส่งตอนเชื่อมต่อ ถ้า feature เปิดอยู่) |
 | `discord` | `group_msg` (field เพิ่ม) | Server → Client | `source: "discord"` | ข้อความที่มาจาก Discord ใช้ event `group_msg` เดิม + `source` ส่วน `from` เป็นชื่อใน Discord **client ต้องไม่ถือว่าเป็นผู้ใช้ในแอป** |
 
 ```js
+socket.timeout(2000).emitWithAck("ping_check", { seq: 1 })  // → { seq: 1, serverTime: 1761638400000, uptimeSec: 302, online: 3 }
+"game_update" → {"id":"1","game":"rps","players":["C1","C2"],"bestOf":3,"status":"playing","round":1,"score":{"C1":0,"C2":0},"moved":["C1"],"event":"moved","by":"C1"}
+"game_update" → {..., "event":"round", "result":{"round":1,"moves":{"C1":"rock","C2":"scissors"},"winner":"C1"}, "score":{"C1":1,"C2":0}}
+"register"    → {"name": "AI", "token": "<AI_BOT_TOKEN>"}                          // AI bot เท่านั้น
+"bot_request" → {"event": "guess_start", "from": "C1", "group": "g1", "category": "animal", "ai": "gemini"}  // ack: {"ok": true, "ai": "Gemini"}
+"group_msg"   → {"group": "g1", "from": "AI", "text": "[Gemini] hint 1/10: It is a bird.", "timestamp": "..."}
 "bridge_info" → {"group": "discord", "platform": "discord", "channel": "#general"}
 "group_msg"   → {"group": "discord", "from": "Bobby", "text": "hi", "timestamp": "...", "source": "discord"}
 ```
@@ -134,3 +155,10 @@ event ของ Feature เสริมอยู่ในหัวข้อน�
 | 2026-10-27 | — | R8: เพิ่ม event `create_group_ok`, ชื่อกลุ่มจำกัด 30 ตัวอักษร + ห้ามซ้ำแบบไม่สนตัวพิมพ์, กลุ่มที่ไม่มีสมาชิกยังไม่ถูกลบ |
 | 2026-10-27 | — | R10: เพิ่ม event `join_group_ok` และ error `ALREADY_MEMBER` |
 | 2026-10-28 | — | Feature discord: เพิ่ม event `bridge_info` และ field `source` ใน `group_msg` |
+| 2026-10-28 | — | Feature ping: เพิ่ม event `ping_check` (ใช้ acknowledgement) |
+| 2026-10-28 | — | Feature ping: เพิ่ม `ping_user` + `ping_probe` (`/ping <ชื่อ>`) |
+| 2026-10-28 | — | Feature game: เพิ่ม `game_challenge`, `game_respond`, `game_move`, `game_quit`, `game_update` (RPS) |
+| 2026-10-28 | — | Feature guess: เพิ่ม `guess_start`, `guess_hints`, `guess_stop` และ `source: "ai"` ใน `group_msg` |
+| 2026-10-28 | — | Feature guess: เลือก AI (`ai` ใน `guess_start`, event `guess_ai`, error `AI_UNAVAILABLE`), `from` = ชื่อ AI, ทายเป็นภาษาอังกฤษเท่านั้น |
+| 2026-10-28 | — | Feature guess: ทายผิด → AI ใบ้เทียบกับคำทาย (`group_msg` จาก AI `💬 <คน> guessed "…" — …` ไม่มี event ใหม่) |
+| 2026-10-28 | — | **AI เป็น client อีกตัว** (`ai-bot/`): `register` รับ `token` + error `NAME_RESERVED` (ชื่อ `AI`), event `bot_request` (Server → bot), error `BOT_OFFLINE` `BOT_TIMEOUT` / ข้อความ AI = `group_msg` จากผู้ใช้ `AI` ขึ้นต้น `[<ชื่อ AI>]` (**เลิกใช้** `source: "ai"` และ `from` = ชื่อ AI) |

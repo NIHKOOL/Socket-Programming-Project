@@ -12,17 +12,8 @@
 //   DISCORD_GROUP       ชื่อกลุ่มในแอป (ค่าเริ่มต้น "discord")
 // ไม่ได้ตั้ง token หรือ channel → feature ปิดตัวเอง แอปทำงานปกติ
 
-import { fileURLToPath } from "node:url";
+import "./env.js"; // โหลด server/.env ก่อนอ่านค่า token
 import { Client, Events, GatewayIntentBits, RESTEvents, escapeMarkdown } from "discord.js";
-
-// โหลด server/.env (ถ้ามี) ตอนรันบนเครื่อง ส่วน test (NODE_ENV=test) ไม่โหลด เพื่อไม่ให้ test ไปต่อ Discord จริง
-if (process.env.NODE_ENV !== "test") {
-  try {
-    process.loadEnvFile?.(fileURLToPath(new URL("../.env", import.meta.url)));
-  } catch {
-    // ไม่มีไฟล์ .env ก็ไม่เป็นไร (บน Render ตั้ง env ใน dashboard)
-  }
-}
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;

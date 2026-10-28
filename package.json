@@ -2,13 +2,14 @@
   "name": "simple-chat",
   "version": "1.0.0",
   "private": true,
-  "description": "Socket programming term project: chat server (Node.js + Socket.IO) and client (React)",
+  "description": "Socket programming term project: chat server (Node.js + Socket.IO), client (React) and AI bot (Socket.IO client)",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm install --prefix server && npm install --prefix client --include=dev && npm run build --prefix client",
+    "build": "npm install --prefix server && npm install --prefix ai-bot && npm install --prefix client --include=dev && npm run build --prefix client",
     "start": "node server/index.js",
+    "bot": "node ai-bot/index.js",
     "test": "npm test --prefix server"
   }
 }

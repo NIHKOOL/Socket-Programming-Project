@@ -88,6 +88,21 @@ Cloud:  browser ──HTTPS/WSS (TLS)──> Railway edge proxy ──HTTP/WS─
 | **Discord REST API** (HTTPS) | bot ส่งข้อความเข้า channel (`POST /channels/{id}/messages`) |
 | **Bot token** (header `Authorization`) | ยืนยันตัวตนของ bot เก็บใน env ไม่ commit |
 
+**Feature guess: AI เป็น client อีกตัว (AI bot)**
+
+```
+browser ══Socket.IO══> server ══Socket.IO══> AI bot (node ai-bot/index.js, ผู้ใช้ชื่อ "AI") ──HTTPS──> Claude / OpenAI / Gemini API
+browser <══Socket.IO══ server <══Socket.IO══ AI bot   (คำใบ้ / ประกาศ = group_msg ของ bot)
+```
+
+| Protocol | ใช้อย่างไร |
+|---|---|
+| **Socket.IO** (bot → server) | bot login (`register` + `AI_BOT_TOKEN`), เข้ากลุ่มเอง (`join_group`) แล้วส่งคำใบ้ / ประกาศเป็น `group_msg` เหมือนผู้ใช้ → server ส่งต่อตามกฎ R11 (เฉพาะสมาชิก) |
+| **Socket.IO + acknowledgement** (server → bot) | คำสั่ง `/guess` ของผู้ใช้ server ส่งต่อเป็น `bot_request` แล้วรอ ack ของ bot ส่งกลับให้คนสั่ง |
+| **HTTPS** (Claude API / OpenAI Responses API / Gemini API) | bot เรียก AI ที่เลือก: ครั้งเดียวต่อเกม (คำลับ + คำใบ้เป็น JSON, structured output) + ทุกคำทายผิด (มี cooldown) / API key อยู่ที่ bot เท่านั้น server และ browser ไม่เคยเห็น |
+
+รายละเอียด: [HandbookFeatures.md → Feature 5](../HandbookFeatures.md#feature-5--เกมทายคำ-ai-ai-บังคับ)
+
 รายละเอียด: [HandbookFeatures.md → Feature 2](../HandbookFeatures.md#feature-2--discord-bridge)
 
 รายละเอียดการทำงาน + ลิงก์โค้ด: [HandbookFeatures.md → Feature 1 — Cloud](../HandbookFeatures.md#feature-1--cloud) · ขั้นตอน deploy: [features/cloud_TEST.md](features/cloud_TEST.md)

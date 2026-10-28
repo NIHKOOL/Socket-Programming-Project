@@ -32,6 +32,7 @@ cd client && npm run dev     # client ที่ http://localhost:5173 (--host �
 cd client && npm run build   # เช็กว่า client build ผ่าน
 npm run build && npm start   # (root) โหมด Cloud: server ตัวเดียวเสิร์ฟ client/dist + socket ที่ port 3000
                              # build ใช้ npm install (ไม่ใช่ npm ci) เพื่อไม่ลบ node_modules ขณะ dev server เปิดอยู่
+npm run bot                  # (root) AI bot ของเกมทายคำ: client อีกตัว ต่อ server เป็นผู้ใช้ชื่อ AI (ต้องมี ai-bot/.env)
 cd server && npm test        # รัน test อัตโนมัติทั้งหมด (แต่ละไฟล์ได้ server ใหม่ที่ port 4100+)
 cd server && npm test -- r07 # รันเฉพาะไฟล์ที่ชื่อมี "r07"
 ```
@@ -53,13 +54,15 @@ Test อยู่ใน `server/tests/*.test.mjs` (1 ไฟล์ต่อ requi
 
 แยกจาก core (R1–R11) ทั้งหมด รายละเอียดอยู่ใน `HandbookFeatures.md`
 - Server: `server/features/<ชื่อ>.js` แล้วลงทะเบียนใน `server/features/index.js` **ห้ามเพิ่ม `socket.on` ของ feature ใน `server/index.js`**
-  core เรียก feature ผ่าน 2 จุดเชื่อมเท่านั้น คือ `handleHttp` และ `setupSocket`
 - Client: `client/src/features/<ชื่อ>/` ต่อเข้า `App.jsx` / `ChatRoom.jsx` ให้น้อยที่สุด และทุกจุดต้องมี comment `// Feature: <ชื่อ>`
 - Test: `server/tests/features/fXX-<ชื่อ>.test.mjs` (รันด้วย `npm test -- features/`) และ `npm test` ของ core ต้องยังผ่าน
 - Docs: `docs/features/<ชื่อ>_TEST.md`, `docs/evidence/features/<ชื่อ>/`, หัวข้อใน `HandbookFeatures.md`
 - event ใหม่ต้องเพิ่มใน `docs/PROTOCOL.md` หัวข้อ "Feature เสริม"
-- จุดเชื่อม 4 จุด: `initFeatures`, `handleHttp`, `setupSocket`, `onGroupMessage` (ดู `server/features/index.js`)
-- ค่าลับอยู่ใน `server/.env` (ตัวอย่างที่ `server/.env.example`) feature ที่ไม่มีค่าที่ต้องใช้ต้องปิดตัวเองได้ โดยแอปยังทำงานปกติ
+- จุดเชื่อม 5 จุด: `initFeatures`, `handleHttp`, `setupSocket`, `onGroupMessage`, `checkRegister` (ดู `server/features/index.js`)
+- ค่าลับอยู่ใน `server/.env` (ตัวอย่างที่ `server/.env.example`) โหลดโดย `server/features/env.js` (import ไฟล์นี้ก่อนอ่าน `process.env`)
+- AI (Claude / ChatGPT / Gemini): เรียกจาก **AI bot** (`ai-bot/` โปรแกรมแยก ต่อเข้า server เป็นผู้ใช้ชื่อ `AI` ด้วย `AI_BOT_TOKEN`) เท่านั้น server ไม่เรียก AI และไม่มี key (key ห้ามไปถึง client) / ข้อความของ AI ต้องส่งผ่าน socket (`group_msg` ของ bot) ห้าม server สร้างข้อความ AI เอง / ค่าลับของ bot อยู่ที่ `ai-bot/.env` / 1 ไฟล์ต่อเจ้าใน `ai-bot/ai-providers/` ทุกตัวมี `generateJson(prompt, schema)` และลงทะเบียนใน `PROVIDERS` ที่ `ai-bot/guess-ai.js` / Claude: `claude-opus-5-5` + `fallbacks: "default"` / เขียนโค้ด SDK ของ OpenAI / Gemini ตามเอกสารใน `node_modules/<sdk>/README.md` และ type definition ห้ามเดา
+- feature ที่ไม่มีค่าลับที่ต้องใช้ต้องปิดตัวเองหรือแจ้ง error ได้ โดยแอปยังทำงานปกติ
+- slash command (client): เพิ่มคำสั่งใน `COMMANDS` ที่ `client/src/features/commands/index.js` ผลของคำสั่งแสดงเฉพาะจอคนสั่ง (`systemMessage`)
 - test ห้ามต่อบริการจริง: `run-all.mjs` ตั้ง `NODE_ENV=test` + ล้าง token ไว้แล้ว
 
 ## Handbook

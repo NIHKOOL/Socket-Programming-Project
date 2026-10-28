@@ -1,0 +1,5 @@
+/* Feature: guess — ข้อความจาก AI สีม่วง แยกจากผู้ใช้ (น้ำเงิน) ตัวเอง (เขียว) และ Discord (blurple) */
+:root { --ai: #8250df; }
+.ai-tag { color: var(--ai); font-weight: 600; font-size: 0.85em; }
+.msg.from-ai .msg-from { color: var(--ai); }
+.msg.from-ai .msg-text { color: var(--ai); }

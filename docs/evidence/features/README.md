@@ -24,3 +24,27 @@
 > ✅ ใช้งานได้บนเครื่อง (2026-10-28) แต่**ยังไม่ได้เก็บหลักฐาน**
 >
 > รูปที่ต้องเก็บใน `discord/` (วิธีอยู่ใน [discord_TEST.md](../../features/discord_TEST.md)): `discord-app-to-discord.png`, `discord-discord-to-app.png`, `discord-server-log.png`, `discord-non-member.png`
+
+## ping
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| _(ยังไม่มี)_ | | | |
+
+> รูปที่ต้องเก็บใน `ping/` (วิธีอยู่ใน [ping_TEST.md](../../features/ping_TEST.md)): `ping-lan.png`, `ping-help.png`, `ping-ws-ack.png`
+
+## game
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| _(ยังไม่มี)_ | | | |
+
+> รูปที่ต้องเก็บใน `game/` (วิธีอยู่ใน [game_TEST.md](../../features/game_TEST.md)): `game-full-match.png`, `game-hidden-move.png`, `game-ws-frames.png`, `game-outsider.png`
+
+## guess
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| _(ยังไม่มี)_ | | | |
+
+> รูปที่ต้องเก็บใน `guess/` (วิธีอยู่ใน [guess_TEST.md](../../features/guess_TEST.md)): `guess-full-game.png`, `guess-server-log.png`, `guess-bot-terminal.png`, `guess-three-ais.png`, `guess-feedback.png`, `guess-winner.png`, `guess-timeout.png`, `guess-ws-no-answer.png`, `guess-outsider.png`, `guess-name-reserved.png`

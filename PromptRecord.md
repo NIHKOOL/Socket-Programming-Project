@@ -417,3 +417,71 @@
   > แล้วตอนนี้เรายังต้องเปิด 2 port แบบเดิมไหมเพราะไม่มี cloud แล้ว
 - **ผลลัพธ์:** ไม่ต้อง: โค้ด cloud.js ยังอยู่ ใช้แบบ port เดียว (`npm run build && npm start`) สำหรับ demo/ทดสอบข้ามเครื่อง ส่วนแบบ 2 port ใช้ตอนเขียนโค้ด / เปลี่ยนชื่อหัวข้อใน README จาก "รันแบบ Cloud" เป็น "รันแบบ port เดียว" พร้อมอธิบายว่าใช้ตอนไหน
 - **หมายเหตุ:** —
+
+### [2026-10-28] Feature 3: /ping + ระบบ slash command
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature ping
+- **Prompt:**
+  > ทำ ping ก่อน
+- **ผลลัพธ์:** server: `server/features/ping.js` (event `ping_check` ตอบด้วย acknowledgement: seq, serverTime, uptimeSec, online; ต้อง register ก่อน) / client: `client/src/features/commands/` (ระบบ slash command: `parseInput`, `COMMANDS` = `/help`, `/ping`, `//text` = ข้อความปกติ, ผลลัพธ์เป็น `systemMessage` เห็นเฉพาะคนสั่ง), `client/src/features/ping/` (`runPing` จับเวลาด้วย `emitWithAck` + timeout 2s, `summarize` แบบ ping ของ OS) / core แตะ `App.jsx` (`sendToActiveRoom`) และ `ChatRoom.jsx` (แสดง system line, placeholder) / test `f03-ping` / เอกสาร: `docs/features/ping_TEST.md`, HandbookFeatures (Feature 3 + เทียบ RTT กับ ICMP/heartbeat + อธิบาย ack), PROTOCOL, README, CLAUDE.md / shift ลิงก์ Handbook จาก snapshot
+- **หมายเหตุ:** `npm test` 13/13 (ping 15/15), build ผ่าน, ลองรันคำสั่งจริงกับ server แล้ว (`/help`, `/ping 3`, `/nope`, `//`) ยังไม่ได้ทดสอบใน browser
+
+### [2026-10-28] /ping <ชื่อ>
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature ping
+- **Prompt:**
+  > ถ้ามีหลายคนแล้วจะ ping ไปหาใคร
+  >
+  > เพิ่ม /ping ชื่อ
+- **ผลลัพธ์:** อธิบายว่า `/ping` เดิมวัดแค่ client ↔ server (star topology ไม่มี client ↔ client ตรง) / เพิ่ม `/ping <ชื่อ> [n]`: server `ping_user` → ส่ง `ping_probe` (ack + timeout 2s) ไปปลายทาง → ตอบผู้สั่งพร้อม `legMs` ทำให้แยกเวลา you↔server + server↔ปลายทาง, ปลายทางตอบอัตโนมัติ (`setupPingProbe`) + แจ้ง `X is pinging you` ในห้อง private ครั้งเดียวต่อรอบ, error `USER_NOT_FOUND` / `SELF` / `TIMEOUT`, ชื่อที่เป็นตัวเลขใช้ `@` / test f03 เพิ่มเป็น 26 ข้อ / อัปเดต HandbookFeatures (flow ใหม่), ping_TEST, PROTOCOL, README, ลิงก์ Handbook
+- **หมายเหตุ:** `npm test` 13/13, build ผ่าน, ลองรันคำสั่งจริงกับ server แล้ว ยังไม่ได้ทดสอบใน browser
+
+### [2026-10-28] Feature: เกมเป่ายิ้งฉุบ (RPS) ผ่าน socket
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature game
+- **Prompt:**
+  > สามารถใช้ Socket ทำเกมที่ใช้ Text ตอบโต้กันสองฝั่งได้ไหม
+  >
+  > เริ่มที่ RPS ก่อนเลย
+- **ผลลัพธ์:** server `server/features/game.js` (server-authoritative: เก็บ state + กติกา + ตัดสิน, ซ่อนคำตอบใน `g.moves` จนครบ 2 คน, `game_update` ส่งเฉพาะผู้เล่น 2 คน, best of 1/3/5, decline / quit / expire 60s / abandoned เมื่อหลุด) / client `client/src/features/game/` (`setupGame` แสดงในห้อง private กับคู่แข่ง, คำสั่ง `/play` `/accept` `/decline` `/move` `/quit`, `formatUpdate` ตามมุมมองผู้เล่น) / core แตะ `App.jsx` (setupGame + ส่ง `room` ให้คำสั่ง) และ `commands/index.js` / test `f04-game` 31 ข้อ (`run-all.mjs` ตั้ง `GAME_INVITE_TIMEOUT_MS=1500`) / เอกสาร: `docs/features/game_TEST.md`, HandbookFeatures (Feature 4), PROTOCOL, README, indexes / shift ลิงก์ Handbook
+- **หมายเหตุ:** `npm test` 14/14, build ผ่าน, ลองเล่นจริงด้วย client 2 process กับ server แล้ว (เจอบั๊กลำดับชื่อในบรรทัดผลแต่ละรอบระหว่างทำ แก้แล้ว) ยังไม่ได้ทดสอบใน browser
+
+### [2026-10-28] Feature: เกมทายคำ AI (AI บังคับของ Part 3)
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature guess (AI)
+- **Prompt:**
+  > อีก Feature ทำเป็นเกมให้ AI คิดคำมาหนึ่งคำ หลังจากนั้นให้ AI ใบ้ คน สัตว์ สิ่งของ โดยการ ส่งข้อความ Socket มาเรื่อยๆ 5 นาที ถือว่าไม่มีใครชนะใครทายถูกก่อนหหน้านั้นคนนั้นชนะ แล้วให้ คนในกลุ่มแข่งกันทาย
+- **ผลลัพธ์:** `server/features/guess-ai.js` (Claude API ผ่าน `@anthropic-ai/sdk` 1.3.0: `claude-opus-5-5`, effort low, structured output JSON schema `{word, aliases, hints[10]}`, `fallbacks: "default"`, ตรวจ/ตัดคำใบ้ที่หลุดคำตอบ, error → ข้อความอ่านเข้าใจ, `GUESS_FAKE_AI` สำหรับ test) / `server/features/guess.js` (เกมต่อกลุ่ม: สมาชิกเท่านั้น, จองกลุ่มระหว่างรอ AI, hint ทุก 5 นาที/10, หมดเวลา → เฉลย, คำทาย = แชทปกติผ่าน `onGroupMessage`, `normalizeGuess`, `/guess hints` `/guess stop`) / ย้ายการโหลด `.env` ไป `server/features/env.js` / client `client/src/features/guess/` (คำสั่ง + ป้าย `[ai]` สีม่วง), `ChatRoom.jsx`: ข้อความที่มี `source` ไม่ใช่ของเรา / test `f05-guess` 24 ข้อ / เอกสาร: `docs/features/guess_TEST.md` (สร้าง key + วิธีเล่น + checklist), HandbookFeatures (Feature 5), PROTOCOL, ARCHITECTURE, README, `.env.example`, CLAUDE.md / shift ลิงก์ Handbook
+- **หมายเหตุ:** **บั๊กที่เจอจาก test:** `normalizeGuess` ลบสระ-วรรณยุกต์ไทย (Unicode Mark) ทำให้คำไทยที่ต่างกันแค่สระนับว่าตรงกัน แก้แล้ว / `npm test` 15/15, build ผ่าน, ทดสอบแล้วว่าไม่มี key ไม่ crash / **ยังไม่ได้ทดสอบกับ Claude API จริง** (เครื่องนี้ไม่มี key)
+
+### [2026-10-28] เกมทายคำ: ทายภาษาอังกฤษเท่านั้น + เพิ่ม ChatGPT และ Gemini
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature guess (AI)
+- **Prompt:**
+  > ลืมบอกไปว่าทายโดยใช้อค่ English กับ เพิ่ม API ของ AI ตัวอื่นไปด้วยอย่าง chatGPT gemini
+- **ผลลัพธ์:** แยก AI เป็น `server/features/ai-providers/` (`claude.js`, `openai.js` ใช้ Responses API + `text.format` json_schema strict, `gemini.js` ใช้ `generateContent` + `responseJsonSchema`) ทุกตัวมี `generateJson(prompt, schema)` / `guess-ai.js` เป็นตัวกลาง: prompt + schema เดียว, `pickProvider` (ระบุ / `GUESS_AI_PROVIDER` / ตัวแรกที่มี key), `providerStatus`, `cleanPuzzle` รับเฉพาะคำตอบ/alias ภาษาอังกฤษ / `guess.js`: param `ai`, event `guess_ai`, error `AI_UNAVAILABLE`, พิธีกร = ชื่อ AI, ข้อความแนะนำให้ทายเป็นอังกฤษ / client: `/guess start [หมวด] [ai]`, `/guess ai` / ติดตั้ง `openai` 7.45.1, `@google/genai` 2.31.0 (เขียนตาม README + type definition ใน node_modules) / test f05 เป็น 34 ข้อ / อัปเดต guess_TEST, HandbookFeatures (เขียน Feature 5 ใหม่), PROTOCOL, ARCHITECTURE, README, `.env.example`, CLAUDE.md
+- **หมายเหตุ:** **บั๊กที่เจอระหว่างทดสอบ:** หยุดเกมระหว่าง AI ยังคิด → AI ตอบกลับมาแล้วประกาศ error ซ้ำ และอาจลบเกมใหม่ของคนอื่น แก้ด้วย `slot` แล้ว / เรียก API จริงทั้ง 3 เจ้าด้วย key ปลอม (ไม่เสียเงิน) ได้ error "key invalid" ถูกต้องทุกตัว / `npm test` 15/15, build ผ่าน / ยังไม่ได้ทดสอบด้วย key จริง
+
+### [2026-10-28] เกมทายคำ: ทายผิดแล้ว AI ใบ้เทียบกับคำทาย
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature guess (AI)
+- **Prompt:**
+  > อยากให้เวลาทุกครั้งที่ทายผิดให้ AI ช่วยใบ้อ้างอิงจากคำตอบของ client เทียบกับคำตอบจริงแล้วพิมพ์ลงกลุ่ม
+- **ผลลัพธ์:** `server/features/guess-ai.js`: `generateFeedback` (ใช้ `generateJson` + schema `{feedback}` ของ AI ตัวเดียวกับพิธีกร, prompt มีคำตอบจริง + คำใบ้ที่ออกแล้ว + คำทาย, ห้ามเฉลย), `cleanFeedback` (ทิ้งข้อความที่หลุดคำตอบ) / `server/features/guess.js`: `onGroupMessage` ทายผิด → `💬 <คน> guessed "<คำ>" — <คำใบ้>` ลงกลุ่ม, ตัวกัน: `looksLikeGuess` (อังกฤษ 1–4 คำ), cooldown ต่อคน 5 วินาที, เพดาน 40 ครั้งต่อเกม, ทิ้งถ้าเกมจบระหว่างรอ AI, AI error → ข้อความกลาง ๆ / test f05 เป็น 43 ข้อ / เอกสาร HandbookFeatures (ตาราง flow ใหม่), guess_TEST, PROTOCOL, `.env.example`
+- **หมายเหตุ:** **บั๊กที่เจอก่อนรัน:** field `provider` ใน state ของเกมถูก `...puzzle.provider` (string) ทับ แก้เป็น `aiProvider` / `npm test` 15/15 / ยังไม่ได้ทดสอบด้วย key จริง
+
+### [2026-10-28] เกมทายคำ: AI เป็น client อีกตัว (ส่งข้อความผ่าน socket)
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature guess (AI), แตะ R3 (ชื่อสงวน)
+- **Prompt:**
+  > อยากให้เวลา AI ตอบให้ส่ง Socket ให้ Server ด้วย
+  > (เลือก: AI เป็น client อีกตัว)
+- **ผลลัพธ์:** โฟลเดอร์ใหม่ `ai-bot/` (โปรแกรมแยก `npm run bot`): `index.js` ต่อ server ด้วย socket.io-client, login เป็น `AI` + `AI_BOT_TOKEN`, รับ `bot_request`, `join_group` เอง, ส่งคำใบ้/ประกาศเป็น `group_msg`, รับคำทายในฐานะสมาชิกกลุ่ม, ตอบ `ping_probe` / `game.js` (ย้ายกติกาเกมจาก server) / ย้าย `guess-ai.js` + `ai-providers/` มาที่ bot (API key อยู่ที่ `ai-bot/.env`) / server: ลบ `features/guess.js`, เพิ่ม `features/bot.js` (สงวนชื่อ AI ด้วย token, ตรวจสมาชิก, relay `/guess` เป็น `bot_request` แบบ ack, `BOT_OFFLINE`/`BOT_TIMEOUT`), จุดเชื่อมใหม่ `checkRegister` ใน core register, ซ่อน token ใน log เป็น `***`, ถอด AI SDK ออกจาก server/package.json / client: ป้าย `[ai]` ดูจากผู้ส่ง `AI` / test f05 เปิด bot เป็น process แยกจริง 49 ข้อ / เอกสาร: HandbookFeatures (Feature 5 เขียนใหม่ + จุดเชื่อมที่ 5), Handbook (R3 แถว 4a), guess_TEST, PROTOCOL, ARCHITECTURE, README, CLAUDE.md, .env.example ทั้ง 2 ไฟล์ / shift ลิงก์ Handbook
+- **หมายเหตุ:** `npm test` 15/15, build ผ่าน, รันจริง server + bot + client (โจทย์ปลอม) แล้ว server log เห็น `[recv] AI -> group_msg …` ครบทั้งเกม / แก้ระหว่างทำ: bot log เคยพิมพ์คำตอบ (จะหลุดถ้าจอ bot ขึ้นโปรเจกเตอร์) เปลี่ยนเป็นไม่แสดง / ยังไม่ได้ทดสอบด้วย key จริง
