@@ -8,6 +8,7 @@ import { handleInput } from "./features/commands/index.js"; // Feature: ping
 import { systemMessage } from "./features/commands/SystemLine.jsx"; // Feature: ping
 import { setupPingProbe } from "./features/ping/ping.js"; // Feature: ping
 import { setupGame } from "./features/game/index.js"; // Feature: game
+import { sendFile, setupFile } from "./features/file/transfer.js"; // Feature: file
 import "./App.css";
 
 export default function App() {
@@ -47,6 +48,14 @@ export default function App() {
     if (roomId !== activeRoomRef.current) {
       setUnread((prev) => ({ ...prev, [roomId]: (prev[roomId] ?? 0) + 1 }));
     }
+  }
+
+  // Feature: file — อัปเดตข้อความไฟล์ (progress / เสร็จ / ล้มเหลว) ตาม id ของการส่ง
+  function updateFileMessage(roomId, id, patch) {
+    setMessages((prev) => ({
+      ...prev,
+      [roomId]: (prev[roomId] ?? []).map((m) => (m.file?.id === id ? { ...m, file: { ...m.file, ...patch } } : m)),
+    }));
   }
 
   function resetSession() {
@@ -103,6 +112,8 @@ export default function App() {
     setupPingProbe(socket, (from, line) => addMessage(dmRoomId(from), systemMessage(line)));
     // Feature: game — ข้อความของเกมแสดงในห้อง private กับคู่แข่ง
     setupGame(socket, (opponent, line) => addMessage(dmRoomId(opponent), systemMessage(line)), () => myName);
+    // Feature: file — ไฟล์ที่ส่ง / รับ แสดงเป็นข้อความในห้อง private หรือห้องกลุ่ม
+    setupFile(socket, { add: addMessage, update: updateFileMessage, me: () => myName });
 
     // R5: ข้อความที่เข้ามาถูกแยกลงห้องของตัวเอง
     socket.on("private_msg", (msg) => addMessage(roomOfPrivateMsg(msg, myName), msg));
@@ -125,6 +136,14 @@ export default function App() {
     setError(""); // ล้าง error เก่า ถ้าส่งไม่ผ่าน server จะส่ง error_msg ใหม่มา
     if (type === "dm") socketRef.current.emit("private_msg", { to: name, text });
     else socketRef.current.emit("group_msg", { group: name, text });
+  }
+
+  // Feature: file — ส่งไฟล์ไปห้องที่เปิดอยู่ (ผู้รับ = อีกฝ่าย หรือสมาชิกกลุ่ม ตรวจสิทธิ์ที่ server)
+  function sendFileToActiveRoom(file) {
+    const roomId = activeRoom;
+    const { type, name } = parseRoomId(roomId);
+    const target = type === "dm" ? { to: name } : { group: name };
+    sendFile(socketRef.current, target, file, (line) => addMessage(roomId, systemMessage(line)));
   }
 
   // R8: สร้างกลุ่ม → server เพิ่มเราเป็นสมาชิกคนแรก แล้วส่ง group_list ใหม่ให้ทุกคน
@@ -315,6 +334,7 @@ export default function App() {
           messages={roomMessages}
           me={me}
           onSend={sendToActiveRoom}
+          onSendFile={sendFileToActiveRoom} // Feature: file
           onBack={closeRoom}
           backBadge={otherUnread}
           disabledReason={online ? null : `${name} is offline`}
@@ -334,6 +354,7 @@ export default function App() {
         messages={roomMessages}
         me={me}
         onSend={sendToActiveRoom}
+          onSendFile={sendFileToActiveRoom} // Feature: file
         onBack={closeRoom}
         backBadge={otherUnread}
         disabledReason={group ? null : "You are no longer a member of this group"}

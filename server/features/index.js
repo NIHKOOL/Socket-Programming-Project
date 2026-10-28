@@ -24,8 +24,9 @@ import discord from "./discord.js";
 import ping from "./ping.js";
 import game from "./game.js";
 import bot from "./bot.js";
+import file from "./file.js";
 
-const features = [cloud, discord, ping, game, bot];
+const features = [cloud, discord, ping, game, bot, file];
 
 // เรียกจาก core ครั้งเดียว หลังสร้าง io และ state (clients, groups)
 export function initFeatures(app) {

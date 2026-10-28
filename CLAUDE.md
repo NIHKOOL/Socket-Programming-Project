@@ -62,6 +62,7 @@ Test อยู่ใน `server/tests/*.test.mjs` (1 ไฟล์ต่อ requi
 - ค่าลับอยู่ใน `server/.env` (ตัวอย่างที่ `server/.env.example`) โหลดโดย `server/features/env.js` (import ไฟล์นี้ก่อนอ่าน `process.env`)
 - AI (Claude / ChatGPT / Gemini): เรียกจาก **AI bot** (`ai-bot/` โปรแกรมแยก ต่อเข้า server เป็นผู้ใช้ชื่อ `AI` ด้วย `AI_BOT_TOKEN`) เท่านั้น server ไม่เรียก AI และไม่มี key (key ห้ามไปถึง client) / ข้อความของ AI ต้องส่งผ่าน socket (`group_msg` ของ bot) ห้าม server สร้างข้อความ AI เอง / ค่าลับของ bot อยู่ที่ `ai-bot/.env` / 1 ไฟล์ต่อเจ้าใน `ai-bot/ai-providers/` ทุกตัวมี `generateJson(prompt, schema)` และลงทะเบียนใน `PROVIDERS` ที่ `ai-bot/guess-ai.js` / Claude: `claude-opus-5-5` + `fallbacks: "default"` / เขียนโค้ด SDK ของ OpenAI / Gemini ตามเอกสารใน `node_modules/<sdk>/README.md` และ type definition ห้ามเดา
 - feature ที่ไม่มีค่าลับที่ต้องใช้ต้องปิดตัวเองหรือแจ้ง error ได้ โดยแอปยังทำงานปกติ
+- ข้อมูล binary (Feature file) ส่งเป็น Buffer / ArrayBuffer ใน event ได้เลย ห้ามแปลงเป็น base64 / server log ย่อ binary เป็น `<binary N bytes>` แล้ว
 - slash command (client): เพิ่มคำสั่งใน `COMMANDS` ที่ `client/src/features/commands/index.js` ผลของคำสั่งแสดงเฉพาะจอคนสั่ง (`systemMessage`)
 - test ห้ามต่อบริการจริง: `run-all.mjs` ตั้ง `NODE_ENV=test` + ล้าง token ไว้แล้ว
 

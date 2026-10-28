@@ -485,3 +485,13 @@
   > (เลือก: AI เป็น client อีกตัว)
 - **ผลลัพธ์:** โฟลเดอร์ใหม่ `ai-bot/` (โปรแกรมแยก `npm run bot`): `index.js` ต่อ server ด้วย socket.io-client, login เป็น `AI` + `AI_BOT_TOKEN`, รับ `bot_request`, `join_group` เอง, ส่งคำใบ้/ประกาศเป็น `group_msg`, รับคำทายในฐานะสมาชิกกลุ่ม, ตอบ `ping_probe` / `game.js` (ย้ายกติกาเกมจาก server) / ย้าย `guess-ai.js` + `ai-providers/` มาที่ bot (API key อยู่ที่ `ai-bot/.env`) / server: ลบ `features/guess.js`, เพิ่ม `features/bot.js` (สงวนชื่อ AI ด้วย token, ตรวจสมาชิก, relay `/guess` เป็น `bot_request` แบบ ack, `BOT_OFFLINE`/`BOT_TIMEOUT`), จุดเชื่อมใหม่ `checkRegister` ใน core register, ซ่อน token ใน log เป็น `***`, ถอด AI SDK ออกจาก server/package.json / client: ป้าย `[ai]` ดูจากผู้ส่ง `AI` / test f05 เปิด bot เป็น process แยกจริง 49 ข้อ / เอกสาร: HandbookFeatures (Feature 5 เขียนใหม่ + จุดเชื่อมที่ 5), Handbook (R3 แถว 4a), guess_TEST, PROTOCOL, ARCHITECTURE, README, CLAUDE.md, .env.example ทั้ง 2 ไฟล์ / shift ลิงก์ Handbook
 - **หมายเหตุ:** `npm test` 15/15, build ผ่าน, รันจริง server + bot + client (โจทย์ปลอม) แล้ว server log เห็น `[recv] AI -> group_msg …` ครบทั้งเกม / แก้ระหว่างทำ: bot log เคยพิมพ์คำตอบ (จะหลุดถ้าจอ bot ขึ้นโปรเจกเตอร์) เปลี่ยนเป็นไม่แสดง / ยังไม่ได้ทดสอบด้วย key จริง
+
+### [2026-10-28] Feature ใหม่: ส่งไฟล์ / รูปผ่าน socket (แทน /ping)
+- **ผู้ใช้:** <ใส่ชื่อ>
+- **AI / Tool:** Claude Code (Opus 5.5)
+- **Requirement:** Part 3 — Feature file (แทน ping ที่ทำอะไรได้น้อย)
+- **Prompt:**
+  > คิดว่า ping ทำอะไรได้น้อยไปไหม
+  > เปลี่ยนเป็น ส่งไฟล์ส่งรูป
+- **ผลลัพธ์:** server `server/features/file.js` (`file_offer` ตรวจผู้รับแบบ R7/R11 + ขนาด ≤ 5 MB + ชื่อไฟล์, `file_chunk` binary 64 KB ตรวจเจ้าของ / ลำดับ seq / ขนาด แล้วส่งต่อเฉพาะผู้รับ, `file_end` ตรวจครบทุก byte, `file_cancel` / `file_abort` เมื่อหลุดหรือเงียบ 30 วินาที, ไม่เก็บไฟล์) / core: log ย่อ binary เป็น `<binary N bytes>` / client `client/src/features/file/` (`transfer.js` แบ่งชิ้น + stop-and-wait + ประกอบ Blob, `FileMessage.jsx` progress bar แบบ terminal + รูปตัวอย่าง (ไม่แสดง SVG) + `[download]` + ความเร็ว), `ChatRoom.jsx` ปุ่ม `[+file]` / ลากวาง / Ctrl+V, `App.jsx` `updateFileMessage` + `sendFileToActiveRoom` / test `f06-file` 27 ข้อ / เอกสาร: `docs/features/file_TEST.md`, HandbookFeatures (Feature 6 + ตาราง: ping เป็นตัวสำรอง), PROTOCOL, ARCHITECTURE, README, CLAUDE.md, indexes / shift ลิงก์ Handbook / ping ไม่ลบ เก็บเป็นตัวสำรอง
+- **หมายเหตุ:** `npm test` 16/16, build ผ่าน / รันโค้ด client จริงส่งไฟล์ 300 KB ระหว่าง 2 process ผ่าน server แล้ว sha256 ตรงกัน / **ยังไม่ได้ทดสอบใน browser**

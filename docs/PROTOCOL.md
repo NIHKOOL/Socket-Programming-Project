@@ -130,6 +130,12 @@ event ของ Feature เสริมอยู่ในหัวข้อน�
 | `bot` | `register` (field เพิ่ม) | AI bot → Server | `name: "AI"`, `token` (= `AI_BOT_TOKEN`) | ชื่อ `AI` (ตัวพิมพ์ใดก็ได้) สงวนไว้ให้ bot: ไม่มี token / token ผิด → `error_msg` `NAME_RESERVED` / server log แสดง token เป็น `***` |
 | `bot` | `bot_request` **(ack)** | Server → AI bot เท่านั้น | `event` (`guess_start`/`guess_stop`/`guess_hints`/`guess_ai`), `from` (ชื่อจริงของคนสั่ง ที่ server รับรอง), `group`, `category`, `ai` | server ส่งต่อคำสั่ง `/guess` ให้ bot แล้วส่ง ack ของ bot กลับไปให้คนสั่ง (รอ ≤ 10 วินาที) |
 | `guess` | `join_group` / `group_msg` (event ของ core) | AI bot → Server → สมาชิกกลุ่ม | `from: "AI"`, `text: "[Gemini] hint 1/10: …"` | bot เข้ากลุ่มเอง (R10) แล้วส่งคำใบ้ / ประกาศเป็นแชทปกติ (R11) **ไม่มี event ใหม่** · client แสดงป้าย `[ai]` เมื่อ `from === "AI"` และไม่มี `source` / คำทาย = `group_msg` ปกติของผู้ใช้ (bot เป็นสมาชิกจึงได้รับ) |
+| `file` | `file_offer` **(ack)** | Client → Server | `to` หรือ `group`, `name`, `size` (byte), `type` (MIME), `ref` (เลขสุ่มของผู้ส่ง) | ขอส่งไฟล์ (≤ 5 MB) / ack `{ ok, id, chunkSize: 65536 }` / error: `USER_NOT_FOUND` `SELF` `GROUP_NOT_FOUND` `NOT_A_MEMBER` `FILE_TOO_LARGE` `BAD_FILE` `TOO_MANY_TRANSFERS` (+ `message`) |
+| `file` | `file_start` | Server → ผู้รับ + ผู้ส่ง | `id`, `from`, `to` หรือ `group`, `name`, `size`, `type`, `chunks`, `timestamp`, `ref` | เริ่มรับไฟล์ (private: 2 คน / group: สมาชิก) |
+| `file` | `file_chunk` **(ack)** | Client → Server → ผู้รับ | `id`, `seq` (0, 1, 2, …), `data` (**binary** ≤ 64 KB) | 1 ชิ้นของไฟล์ ต้องเรียงลำดับ / ack `{ ok, received }` หรือ `NO_TRANSFER` `BAD_SEQ` `BAD_CHUNK` / ผู้ส่งต้องรอ ack ก่อนส่งชิ้นถัดไป |
+| `file` | `file_end` **(ack)** | Client → Server → ผู้รับ + ผู้ส่ง | `id` | ส่งครบ (server ตรวจว่าได้ครบทุก byte ไม่งั้น `INCOMPLETE`) |
+| `file` | `file_cancel` | Client → Server | `id` | ผู้ส่งยกเลิก |
+| `file` | `file_abort` | Server → ผู้รับ + ผู้ส่ง | `id`, `reason` | ยกเลิก: ผู้ส่งยกเลิก / ผู้ส่งหลุด / ผู้รับ private ออฟไลน์ / ผู้ส่งเงียบเกิน 30 วินาที |
 | `discord` | `bridge_info` | Server → Client | `group`, `platform`, `channel` | บอกว่ากลุ่มไหน bridge กับ Discord (ส่งตอนเชื่อมต่อ ถ้า feature เปิดอยู่) |
 | `discord` | `group_msg` (field เพิ่ม) | Server → Client | `source: "discord"` | ข้อความที่มาจาก Discord ใช้ event `group_msg` เดิม + `source` ส่วน `from` เป็นชื่อใน Discord **client ต้องไม่ถือว่าเป็นผู้ใช้ในแอป** |
 
@@ -140,6 +146,8 @@ socket.timeout(2000).emitWithAck("ping_check", { seq: 1 })  // → { seq: 1, ser
 "register"    → {"name": "AI", "token": "<AI_BOT_TOKEN>"}                          // AI bot เท่านั้น
 "bot_request" → {"event": "guess_start", "from": "C1", "group": "g1", "category": "animal", "ai": "gemini"}  // ack: {"ok": true, "ai": "Gemini"}
 "group_msg"   → {"group": "g1", "from": "AI", "text": "[Gemini] hint 1/10: It is a bird.", "timestamp": "..."}
+"file_offer"  → {"to": "C2", "name": "cat.png", "size": 300000, "type": "image/png", "ref": "k3x9"}   // ack: {"ok": true, "id": "1", "chunkSize": 65536}
+"file_chunk"  → {"id": "1", "seq": 0, "data": <binary 65536 bytes>}                            // ack: {"ok": true, "received": 65536}
 "bridge_info" → {"group": "discord", "platform": "discord", "channel": "#general"}
 "group_msg"   → {"group": "discord", "from": "Bobby", "text": "hi", "timestamp": "...", "source": "discord"}
 ```
@@ -162,3 +170,4 @@ socket.timeout(2000).emitWithAck("ping_check", { seq: 1 })  // → { seq: 1, ser
 | 2026-10-28 | — | Feature guess: เลือก AI (`ai` ใน `guess_start`, event `guess_ai`, error `AI_UNAVAILABLE`), `from` = ชื่อ AI, ทายเป็นภาษาอังกฤษเท่านั้น |
 | 2026-10-28 | — | Feature guess: ทายผิด → AI ใบ้เทียบกับคำทาย (`group_msg` จาก AI `💬 <คน> guessed "…" — …` ไม่มี event ใหม่) |
 | 2026-10-28 | — | **AI เป็น client อีกตัว** (`ai-bot/`): `register` รับ `token` + error `NAME_RESERVED` (ชื่อ `AI`), event `bot_request` (Server → bot), error `BOT_OFFLINE` `BOT_TIMEOUT` / ข้อความ AI = `group_msg` จากผู้ใช้ `AI` ขึ้นต้น `[<ชื่อ AI>]` (**เลิกใช้** `source: "ai"` และ `from` = ชื่อ AI) |
+| 2026-10-28 | — | Feature file: ส่งไฟล์ / รูป `file_offer`, `file_start`, `file_chunk` (binary), `file_end`, `file_cancel`, `file_abort` |

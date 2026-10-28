@@ -1,0 +1,13 @@
+/* Feature: file — ข้อความไฟล์ / รูป แบบ terminal */
+.file-msg { display: inline-flex; flex-direction: column; gap: 4px; vertical-align: top; }
+.file-progress { color: var(--muted); white-space: pre; }
+.file-failed { color: var(--error); }
+.file-preview {
+  display: block; max-width: min(260px, 100%); max-height: 260px; margin-top: 2px;
+  border: 1px solid var(--border); border-radius: 6px;
+}
+.file-download { color: var(--prompt); font-weight: 600; text-decoration: none; }
+.file-download:hover { text-decoration: underline; }
+.attach-btn input { display: none; }
+/* ลากไฟล์มาวางในห้องแชท */
+.chat-window.drop-target { outline: 2px dashed var(--prompt); outline-offset: -6px; background: var(--prompt-soft); }

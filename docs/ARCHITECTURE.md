@@ -101,6 +101,16 @@ browser <══Socket.IO══ server <══Socket.IO══ AI bot   (คำใ
 | **Socket.IO + acknowledgement** (server → bot) | คำสั่ง `/guess` ของผู้ใช้ server ส่งต่อเป็น `bot_request` แล้วรอ ack ของ bot ส่งกลับให้คนสั่ง |
 | **HTTPS** (Claude API / OpenAI Responses API / Gemini API) | bot เรียก AI ที่เลือก: ครั้งเดียวต่อเกม (คำลับ + คำใบ้เป็น JSON, structured output) + ทุกคำทายผิด (มี cooldown) / API key อยู่ที่ bot เท่านั้น server และ browser ไม่เคยเห็น |
 
+**Feature file: ส่งไฟล์ / รูป**
+
+| แนวคิด | ใช้อย่างไร |
+|---|---|
+| **Chunking + framing** | ไฟล์ถูกแบ่งชิ้นละ 64 KB แต่ละชิ้นเป็น 1 event `file_chunk { id, seq, data }` (data เป็น binary attachment ของ Socket.IO ไม่ใช่ base64) |
+| **Stop-and-wait (flow control)** | ผู้ส่งรอ ack ของแต่ละชิ้นก่อนส่งชิ้นถัดไป (คล้าย ACK ของ TCP แต่ที่ระดับ application) |
+| **Relay ไม่เก็บไฟล์** | server ตรวจสิทธิ์ (R7 / R11) + ลำดับ + ขนาด แล้วส่งต่อทันที ไม่มี storage กลาง |
+
+รายละเอียด: [HandbookFeatures.md → Feature 6](../HandbookFeatures.md#feature-6--ส่งไฟล์--รูปผ่าน-socket)
+
 รายละเอียด: [HandbookFeatures.md → Feature 5](../HandbookFeatures.md#feature-5--เกมทายคำ-ai-ai-บังคับ)
 
 รายละเอียด: [HandbookFeatures.md → Feature 2](../HandbookFeatures.md#feature-2--discord-bridge)

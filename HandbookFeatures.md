@@ -18,6 +18,7 @@
 - [Feature 3 — /ping (+ ระบบ slash command)](#feature-3--ping--ระบบ-slash-command)
 - [Feature 4 — เกมเป่ายิ้งฉุบ (RPS)](#feature-4--เกมเป่ายิ้งฉุบ-rps)
 - [Feature 5 — เกมทายคำ AI (AI บังคับ)](#feature-5--เกมทายคำ-ai-ai-บังคับ)
+- [Feature 6 — ส่งไฟล์ / รูปผ่าน socket](#feature-6--ส่งไฟล์--รูปผ่าน-socket)
 - [คู่มือเพิ่ม Feature ใหม่](#คู่มือเพิ่ม-feature-ใหม่)
 
 ---
@@ -47,13 +48,13 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 
 | # | จุดเชื่อม | core เรียกตอนไหน | feature ใช้ทำอะไร | โค้ด |
 |---|---|---|---|---|
-| 1 | `initFeatures(app)` | ครั้งเดียวตอน server เริ่ม (หลังสร้าง `io`, `clients`, `groups`) ได้ `{ io, clients, groups, now }` | login บริการภายนอก, เตรียมกลุ่ม (Discord) | core: [server/index.js:38](server/index.js#L38) → [features/index.js:31-33](server/features/index.js#L31-L33) |
-| 2 | `handleHttp(req, res)` | ทุก HTTP request ที่ไม่ใช่ `/socket.io/` **ก่อน**ตอบ 404 | เสิร์ฟไฟล์หน้าเว็บ (Cloud) ถ้า return `true` ถือว่า feature ตอบไปแล้ว | core: [server/index.js:17](server/index.js#L17) → [features/index.js:37-39](server/features/index.js#L37-L39) |
-| 3 | `setupSocket(socket, ctx)` | ทุกครั้งที่มี socket ใหม่ (หลังสร้าง `requireName`) | เพิ่ม `socket.on("<event ของ feature>")` / ส่งข้อมูลเริ่มต้น (Discord: `bridge_info`) | core: [server/index.js:116-118](server/index.js#L116-L118) → [features/index.js:42-44](server/features/index.js#L42-L44) |
-| 4 | `onGroupMessage(msg)` | หลัง core ส่ง `group_msg` ให้สมาชิกแล้ว (**ผ่านการตรวจสิทธิ์ R11 แล้ว**) | ส่งต่อข้อความออกนอกระบบ (Discord) | core: [server/index.js:184](server/index.js#L184) → [features/index.js:47-49](server/features/index.js#L47-L49) |
-| 5 | `checkRegister(name, payload)` | ตอน `register` ก่อนจองชื่อ (R3) | สงวนชื่อ: `AI` ต้องมี `AI_BOT_TOKEN` (Feature 5) คืน `{ code, message }` = ปฏิเสธ | core: [server/index.js:93-95](server/index.js#L93-L95) → [features/index.js:52-58](server/features/index.js#L52-L58) |
+| 1 | `initFeatures(app)` | ครั้งเดียวตอน server เริ่ม (หลังสร้าง `io`, `clients`, `groups`) ได้ `{ io, clients, groups, now }` | login บริการภายนอก, เตรียมกลุ่ม (Discord) | core: [server/index.js:38](server/index.js#L38) → [features/index.js:32-34](server/features/index.js#L32-L34) |
+| 2 | `handleHttp(req, res)` | ทุก HTTP request ที่ไม่ใช่ `/socket.io/` **ก่อน**ตอบ 404 | เสิร์ฟไฟล์หน้าเว็บ (Cloud) ถ้า return `true` ถือว่า feature ตอบไปแล้ว | core: [server/index.js:17](server/index.js#L17) → [features/index.js:38-40](server/features/index.js#L38-L40) |
+| 3 | `setupSocket(socket, ctx)` | ทุกครั้งที่มี socket ใหม่ (หลังสร้าง `requireName`) | เพิ่ม `socket.on("<event ของ feature>")` / ส่งข้อมูลเริ่มต้น (Discord: `bridge_info`) | core: [server/index.js:121-123](server/index.js#L121-L123) → [features/index.js:43-45](server/features/index.js#L43-L45) |
+| 4 | `onGroupMessage(msg)` | หลัง core ส่ง `group_msg` ให้สมาชิกแล้ว (**ผ่านการตรวจสิทธิ์ R11 แล้ว**) | ส่งต่อข้อความออกนอกระบบ (Discord) | core: [server/index.js:189](server/index.js#L189) → [features/index.js:48-50](server/features/index.js#L48-L50) |
+| 5 | `checkRegister(name, payload)` | ตอน `register` ก่อนจองชื่อ (R3) | สงวนชื่อ: `AI` ต้องมี `AI_BOT_TOKEN` (Feature 5) คืน `{ code, message }` = ปฏิเสธ | core: [server/index.js:98-100](server/index.js#L98-L100) → [features/index.js:53-59](server/features/index.js#L53-L59) |
 
-**`ctx` ที่ feature ได้รับ** ([server/index.js:117](server/index.js#L117)) เป็นตัวเดียวกับที่ core ใช้:
+**`ctx` ที่ feature ได้รับ** ([server/index.js:122](server/index.js#L122)) เป็นตัวเดียวกับที่ core ใช้:
 
 | ชื่อ | คืออะไร |
 |---|---|
@@ -82,7 +83,8 @@ core รู้จัก feature ผ่าน [server/features/index.js](server/f
 | 2 | Discord bridge: กลุ่ม `#discord` ↔ channel ใน Discord จริง | `discord` | ✅ ใช้งานได้บนเครื่อง (รอเก็บหลักฐาน) | [Feature 2 — Discord bridge](#feature-2--discord-bridge) |
 | 3 | **เกมทายคำ AI** (`/guess start`): Claude / ChatGPT / Gemini คิดคำ + ใบ้ทีละข้อ คนในกลุ่มแข่งทาย (ภาษาอังกฤษ) — **AI เป็น client อีกตัว** (`ai-bot/`) **(AI บังคับ)** | `bot` + `ai-bot/` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน (โจทย์ปลอม) + เรียก API จริงทั้ง 3 เจ้าด้วย key ปลอมแล้ว **รอ API key จริง** | [Feature 5 — เกมทายคำ AI](#feature-5--เกมทายคำ-ai-ai-บังคับ) |
 | 5 | เกมผ่าน socket: เป่ายิ้งฉุบ (`/play rps`) | `game` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน รอทดสอบด้วยมือ | [Feature 4 — RPS](#feature-4--เกมเป่ายิ้งฉุบ-rps) |
-| 4 | `/ping` / `/ping <ชื่อ>` วัด RTT + ระบบ slash command (`/help`) | `ping` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน รอทดสอบด้วยมือ | [Feature 3 — /ping](#feature-3--ping--ระบบ-slash-command) |
+| 4 | **ส่งไฟล์ / รูปผ่าน socket** (แบ่งชิ้น 64 KB, stop-and-wait, private + group) | `file` | 🟨 โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน + ลองส่งจริงด้วยโค้ด client แล้ว รอทดสอบใน browser | [Feature 6 — ส่งไฟล์](#feature-6--ส่งไฟล์--รูปผ่าน-socket) |
+| – | `/ping` / `/ping <ชื่อ>` วัด RTT + ระบบ slash command (`/help`) | `ping` | ⏸ ตัวสำรอง (โค้ด + test ยังอยู่ ไม่นับคะแนน แทนด้วยส่งไฟล์) | [Feature 3 — /ping](#feature-3--ping--ระบบ-slash-command) |
 
 (อัปเดตตารางนี้และเพิ่มหัวข้อของแต่ละ feature เมื่อทำเสร็จ)
 
@@ -164,7 +166,7 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 | [server/features/discord.js](server/features/discord.js) | bot (discord.js): login, รับ/ส่งข้อความ, แปลงข้อความทั้ง 2 ทิศทาง |
 | [server/.env.example](server/.env.example) | ตัวอย่าง env ที่ต้องตั้ง (`DISCORD_BOT_TOKEN`, `DISCORD_CHANNEL_ID`, `DISCORD_GROUP`) |
 | [client/src/features/discord/](client/src/features/discord/index.jsx) | ป้าย `⇄ discord` ข้างกลุ่ม, `[discord]` ข้างชื่อผู้ส่ง, สี blurple |
-| core ที่แตะ (มี comment `Feature: discord`) | [App.jsx:6](client/src/App.jsx#L6), [:22](client/src/App.jsx#L22), [:56](client/src/App.jsx#L56), [:100-101](client/src/App.jsx#L100-L101), [:267](client/src/App.jsx#L267), [:332](client/src/App.jsx#L332) · [ChatRoom.jsx:3](client/src/ChatRoom.jsx#L3), [:46-59](client/src/ChatRoom.jsx#L46-L59) |
+| core ที่แตะ (มี comment `Feature: discord`) | [App.jsx:6](client/src/App.jsx#L6), [:23](client/src/App.jsx#L23), [:65](client/src/App.jsx#L65), [:109-110](client/src/App.jsx#L109-L110), [:286](client/src/App.jsx#L286), [:352](client/src/App.jsx#L352) · [ChatRoom.jsx:3](client/src/ChatRoom.jsx#L3), [:67-80](client/src/ChatRoom.jsx#L67-L80) |
 
 **ลำดับการทำงาน: server เริ่ม**
 
@@ -180,8 +182,8 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | สมาชิก `#discord` ส่งข้อความ → core ตรวจสิทธิ์ (R11) → ส่งให้สมาชิกในแอป | [server/index.js:182-183](server/index.js#L182-L183) |
-| 2 | core เรียก `onGroupMessage(msg)` | [server/index.js:184](server/index.js#L184) |
+| 1 | สมาชิก `#discord` ส่งข้อความ → core ตรวจสิทธิ์ (R11) → ส่งให้สมาชิกในแอป | [server/index.js:187-188](server/index.js#L187-L188) |
+| 2 | core เรียก `onGroupMessage(msg)` | [server/index.js:189](server/index.js#L189) |
 | 3 | discord: ไม่ใช่กลุ่มที่ bridge → ข้าม / bot ยังต่อ Discord ไม่สำเร็จ → **log เตือน** `NOT forwarded` (ไม่ข้ามเงียบ ๆ) | [discord.js:123-128](server/features/discord.js#L123-L128) |
 | 4 | แปลงเป็น `**C1**: text` (escape markdown ในชื่อ) | [discord.js:27-29](server/features/discord.js#L27-L29) |
 | 5 | `channel.send(...)` ผ่าน REST API โดย `allowedMentions: { parse: [] }` → **ไม่ ping `@everyone` / `@user`** | [discord.js:130-132](server/features/discord.js#L130-L132) |
@@ -195,14 +197,14 @@ server ของเราเป็น **client ของ Discord**: login ผ่
 | 3 | **ข้อความจาก bot (รวมถึงของตัวเอง) → ข้าม** กันวนลูป: ข้อความที่เราส่งออกไปจะไม่ย้อนกลับมา | [discord.js:34](server/features/discord.js#L34) |
 | 4 | แปลงเป็น payload `group_msg`: ชื่อ = nickname ใน server, แนบ URL ของไฟล์, ตัดที่ 1000 ตัวอักษร (เท่า core), `source: "discord"` | [discord.js:33-46](server/features/discord.js#L33-L46) |
 | 5 | ส่งให้ **room `group:discord` เท่านั้น** (เหมือน R11 คนที่ไม่ใช่สมาชิกไม่ได้รับ) | [discord.js:86](server/features/discord.js#L86) |
-| 6 | Client: ข้อความที่ `source === "discord"` แสดงป้าย `[discord]` สี blurple และ**ไม่นับเป็นข้อความของเรา** แม้ชื่อจะตรงกับเรา (กันปลอมตัว) | [ChatRoom.jsx:46-59](client/src/ChatRoom.jsx#L46-L59) |
+| 6 | Client: ข้อความที่ `source === "discord"` แสดงป้าย `[discord]` สี blurple และ**ไม่นับเป็นข้อความของเรา** แม้ชื่อจะตรงกับเรา (กันปลอมตัว) | [ChatRoom.jsx:67-80](client/src/ChatRoom.jsx#L67-L80) |
 
 **ลำดับการทำงาน: UI รู้ได้อย่างไรว่ากลุ่มไหน bridge**
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
 | 1 | socket ใหม่ → `setupSocket` ของ discord ส่ง `bridge_info { group, platform, channel }` | [discord.js:116-118](server/features/discord.js#L116-L118) |
-| 2 | Client เก็บไว้ใน `bridges` → แสดง `⇄ discord` ข้างชื่อกลุ่ม และ "bridged to Discord #channel" ในหัวห้อง | [App.jsx:100-101](client/src/App.jsx#L100-L101), [:267](client/src/App.jsx#L267), [:332](client/src/App.jsx#L332) |
+| 2 | Client เก็บไว้ใน `bridges` → แสดง `⇄ discord` ข้างชื่อกลุ่ม และ "bridged to Discord #channel" ในหัวห้อง | [App.jsx:109-110](client/src/App.jsx#L109-L110), [:286](client/src/App.jsx#L286), [:352](client/src/App.jsx#L352) |
 
 **ความปลอดภัย / ความเป็นส่วนตัว**
 - **token ห้าม commit** อยู่ใน `server/.env` (gitignore แล้ว) หรือ Variables ของ Railway เท่านั้น
@@ -233,18 +235,18 @@ reply from server: seq=1 time=12.3 ms
 | [server/features/ping.js](server/features/ping.js) | `ping_check`: ตอบผ่าน **acknowledgement** ทันที / `ping_user`: ส่ง probe ต่อไปหาผู้ใช้ปลายทางแล้วจับเวลาช่วง server ↔ ปลายทาง |
 | [client/src/features/commands/](client/src/features/commands/index.js) | ระบบ slash command: แยกคำสั่ง ([parse.js](client/src/features/commands/parse.js)), ทะเบียนคำสั่ง (`/help`, `/ping`), บรรทัดผลลัพธ์ ([SystemLine.jsx](client/src/features/commands/SystemLine.jsx)) |
 | [client/src/features/ping/](client/src/features/ping/ping.js) | ส่ง ping ทีละครั้ง จับเวลา ([ping.js](client/src/features/ping/ping.js)) + สรุปผล ([stats.js](client/src/features/ping/stats.js)) |
-| core ที่แตะ (มี comment `Feature: ping`) | [App.jsx:7-9](client/src/App.jsx#L7-L9), [:102-103](client/src/App.jsx#L102-L103), [:114-122](client/src/App.jsx#L114-L122) · [ChatRoom.jsx:4](client/src/ChatRoom.jsx#L4), [:45](client/src/ChatRoom.jsx#L45), [:75](client/src/ChatRoom.jsx#L75) |
+| core ที่แตะ (มี comment `Feature: ping`) | [App.jsx:7-9](client/src/App.jsx#L7-L9), [:111-112](client/src/App.jsx#L111-L112), [:125-133](client/src/App.jsx#L125-L133) · [ChatRoom.jsx:4](client/src/ChatRoom.jsx#L4), [:66](client/src/ChatRoom.jsx#L66), [:97](client/src/ChatRoom.jsx#L97) |
 
 **ลำดับการทำงาน: พิมพ์อะไรก็ได้ในช่องแชท (ระบบ slash command)**
 
 | # | เกิดอะไรขึ้น | โค้ด |
 |---|---|---|
-| 1 | กด Enter → `sendToActiveRoom(input)` ส่งข้อความให้ระบบคำสั่งดูก่อน | [App.jsx:114-121](client/src/App.jsx#L114-L121) |
+| 1 | กด Enter → `sendToActiveRoom(input)` ส่งข้อความให้ระบบคำสั่งดูก่อน | [App.jsx:125-132](client/src/App.jsx#L125-L132) |
 | 2 | `parseInput`: ไม่ขึ้นต้นด้วย `/` → ข้อความปกติ / `//text` → ส่ง `/text` เป็นข้อความ / `/name args` → คำสั่ง | [parse.js](client/src/features/commands/parse.js) → [commands/index.js:31-32](client/src/features/commands/index.js#L31-L32) |
-| 3 | ข้อความปกติ → คืนข้อความ → core ส่ง `private_msg` / `group_msg` ตามเดิม (R7, R11) | [App.jsx:122-124](client/src/App.jsx#L122-L124) |
+| 3 | ข้อความปกติ → คืนข้อความ → core ส่ง `private_msg` / `group_msg` ตามเดิม (R7, R11) | [App.jsx:133-135](client/src/App.jsx#L133-L135) |
 | 4 | คำสั่ง → พิมพ์ `$ /ping` แล้วเรียกคำสั่ง (ไม่รู้จัก → `unknown command`) คืน `null` = **ไม่ส่งเป็นแชท** | [commands/index.js:35-41](client/src/features/commands/index.js#L35-L41) |
-| 5 | ผลลัพธ์ทุกบรรทัด → `addMessage(ห้องเดิม, systemMessage(line))` → อยู่ในจอเราคนเดียว | [App.jsx:117-121](client/src/App.jsx#L117-L121) |
-| 6 | `ChatRoom`: ข้อความ `system` แสดงเป็นบรรทัดสีเทาแบบ output ของ terminal | [ChatRoom.jsx:45](client/src/ChatRoom.jsx#L45) |
+| 5 | ผลลัพธ์ทุกบรรทัด → `addMessage(ห้องเดิม, systemMessage(line))` → อยู่ในจอเราคนเดียว | [App.jsx:128-132](client/src/App.jsx#L128-L132) |
+| 6 | `ChatRoom`: ข้อความ `system` แสดงเป็นบรรทัดสีเทาแบบ output ของ terminal | [ChatRoom.jsx:66](client/src/ChatRoom.jsx#L66) |
 
 **ลำดับการทำงาน: `/ping [n]` (วัดกับ server)**
 
@@ -268,7 +270,7 @@ reply from server: seq=1 time=12.3 ms
 | 2 | C1: จับเวลา `t0` → `emitWithAck("ping_user", { to: "C2", seq })` | [ping.js:24](client/src/features/ping/ping.js#L24), [ping.js:28](client/src/features/ping/ping.js#L28) |
 | 3 | Server: ต้อง register / C2 ต้องออนไลน์ (`USER_NOT_FOUND`) / ห้าม ping ตัวเอง (`SELF`) — ตอบเป็น ack `{ ok: false, code }` | [ping.js:39-46](server/features/ping.js#L39-L46) |
 | 4 | Server: จับเวลาช่วงของตัวเอง แล้วส่ง `ping_probe { from: <ชื่อจริงของ C1>, seq }` ไปหา C2 แบบ**มี ack + timeout 2 วินาที** | [ping.js:49-50](server/features/ping.js#L49-L50) |
-| 5 | C2: `setupPingProbe` **ตอบ ack ทันที** (ก่อนทำอย่างอื่น ให้เวลาแม่นที่สุด) แล้วแจ้ง `C1 is pinging you` ในห้อง private กับ C1 (ครั้งเดียวต่อรอบ) | [ping.js:61-64](client/src/features/ping/ping.js#L61-L64) ← [App.jsx:102-103](client/src/App.jsx#L102-L103) |
+| 5 | C2: `setupPingProbe` **ตอบ ack ทันที** (ก่อนทำอย่างอื่น ให้เวลาแม่นที่สุด) แล้วแจ้ง `C1 is pinging you` ในห้อง private กับ C1 (ครั้งเดียวต่อรอบ) | [ping.js:61-64](client/src/features/ping/ping.js#L61-L64) ← [App.jsx:111-112](client/src/App.jsx#L111-L112) |
 | 6 | Server: ได้ ack จาก C2 → `ack({ ok: true, legMs })` กลับไปหา C1 โดย `legMs` = เวลาช่วง server ↔ C2 / C2 ไม่ตอบ → `TIMEOUT` | [ping.js:51-52](server/features/ping.js#L51-L52) |
 | 7 | C1: `RTT` ทั้งหมด แยกเป็น `you↔server = RTT − legMs` + `server↔C2 = legMs` | [ping.js:29-38](client/src/features/ping/ping.js#L29-L38) |
 | 8 | `USER_NOT_FOUND` / `SELF` → แสดงเหตุผลแล้วหยุด / `TIMEOUT` → `request timeout … (C2 did not answer)` นับเป็น loss | [ping.js:30-34](client/src/features/ping/ping.js#L30-L34), [ping.js:45-47](client/src/features/ping/ping.js#L45-L47) |
@@ -314,7 +316,7 @@ C2: /move s         →  ทั้งคู่: round 1: C1 ✊ rock vs C2 ✌�
 | [server/features/game.js](server/features/game.js) | สถานะเกมทั้งหมด + กติกา + ตัดสิน + ส่ง `game_update` ให้ผู้เล่น |
 | [client/src/features/game/index.js](client/src/features/game/index.js) | รับ `game_update` มาแสดงในห้อง private กับคู่แข่ง + คำสั่ง `/play` `/accept` `/decline` `/move` `/quit` |
 | [client/src/features/game/format.js](client/src/features/game/format.js) | แปลง update เป็นข้อความตามมุมมองของแต่ละคน (เช่น "you win" / "C1 wins") |
-| core ที่แตะ (มี comment `Feature: game`) | [App.jsx:10](client/src/App.jsx#L10), [:104-105](client/src/App.jsx#L104-L105), [:118](client/src/App.jsx#L118) (ส่ง `room` ให้คำสั่ง) · [commands/index.js:24](client/src/features/commands/index.js#L24) |
+| core ที่แตะ (มี comment `Feature: game`) | [App.jsx:10](client/src/App.jsx#L10), [:113-114](client/src/App.jsx#L113-L114), [:129](client/src/App.jsx#L129) (ส่ง `room` ให้คำสั่ง) · [commands/index.js:24](client/src/features/commands/index.js#L24) |
 
 **สถานะที่ server เก็บ** ([game.js:30-31](server/features/game.js#L30-L31))
 ```js
@@ -390,7 +392,7 @@ server log ตอนเล่น (เห็นว่าข้อความข�
 | [ai-bot/env.js](ai-bot/env.js) · [.env.example](ai-bot/.env.example) | โหลด `AI_BOT_TOKEN` + API key จาก `ai-bot/.env` |
 | [server/features/bot.js](server/features/bot.js) | **ฝั่ง server**: สงวนชื่อ `AI` (ต้องมี token) + ตรวจสมาชิก + ส่งคำสั่ง `/guess` ต่อให้ bot / `BOT_OFFLINE` |
 | [client/src/features/guess/](client/src/features/guess/commands.js) | คำสั่ง `/guess start\|hints\|stop\|ai` + ป้าย `[ai]` สีม่วงบนข้อความจากผู้ใช้ `AI` ([AiTag.jsx](client/src/features/guess/AiTag.jsx)) |
-| core ที่แตะ | server: [index.js:81-84](server/index.js#L81-L84) (ซ่อน token ใน log), [index.js:93-95](server/index.js#L93-L95) (`checkRegister`) · client (comment `Feature: guess`): [ChatRoom.jsx:5](client/src/ChatRoom.jsx#L5), [:48-49](client/src/ChatRoom.jsx#L48-L49) · [commands/index.js:7](client/src/features/commands/index.js#L7), [:25](client/src/features/commands/index.js#L25) |
+| core ที่แตะ | server: [index.js:81-89](server/index.js#L81-L89) (ซ่อน token ใน log), [index.js:98-100](server/index.js#L98-L100) (`checkRegister`) · client (comment `Feature: guess`): [ChatRoom.jsx:5](client/src/ChatRoom.jsx#L5), [:69-70](client/src/ChatRoom.jsx#L69-L70) · [commands/index.js:7](client/src/features/commands/index.js#L7), [:25](client/src/features/commands/index.js#L25) |
 
 **AI ทั้ง 3 เจ้า**
 
@@ -409,7 +411,7 @@ server log ตอนเล่น (เห็นว่าข้อความข�
 |---|---|---|
 | 1 | `npm run bot` → ต่อ server (`SERVER_URL`) ด้วย Socket.IO `reconnection: true` (server restart แล้วกลับมาเอง) | [index.js:27](ai-bot/index.js#L27) |
 | 2 | `connect` → `register { name: "AI", token }` | [index.js:62-65](ai-bot/index.js#L62-L65) |
-| 3 | Server: core เรียก `checkRegister` ก่อนจองชื่อ (R3) → ชื่อ `AI` (ตัวพิมพ์ใดก็ได้) ต้องมี token ตรงกับ `AI_BOT_TOKEN` ไม่งั้น `NAME_RESERVED` → **ผู้ใช้ปลอมเป็น AI ไม่ได้** | [index.js:93-95](server/index.js#L93-L95) → [index.js:52-58](server/features/index.js#L52-L58) → [bot.js:29-36](server/features/bot.js#L29-L36) |
+| 3 | Server: core เรียก `checkRegister` ก่อนจองชื่อ (R3) → ชื่อ `AI` (ตัวพิมพ์ใดก็ได้) ต้องมี token ตรงกับ `AI_BOT_TOKEN` ไม่งั้น `NAME_RESERVED` → **ผู้ใช้ปลอมเป็น AI ไม่ได้** | [index.js:98-100](server/index.js#L98-L100) → [index.js:53-59](server/features/index.js#L53-L59) → [bot.js:29-36](server/features/bot.js#L29-L36) |
 | 4 | ผ่าน → เป็นผู้ใช้คนหนึ่ง: อยู่ในรายชื่อออนไลน์ (R4), `/ping AI` ได้ (ตอบ `ping_probe`) | [index.js:67](ai-bot/index.js#L67), [index.js:101](ai-bot/index.js#L101) |
 
 **ลำดับการทำงาน: เริ่มเกม (AI คิดโจทย์)**
@@ -467,6 +469,84 @@ server log ตอนเล่น (เห็นว่าข้อความข�
 - **หลาย AI ผ่าน interface เดียว** (`generateJson(prompt, schema)`) → เกมไม่รู้ว่าเป็นเจ้าไหน เพิ่มเจ้าใหม่ = เพิ่ม 1 ไฟล์ใน `ai-bot/ai-providers/` + 1 บรรทัดใน `PROVIDERS`
 
 **Test:** [server/tests/features/f05-guess.test.mjs](server/tests/features/f05-guess.test.mjs) · `npm test -- f05` — **เปิด AI bot เป็น process แยกจริง** แล้วเล่นผ่าน socket (โจทย์ปลอม `GUESS_FAKE_AI=1` + เกม 3 วินาที **ไม่เรียก AI จริง**)
+
+---
+
+## Feature 6 — ส่งไฟล์ / รูปผ่าน socket
+
+> ส่งไฟล์ไม่เกิน 5 MB ในห้อง private หรือห้องกลุ่ม: ปุ่ม `[+file]` / ลากไฟล์มาวาง / วางรูปจาก clipboard (Ctrl+V)
+> ไฟล์ถูก**แบ่งเป็นชิ้นละ 64 KB ส่งทีละชิ้นผ่าน socket** server ส่งต่อทันทีโดย**ไม่เก็บไฟล์** · Checklist: [docs/features/file_TEST.md](docs/features/file_TEST.md)
+
+```
+#g1  C1: 📎 cat.png (300.0 KB)
+         [##########----------] 50% sending...          ← ระหว่างส่ง (ผู้รับเห็น receiving...)
+#g1  C1: 📎 cat.png (300.0 KB)
+         <รูปตัวอย่าง>
+         [download] sent in 0.4s (750.0 KB/s)
+```
+
+```
+ C1 ──file_offer {to|group, name, size, type, ref} (ack)──> Server: ตรวจผู้รับ (R7: ออนไลน์ / R11: สมาชิก) + ขนาด ≤ 5 MB
+ C1 <──ack {id, chunkSize: 65536}────────────────────────┘ ──file_start {id, from, name, size, chunks}──> ผู้รับ + C1 (echo)
+ C1 ──file_chunk {id, seq: 0, data: <binary 64 KB>} (ack)──> Server: เจ้าของ? seq ถูกลำดับ? ขนาด? ──file_chunk──> ผู้รับ เท่านั้น
+ C1 <──ack {received}────────────────────────────────────┘   (C1 รอ ack ก่อนส่งชิ้นถัดไป = stop-and-wait)
+    ... ทำซ้ำจนครบทุกชิ้น ...
+ C1 ──file_end {id} (ack)──> Server: ครบทุก byte? ──file_end──> ผู้รับ: ต่อทุกชิ้น → Blob → รูปตัวอย่าง / [download]
+```
+
+server log (ชิ้นไฟล์เป็น binary แสดงแค่ขนาด):
+```
+[recv] C1 -> file_offer {"to":"C2","name":"cat.png","size":300000,"type":"image/png","ref":"00xirfprk8ay"}
+[recv] C1 -> file_chunk {"id":"1","seq":0,"data":"<binary 65536 bytes>"}
+[recv] C1 -> file_chunk {"id":"1","seq":4,"data":"<binary 37856 bytes>"}
+[recv] C1 -> file_end {"id":"1"}
+```
+
+**ไฟล์ที่เกี่ยวข้อง**
+
+| ไฟล์ | หน้าที่ |
+|---|---|
+| [server/features/file.js](server/features/file.js) | ตรวจสิทธิ์ + ตรวจชิ้น (เจ้าของ / ลำดับ / ขนาด) + ส่งต่อให้ผู้รับ + ยกเลิกเมื่อหลุด / เงียบเกิน 30 วินาที |
+| [client/src/features/file/transfer.js](client/src/features/file/transfer.js) | `sendFile` (แบ่งชิ้น + stop-and-wait) / `setupFile` (รับชิ้น → ประกอบเป็นไฟล์) |
+| [FileMessage.jsx](client/src/features/file/FileMessage.jsx) · [format.js](client/src/features/file/format.js) · [file.css](client/src/features/file/file.css) | แสดงข้อความไฟล์: progress bar แบบ terminal / รูปตัวอย่าง / `[download]` / ความเร็ว |
+| core ที่แตะ (มี comment `Feature: file`) | server: [index.js:81-89](server/index.js#L81-L89) (log binary เป็นขนาด) · client: [App.jsx:54-59](client/src/App.jsx#L54-L59) (`updateFileMessage`), [App.jsx:115-116](client/src/App.jsx#L115-L116), [App.jsx:141-147](client/src/App.jsx#L141-L147), `onSendFile` [App.jsx:337](client/src/App.jsx#L337) · [ChatRoom.jsx:33-37](client/src/ChatRoom.jsx#L33-L37), [ChatRoom.jsx:51-63](client/src/ChatRoom.jsx#L51-L63) (ลากวาง), [ChatRoom.jsx:79](client/src/ChatRoom.jsx#L79), [ChatRoom.jsx:96](client/src/ChatRoom.jsx#L96) (paste), [ChatRoom.jsx:104-117](client/src/ChatRoom.jsx#L104-L117) (ปุ่ม `[+file]`) |
+
+**ลำดับการทำงาน: ส่ง (ผู้ส่ง → server)**
+
+| # | เกิดอะไรขึ้น | โค้ด |
+|---|---|---|
+| 1 | ผู้ใช้เลือกไฟล์ (`[+file]` / ลากวาง / Ctrl+V) → `onSendFile(file)` → ผู้รับ = ห้องที่เปิดอยู่ (`{ to }` หรือ `{ group }`) | [ChatRoom.jsx:33-37](client/src/ChatRoom.jsx#L33-L37) → [App.jsx:141-147](client/src/App.jsx#L141-L147) |
+| 2 | `file_offer { to\|group, name, size, type, ref }` แบบมี ack (`ref` = เลขสุ่มไว้จับคู่กับไฟล์ในเครื่อง) | [transfer.js:65-74](client/src/features/file/transfer.js#L65-L74) |
+| 3 | **Server ตรวจ**: ชื่อไฟล์ (ตัด path / ตัวอักษรควบคุม), ขนาด 1 byte – 5 MB (`FILE_TOO_LARGE`), ส่งพร้อมกันไม่เกิน 3 ไฟล์ | [file.js:78-88](server/features/file.js#L78-L88) → `cleanFileName` [file.js:23-30](server/features/file.js#L23-L30) |
+| 4 | **ตรวจผู้รับด้วยกฎเดียวกับแชท**: private → ต้องออนไลน์ ไม่ใช่ตัวเอง (R7) / group → ต้องมีกลุ่ม + เป็นสมาชิก (R11) | [file.js:90-103](server/features/file.js#L90-L103) |
+| 5 | สร้างการส่ง (`id`, จำนวนชิ้น = `ceil(size / 64 KB)`) → ack `{ id, chunkSize }` → ส่ง `file_start` ให้ผู้รับ + ผู้ส่ง (`from` มาจาก server) | [file.js:105-117](server/features/file.js#L105-L117) |
+| 6 | ผู้ส่งวนทีละชิ้น: `file.slice()` อ่านเฉพาะส่วน → `ArrayBuffer` → `emitWithAck("file_chunk", { id, seq, data })` → **รอ ack ก่อนชิ้นถัดไป** | [transfer.js:78-84](client/src/features/file/transfer.js#L78-L84) |
+| 7 | **Server ตรวจทุกชิ้น**: เป็นของ socket นี้ (คนอื่นแทรกไม่ได้ `NO_TRANSFER`) / `seq` ต้องเรียง 0, 1, 2… (`BAD_SEQ`) / เป็น binary ≤ 64 KB และไม่เกินขนาดที่ประกาศ (`BAD_CHUNK`) | [file.js:72-76](server/features/file.js#L72-L76), [file.js:119-127](server/features/file.js#L119-L127) |
+| 8 | ผ่าน → ส่งต่อ**เฉพาะผู้รับ** (private = อีกฝ่าย / group = `socket.to(room)` สมาชิกยกเว้นผู้ส่ง) → ack `{ received }` → progress ของผู้ส่ง | [file.js:128-132](server/features/file.js#L128-L132) → [file.js:33-36](server/features/file.js#L33-L36) |
+| 9 | ครบ → `file_end` → server ตรวจว่าได้ครบทุก byte (`INCOMPLETE`) → แจ้งทุกคน | [transfer.js:87-88](client/src/features/file/transfer.js#L87-L88) → [file.js:135-143](server/features/file.js#L135-L143) |
+| 10 | error / หมดเวลา → ผู้ส่ง `file_cancel` → server แจ้ง `file_abort` ให้ทุกคน | [transfer.js:89-91](client/src/features/file/transfer.js#L89-L91) → [file.js:145-148](server/features/file.js#L145-L148) |
+
+**ลำดับการทำงาน: รับ (server → ผู้รับ)**
+
+| # | เกิดอะไรขึ้น | โค้ด |
+|---|---|---|
+| 1 | `file_start` → สร้างข้อความไฟล์ในห้อง (private: ห้องของอีกฝ่าย / group: ห้องกลุ่ม) สถานะ `receiving` (ผู้ส่ง: จับคู่ `ref` → ใช้ไฟล์ในเครื่องแสดงทันที สถานะ `sending`) | [transfer.js:18-31](client/src/features/file/transfer.js#L18-L31) |
+| 2 | `file_chunk` → เก็บต่อท้าย (server รับประกันลำดับแล้ว) → อัปเดต progress | [transfer.js:34-40](client/src/features/file/transfer.js#L34-L40) → [App.jsx:54-59](client/src/App.jsx#L54-L59) |
+| 3 | `file_end` → ต่อทุกชิ้นเป็น `Blob` → `URL.createObjectURL` → รูปตัวอย่าง (PNG / JPEG / GIF / WebP / BMP) + `[download]` | [transfer.js:42-53](client/src/features/file/transfer.js#L42-L53) → [FileMessage.jsx:5-36](client/src/features/file/FileMessage.jsx#L5-L36) |
+| 4 | ชนิดไฟล์มาจากผู้ส่ง (เชื่อไม่ได้) → ไม่ใช่รูปที่ปลอดภัยใช้ `application/octet-stream` / **ไม่แสดง SVG** (เปิดแล้วรัน script ได้) | [transfer.js:50-51](client/src/features/file/transfer.js#L50-L51), [format.js:15-17](client/src/features/file/format.js#L15-L17) |
+| 5 | `file_abort` (ผู้ส่งยกเลิก / หลุด / ผู้รับออฟไลน์ / เงียบเกิน 30 วินาที) → `✗ transfer failed: <เหตุผล>` | [transfer.js:55-61](client/src/features/file/transfer.js#L55-L61) ← [file.js:51-61](server/features/file.js#L51-L61), [file.js:151-159](server/features/file.js#L151-L159) |
+
+**ทำไมออกแบบแบบนี้ (ใช้ตอบอาจารย์)**
+- **แบ่งชิ้น (chunking)**: ส่งทั้งไฟล์ใน event เดียวจะติดเพดาน `maxHttpBufferSize` (1 MB) ของ Socket.IO, ต้องโหลดทั้งไฟล์เข้าหน่วยความจำ และไม่มี progress / ชิ้นละ 64 KB จึงส่งไฟล์ใหญ่ได้และเห็นความคืบหน้า
+- **framing**: 1 ชิ้น = 1 event ที่มี `{ id, seq, data }` → ผู้รับรู้ว่าชิ้นนี้เป็นของไฟล์ไหน ลำดับที่เท่าไร / `data` ส่งเป็น **binary attachment** ของ Socket.IO (ไม่แปลง base64 ที่ทำให้ใหญ่ขึ้น 33%)
+- **stop-and-wait (flow control)**: รอ ack ทีละชิ้น → ผู้ส่งไม่ยิงข้อมูลเร็วกว่าที่ server รับไหว และรู้ทันทีถ้าชิ้นไหนถูกปฏิเสธ (หลักเดียวกับ ACK ของ TCP แต่ทำที่ระดับ application) / แลกกับความเร็ว: แต่ละชิ้นต้องรอ 1 RTT
+- **server ไม่เก็บไฟล์**: เป็นตัวส่งต่อ (relay) อย่างเดียว ไม่มี storage / database กลาง → ข้อมูลวิ่งผ่าน socket ล้วน (R2)
+- **ตรวจที่ server ทุกชิ้น**: เจ้าของ / ลำดับ / ขนาด → client ปลอมชิ้น แทรกไฟล์คนอื่น หรือส่งเกินที่ประกาศไม่ได้ / ผู้รับใช้กฎเดียวกับแชท (R7, R11) **คนนอกไม่ได้รับแม้แต่ byte เดียว** (test ยืนยัน)
+- **หลุดกลางทาง**: ทุกฝ่ายได้ `file_abort` ไม่มีไฟล์ค้างครึ่ง ๆ
+
+**ข้อจำกัด**: ไฟล์ในกลุ่ม `#discord` ไม่ถูกส่งต่อไป Discord (bridge ส่งเฉพาะข้อความ) / คนที่ join กลุ่มระหว่างที่ไฟล์กำลังส่งจะไม่ได้ไฟล์นั้น
+
+**Test:** [server/tests/features/f06-file.test.mjs](server/tests/features/f06-file.test.mjs) · `npm test -- f06`
 
 ---
 

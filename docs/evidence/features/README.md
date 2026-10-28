@@ -25,7 +25,15 @@
 >
 > รูปที่ต้องเก็บใน `discord/` (วิธีอยู่ใน [discord_TEST.md](../../features/discord_TEST.md)): `discord-app-to-discord.png`, `discord-discord-to-app.png`, `discord-server-log.png`, `discord-non-member.png`
 
-## ping
+## file
+
+| ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
+|---|---|---|---|
+| _(ยังไม่มี)_ | | | |
+
+> รูปที่ต้องเก็บใน `file/` (วิธีอยู่ใน [file_TEST.md](../../features/file_TEST.md)): `file-private-image.png`, `file-group.png`, `file-progress.png`, `file-server-log.png`, `file-ws-binary.png`, `file-outsider.png`, `file-too-large.png`
+
+## ping (ตัวสำรอง)
 
 | ไฟล์ | วันที่ | สภาพแวดล้อม | สิ่งที่แสดง |
 |---|---|---|---|

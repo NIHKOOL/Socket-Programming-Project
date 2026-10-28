@@ -80,7 +80,12 @@ io.on("connection", (socket) => {
   // R2: log ทุก event ที่รับเข้ามาผ่าน socket นี้ ใช้แสดงตอน demo ว่าข้อความทุกอย่างวิ่งผ่าน socket
   socket.onAny((event, payload) => {
     // ซ่อน token (รหัสลับของ AI bot ตอน register) ไม่ให้หลุดลง log
-    const shown = JSON.stringify(payload, (key, value) => (key === "token" ? "***" : value));
+    // ข้อมูล binary (ชิ้นไฟล์ของ Feature file) แสดงแค่ขนาด ไม่พิมพ์ทุก byte
+    const shown = JSON.stringify(payload, function (key, value) {
+      if (key === "token") return "***";
+      if (Buffer.isBuffer(this[key])) return `<binary ${this[key].length} bytes>`;
+      return value;
+    });
     console.log(`[recv] ${socket.data.name ?? socket.id} -> ${event} ${shown}`);
   });
 

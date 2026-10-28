@@ -176,7 +176,8 @@ ok    features/f00-feature-hooks.test.mjs  (3 passed, 0 failed)
 | 2 | Discord bridge (`discord`) — กลุ่ม `#discord` ↔ channel ใน Discord จริง · [checklist + วิธีตั้ง bot](docs/features/discord_TEST.md) · **ใช้งานได้บนเครื่อง** (หลักฐานยังไม่ได้เก็บ) | ✅ | |
 | 3 | **เกมทายคำ AI** (`guess`) — **Claude / ChatGPT / Gemini** (เลือกได้) คิดคำ + ใบ้ทุก 30 วินาที คนในกลุ่มแข่งทายเป็นภาษาอังกฤษ 5 นาที — **AI เป็น client อีกตัว** (`ai-bot/`, `npm run bot`) ส่งทุกข้อความผ่าน socket **(AI บังคับ)** · [checklist](docs/features/guess_TEST.md) · โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน **ต้องใส่ API key อย่างน้อย 1 เจ้าแล้วทดสอบกับ AI จริง** | 🟨 | |
 | 5 | เกมเป่ายิ้งฉุบผ่าน socket (`game`) — `/play rps <ชื่อ>`, server ตัดสินและซ่อนคำตอบ · [checklist](docs/features/game_TEST.md) · โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน **รอทดสอบด้วยมือ** | 🟨 | |
-| 4 | `/ping` / `/ping <ชื่อ>` วัด round-trip time + ระบบ slash command (`ping`) · [checklist](docs/features/ping_TEST.md) · โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน **รอทดสอบด้วยมือ** | 🟨 | |
+| 4 | **ส่งไฟล์ / รูปผ่าน socket** (`file`) — แบ่งชิ้น 64 KB ส่งทีละชิ้นรอ ack (stop-and-wait), private + group ตรวจสิทธิ์แบบ R7/R11, server ไม่เก็บไฟล์ · [checklist](docs/features/file_TEST.md) · โค้ดเสร็จ ทดสอบอัตโนมัติผ่าน **รอทดสอบใน browser** | 🟨 | |
+| – | `/ping` / `/ping <ชื่อ>` วัด round-trip time + ระบบ slash command (`ping`) — **ตัวสำรอง ไม่นับคะแนน** (แทนด้วยส่งไฟล์) โค้ด + test ยังอยู่ · [checklist](docs/features/ping_TEST.md) | ⏸ | |
 
 สัญลักษณ์: ⬜ ยังไม่เริ่ม · 🟨 กำลังทำ · ✅ เสร็จและทดสอบข้ามเครื่องแล้ว
 
